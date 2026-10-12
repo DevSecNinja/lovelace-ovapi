@@ -6,9 +6,9 @@ Two HA-native cards: a readable **departure board** and a walking-adjusted
 **“leave in” commute view**. Multiple favourites, line/destination filters,
 English/Dutch, phone/tablet layouts and your Home Assistant theme.
 
-**Pre-release implementation:** no release has been published. Review and merge
-are required before default-branch HACS installation. Synthetic demonstrations
-are not evidence of real service coverage.
+**Pre-release implementation:** no release has been published. HACS can use the
+default-branch resource. Synthetic demonstrations are not evidence of real service
+coverage.
 
 ## Requirements
 
@@ -24,9 +24,16 @@ is complementary and independent.
 
 ## Installation
 
-### HACS (after the implementation is available on the default branch)
+### HACS
 
-1. Add `https://github.com/DevSecNinja/lovelace-ovapi` as a **Dashboard** custom repository.
+Requires Home Assistant with HACS already installed and configured. Use the button
+to open this repository in HACS and confirm adding it as a custom repository if
+prompted. It does not install or enable HACS, or automatically download the cards.
+
+[![Open lovelace-ovapi in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=DevSecNinja&repository=lovelace-ovapi&category=plugin)
+
+1. If not added using the button, add `https://github.com/DevSecNinja/lovelace-ovapi`
+   as a **Dashboard** [custom repository](https://www.hacs.xyz/docs/faq/custom_repositories/).
 2. Download the repository. It contains `dist/lovelace-ovapi.js`; no build tools are needed in HA.
 3. Check **Settings → Dashboards → Resources** (advanced mode). HACS normally registers
    `/hacsfiles/lovelace-ovapi/lovelace-ovapi.js` as a **JavaScript module**.
