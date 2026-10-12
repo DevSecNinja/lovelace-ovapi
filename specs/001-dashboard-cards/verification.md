@@ -122,8 +122,14 @@ Checked FR-001..FR-008, SC-001..SC-005, all 8 story acceptance scenarios, the
 retention/locale/lifecycle edge cases, shared-subscription/package/CI decisions,
 and all five constitutional principles against implementation and evidence.
 No missing or contradictory product work remains. T018 is fulfilled by the
-actual HA check; T019 is the final review-branch delivery step.
+actual HA check; T019 delivered implementation commit `43edcf3` and review
+[pull request 1](https://github.com/DevSecNinja/lovelace-ovapi/pull/1).
 No empty convergence phase or invented work was appended.
+
+Hosted CI's initial YAML check found generated Spec Kit YAML that bare local
+`yamlfmt` discovery omitted. Local lint/pre-commit now uses the tracked YAML file
+list, matching the central workflow's coverage; the generated workflow is formatted
+without semantic changes. This is not suppressed or excluded.
 
 Remaining operational constraints: no official releases; HACS sees the default
 branch only after review/merge. The inherited shared-lint workflow requires

@@ -20,7 +20,7 @@ run = "npm ci"
 run = "npm run check"
 
 [tasks.lint]
-run = ["dprint check", "yamlfmt -lint", "actionlint", "zizmor --no-online-audits .github/workflows", "npm run check"]
+run = ["dprint check", "git ls-files -z '*.yaml' '*.yml' | xargs -0 yamlfmt -lint", "actionlint", "zizmor --no-online-audits .github/workflows", "npm run check"]
 
 [tasks.test]
 run = "npm run test:coverage"

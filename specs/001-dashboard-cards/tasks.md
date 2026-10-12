@@ -43,7 +43,7 @@
 - [x] T016 Document installation, policy boundaries and development in `README.md`.
 - [x] T017 Align repository conventions and CI in `.github/workflows/`.
 - [x] T018 Verify actual isolated HA/backend/card contract in `scripts/`, record evidence in `verification.md`.
-- [ ] T019 Execute convergence, finish artifacts and push reviewed implementation branch.
+- [x] T019 Execute convergence, finish artifacts and push reviewed implementation branch.
 
 ## Dependencies & Execution Order
 

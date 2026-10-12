@@ -6,7 +6,7 @@ pre-commit:
     markdown:
       run: mise exec -- dprint check
     yaml:
-      run: mise exec -- yamlfmt -lint
+      run: git ls-files -z '*.yaml' '*.yml' | xargs -0 mise exec -- yamlfmt -lint
     actions:
       run: mise exec -- actionlint
     secrets:
