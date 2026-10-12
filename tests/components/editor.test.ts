@@ -127,7 +127,7 @@ describe("visual editor", () => {
     await editor.updateComplete;
     expect(
       editor.shadowRoot!.querySelector("[role=alert]")?.textContent,
-    ).toContain("1 to 12");
+    ).toContain("1 tot 12");
     checkbox.checked = true;
     checkbox.dispatchEvent(new Event("change"));
     await editor.updateComplete;
@@ -222,5 +222,240 @@ describe("visual editor", () => {
     expect(
       editor.shadowRoot!.querySelectorAll('input[type="checkbox"]'),
     ).toHaveLength(2);
+  });
+
+  async function favourites(entities = ["sensor.c", "sensor.a"]) {
+    const editor = new OvapiCardEditor();
+    const ha = hass();
+    ha.states = Object.fromEntries(
+      ["sensor.b", "sensor.a", "sensor.c"].map((entity) => [
+        entity,
+        {
+          state: "ready",
+          attributes: { contract_version: 1, board_id: entity },
+        },
+      ]),
+    );
+    editor.hass = ha;
+    const config = {
+      type: "custom:ovapi-departures-card",
+      entities,
+      display_mode: "grouped",
+      max_routes: 3,
+      max_departures: 7,
+    };
+    editor.setConfig(config);
+    document.body.append(editor);
+    await editor.updateComplete;
+    const changes: Record<string, unknown>[] = [];
+    editor.addEventListener("config-changed", (event) => {
+      const next = (event as CustomEvent).detail.config;
+      changes.push(next);
+      editor.setConfig(structuredClone(next));
+    });
+    const checkbox = (entity: string) =>
+      editor.shadowRoot!.querySelector<HTMLInputElement>(
+        `input[value="${entity}"]`,
+      )!;
+    return { editor, ha, config, changes, checkbox };
+  }
+
+  it("keys sorted rows by entity, preserves saved order and ignores unchanged selection", async () => {
+    const { editor, ha, config, changes, checkbox } = await favourites();
+    const a = checkbox("sensor.a");
+    const b = checkbox("sensor.b");
+    const c = checkbox("sensor.c");
+    const order = () =>
+      [
+        ...editor.shadowRoot!.querySelectorAll<HTMLInputElement>(
+          "[type=checkbox]",
+        ),
+      ].map((el) => el.value);
+    expect(order()).toEqual(["sensor.a", "sensor.b", "sensor.c"]);
+    expect(config.entities).toEqual(["sensor.c", "sensor.a"]);
+    a.dispatchEvent(new Event("change"));
+    await editor.updateComplete;
+    expect(changes).toEqual([]);
+    c.click();
+    await editor.updateComplete;
+    expect(checkbox("sensor.c")).toBe(c);
+    expect(checkbox("sensor.a")).toBe(a);
+    expect(a.checked).toBe(true);
+    expect(c.checked).toBe(false);
+    expect(order()).toEqual(["sensor.a", "sensor.b", "sensor.c"]);
+    c.click();
+    await editor.updateComplete;
+    expect(changes.at(-1)?.entities).toEqual(["sensor.a", "sensor.c"]);
+
+    ha.states = {
+      "sensor.aa": ha.states["sensor.a"]!,
+      ...Object.fromEntries(Object.entries(ha.states).reverse()),
+    };
+    editor.hass = ha;
+    await editor.updateComplete;
+    expect(order()).toEqual(["sensor.a", "sensor.aa", "sensor.b", "sensor.c"]);
+    expect(checkbox("sensor.b")).toBe(b);
+    expect(checkbox("sensor.c")).toBe(c);
+    expect(changes).toHaveLength(2);
+  });
+
+  it("uses current draft state for native clicks in the same render turn", async () => {
+    const { editor, changes, checkbox } = await favourites(["sensor.a"]);
+    checkbox("sensor.b").click();
+    checkbox("sensor.c").click();
+    checkbox("sensor.a").click();
+    await editor.updateComplete;
+    expect(changes.map((c) => c.entities)).toEqual([
+      ["sensor.a", "sensor.b"],
+      ["sensor.a", "sensor.b", "sensor.c"],
+      ["sensor.b", "sensor.c"],
+    ]);
+    expect(checkbox("sensor.a").checked).toBe(false);
+    expect(checkbox("sensor.b").checked).toBe(true);
+    expect(checkbox("sensor.c").checked).toBe(true);
+  });
+
+  it("retains an empty draft across equivalent HA echoes and emits only a valid replacement", async () => {
+    const { editor, ha, config, changes, checkbox } = await favourites([
+      "sensor.a",
+    ]);
+    checkbox("sensor.a").click();
+    await editor.updateComplete;
+    expect(changes).toEqual([]);
+    expect(config.entities).toEqual(["sensor.a"]);
+    editor.setConfig(
+      Object.fromEntries(Object.entries(structuredClone(config)).reverse()),
+    );
+    editor.hass = { ...ha };
+    await editor.updateComplete;
+    expect(checkbox("sensor.a").checked).toBe(false);
+    expect(
+      editor.shadowRoot!.querySelector("[role=alert]")?.textContent,
+    ).toContain("1 to 12");
+    const title = editor.shadowRoot!.querySelector<HTMLInputElement>("#title")!;
+    title.value = "Kept draft title";
+    title.dispatchEvent(new Event("change"));
+    await editor.updateComplete;
+    expect(changes).toEqual([]);
+    checkbox("sensor.b").click();
+    await editor.updateComplete;
+    expect(changes).toEqual([
+      { ...config, entities: ["sensor.b"], title: "Kept draft title" },
+    ]);
+    expect(editor.shadowRoot!.querySelector("[role=alert]")).toBeNull();
+  });
+
+  it("accepts a different external config after an invalid draft and clears the error", async () => {
+    const { editor, config, changes, checkbox } = await favourites([
+      "sensor.a",
+    ]);
+    checkbox("sensor.a").click();
+    await editor.updateComplete;
+    editor.setConfig({ ...config, entities: ["sensor.c"] });
+    await editor.updateComplete;
+    expect(checkbox("sensor.c").checked).toBe(true);
+    expect(checkbox("sensor.a").checked).toBe(false);
+    expect(editor.shadowRoot!.querySelector("[role=alert]")).toBeNull();
+    expect(changes).toEqual([]);
+  });
+
+  it("ignores nested object key order in echoes but respects array order and changed nested values", async () => {
+    const { editor, config, changes, checkbox } = await favourites([
+      "sensor.a",
+    ]);
+    const visibility = [
+      { condition: "state", entity: "input_boolean.show", state: "on" },
+      { condition: "screen", media_query: "(min-width: 390px)" },
+    ];
+    const original = {
+      ...config,
+      view_layout: {
+        grid_area: "main",
+        options: { columns: 2, rows: 3 },
+        extra: null,
+      },
+      visibility,
+    };
+    editor.setConfig(original);
+    await editor.updateComplete;
+    checkbox("sensor.a").click();
+    await editor.updateComplete;
+    editor.setConfig({
+      ...config,
+      visibility: [
+        { state: "on", entity: "input_boolean.show", condition: "state" },
+        { media_query: "(min-width: 390px)", condition: "screen" },
+      ],
+      view_layout: {
+        extra: null,
+        options: { rows: 3, columns: 2 },
+        grid_area: "main",
+      },
+    });
+    await editor.updateComplete;
+    expect(checkbox("sensor.a").checked).toBe(false);
+    expect(editor.shadowRoot!.querySelector("[role=alert]")).not.toBeNull();
+    expect(changes).toEqual([]);
+    checkbox("sensor.b").click();
+    await editor.updateComplete;
+    expect(changes).toEqual([{ ...original, entities: ["sensor.b"] }]);
+    checkbox("sensor.b").click();
+    await editor.updateComplete;
+    const reordered = {
+      ...original,
+      entities: ["sensor.b"],
+      visibility: [...visibility].reverse(),
+    };
+    editor.setConfig(reordered);
+    await editor.updateComplete;
+    expect(checkbox("sensor.b").checked).toBe(true);
+    expect(editor.shadowRoot!.querySelector("[role=alert]")).toBeNull();
+    checkbox("sensor.b").click();
+    await editor.updateComplete;
+    editor.setConfig({
+      ...reordered,
+      view_layout: {
+        ...original.view_layout,
+        options: { columns: 4, rows: 3 },
+      },
+    });
+    await editor.updateComplete;
+    expect(checkbox("sensor.b").checked).toBe(true);
+    expect(editor.shadowRoot!.querySelector("[role=alert]")).toBeNull();
+  });
+
+  it("restores a rejected thirteenth native checkbox toggle and keeps missing sensors removable", async () => {
+    const entities = Array.from(
+      { length: 12 },
+      (_, i) => `sensor.missing_${i}`,
+    );
+    const { editor, ha, config, changes, checkbox } =
+      await favourites(entities);
+    ha.language = "nl";
+    ha.locale!.language = "nl";
+    ha.states[entities[0]!] = { state: "unavailable", attributes: {} };
+    editor.hass = ha;
+    await editor.updateComplete;
+    const a = checkbox("sensor.a");
+    for (let i = 0; i < 2; i++) {
+      a.click();
+      await editor.updateComplete;
+      expect(a.checked).toBe(false);
+      expect(changes).toEqual([]);
+      expect(
+        editor.shadowRoot!.querySelector("[role=alert]")?.textContent,
+      ).toContain("1 tot 12");
+    }
+    expect(config.entities).toEqual(entities);
+    checkbox(entities[0]!).click();
+    await editor.updateComplete;
+    expect(editor.shadowRoot!.querySelector("[role=alert]")).toBeNull();
+    a.click();
+    await editor.updateComplete;
+    expect(a.checked).toBe(true);
+    expect(changes.at(-1)?.entities).toEqual([
+      ...entities.slice(1),
+      "sensor.a",
+    ]);
   });
 });

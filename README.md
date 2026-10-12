@@ -53,6 +53,11 @@ No live Home Assistant installation is modified by development or tests.
 
 Choose favourite OVAPI sensors in the visual editor. Each sensor is configured in
 the backend integration; the cards only display its existing board.
+The picker is ordered by entity ID so rows do not jump when toggled; it does not
+reorder saved favourites. New selections are appended to the card's display order.
+Cards require 1–12 sensors. Clearing the last checkbox leaves an unsaved draft
+with an error; HA keeps the last valid configuration until you choose a sensor.
+A thirteenth selection is rejected without changing the existing twelve.
 Add/remove individual line and destination fields. Each field is one exact value;
 commas, quotes and line breaks within a name are preserved rather than split.
 
@@ -215,6 +220,9 @@ real backend integration, actual HA config-flow HTTP and WebSocket APIs, the
 real HA frontend and Lovelace resource registration. Only the backend's upstream
 transport is replaced with dynamically dated synthetic data. It is not a live
 HA test and does not validate real stop coverage or upstream availability.
+It also opens the native Lovelace card editor with three actual synthetic sensors,
+exercises label/Space selection and an empty draft, observes the host's
+`config-changed`/`setConfig` feedback, and verifies Save/storage/reopen.
 
 With a reviewed backend checkout available, run in one terminal:
 

@@ -88,8 +88,10 @@ function emit(status: BoardSnapshot["status"] = "ready") {
   });
 }
 emit();
+const configChanges: Record<string, unknown>[] = [];
+let editor: OvapiCardEditor | undefined;
 if (params.has("editor")) {
-  const editor = document.createElement("ovapi-card-editor") as OvapiCardEditor;
+  editor = document.createElement("ovapi-card-editor") as OvapiCardEditor;
   editor.hass = ha;
   editor.setConfig({
     type: "custom:ovapi-departures-card",
@@ -99,7 +101,11 @@ if (params.has("editor")) {
       : {}),
   });
   editor.addEventListener("config-changed", (event) => {
-    window.demo.config = (event as CustomEvent).detail.config;
+    const config = (event as CustomEvent<{ config: Record<string, unknown> }>)
+      .detail.config;
+    window.demo.config = config;
+    configChanges.push(config);
+    editor!.setConfig(structuredClone(config));
     cards[0]!.setConfig(window.demo.config);
     emit();
   });
@@ -109,6 +115,9 @@ declare global {
   interface Window {
     demo: {
       connection: FakeConnection;
+      ha: typeof ha;
+      editor: OvapiCardEditor | undefined;
+      configChanges: typeof configChanges;
       config?: unknown;
       emit: typeof emit;
       empty: () => void;
@@ -119,6 +128,9 @@ declare global {
 }
 window.demo = {
   connection,
+  ha,
+  editor,
+  configChanges,
   emit,
   empty: () =>
     entities.forEach((e) =>

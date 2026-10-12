@@ -1,13 +1,29 @@
 import { LitElement, html, nothing } from "lit";
+import { live } from "lit/directives/live.js";
+import { repeat } from "lit/directives/repeat.js";
 import type { HomeAssistant } from "./contract";
 import { record, isSupportedContract } from "./contract";
 import { parseConfig } from "./model";
 import { labels } from "./localize";
 import { styles } from "./styles";
 
+function configKey(config: Record<string, unknown>): string {
+  return JSON.stringify(config, (_key, value: unknown) => {
+    if (value === null || typeof value !== "object" || Array.isArray(value))
+      return value;
+    const object = record(value);
+    return Object.fromEntries(
+      Object.keys(object)
+        .sort()
+        .map((key) => [key, object[key]]),
+    );
+  });
+}
+
 export class OvapiCardEditor extends LitElement {
   static styles = styles;
   private config: Record<string, unknown> = {};
+  private acceptedConfig?: string;
   private ha?: HomeAssistant;
   private error = "";
   set hass(hass: HomeAssistant) {
@@ -15,8 +31,37 @@ export class OvapiCardEditor extends LitElement {
     this.requestUpdate();
   }
   setConfig(config: unknown): void {
-    this.config = { ...record(config) };
+    const next = { ...record(config) };
+    const key = configKey(next);
+    // HA echoes the last valid config; do not replace an unfinished local draft.
+    if (key === this.acceptedConfig) return;
+    this.config = next;
+    this.acceptedConfig = key;
+    this.error = "";
     this.requestUpdate();
+  }
+
+  private selectedEntities(): string[] {
+    return Array.isArray(this.config.entities)
+      ? this.config.entities.filter((e): e is string => typeof e === "string")
+      : [];
+  }
+
+  private toggleEntity(entity: string, checked: boolean): void {
+    const selected = this.selectedEntities();
+    if (selected.includes(entity) === checked) {
+      this.requestUpdate();
+      return;
+    }
+    if (checked && selected.length >= 12) {
+      this.error = "entities: select 1 to 12 OVAPI sensors";
+      this.requestUpdate();
+      return;
+    }
+    this.change(
+      "entities",
+      checked ? [...selected, entity] : selected.filter((e) => e !== entity),
+    );
   }
 
   private change(key: string, value: unknown): void {
@@ -33,6 +78,7 @@ export class OvapiCardEditor extends LitElement {
     try {
       parseConfig(next);
       this.error = "";
+      this.acceptedConfig = configKey(next);
       this.dispatchEvent(
         new CustomEvent("config-changed", {
           detail: { config: next },
@@ -71,9 +117,7 @@ export class OvapiCardEditor extends LitElement {
     const t = labels({ language }, this.ha);
     const departures = this.config.type !== "custom:ovapi-commute-card";
     const grouped = departures && this.config.display_mode === "grouped";
-    const selected = Array.isArray(this.config.entities)
-      ? this.config.entities.filter((e): e is string => typeof e === "string")
-      : [];
+    const selected = this.selectedEntities();
     const entities = [
       ...new Set([
         ...selected,
@@ -86,19 +130,22 @@ export class OvapiCardEditor extends LitElement {
           )
           .map(([id]) => id),
       ]),
-    ];
+    ].sort();
     return html`<div class="editor">
       <fieldset>
         <legend>${t.entities}</legend>
         ${
           entities.length
-            ? entities.map(
+            ? repeat(
+                entities,
+                (entity) => entity,
                 (entity) =>
                   html`<label class="choice">
                     <input
                       type="checkbox"
-                      .checked=${selected.includes(entity)}
-                      @change=${(event: Event) => this.change("entities", this.input(event).checked ? [...selected, entity] : selected.filter((e) => e !== entity))}
+                      .value=${entity}
+                      .checked=${live(selected.includes(entity))}
+                      @change=${(event: Event) => this.toggleEntity(entity, this.input(event).checked)}
                     />
                     ${String(this.ha?.states[entity]?.attributes.friendly_name ?? entity)}
                   </label>`,
@@ -106,7 +153,7 @@ export class OvapiCardEditor extends LitElement {
             : html`<p>${t.choose}</p>`
         }
       </fieldset>
-      ${this.error ? html`<p class="error" role="alert">${this.error}</p>` : nothing}
+      ${this.error ? html`<p class="error" role="alert">${this.error.startsWith("entities:") ? t.entitiesError : this.error}</p>` : nothing}
       <label for="title">${t.title}</label
       ><input
         id="title"

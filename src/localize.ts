@@ -35,6 +35,8 @@ const en = {
   transport: "Service",
   title: "Title",
   entities: "Favourite OVAPI sensors",
+  entitiesError:
+    "Select 1 to 12 OVAPI sensors. Changes are not applied until the selection is valid.",
   lines: "Lines",
   destinations: "Destinations",
   addFilter: "Add",
@@ -92,6 +94,8 @@ const nl: typeof en = {
   transport: "Vervoer",
   title: "Titel",
   entities: "Favoriete OVAPI-sensoren",
+  entitiesError:
+    "Selecteer 1 tot 12 OVAPI-sensoren. Wijzigingen worden pas toegepast als de selectie geldig is.",
   lines: "Lijnen",
   destinations: "Bestemmingen",
   addFilter: "Toevoegen",

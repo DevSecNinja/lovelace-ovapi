@@ -55,3 +55,30 @@ dist/lovelace-ovapi.js
 
 Shared subscription state is necessary to avoid duplicate listeners and cached
 payloads when both cards show the same favourite. No state-management dependency.
+
+## Scoped follow-up: stable favourite selection
+
+Branch `devsecninja-stable-favourite-selection`, based on merged main
+`bcfede3f24a7bef0cd071794116fe7764d483ef0`. This repairs US3 rather than introducing
+a new feature or configuration/contract version. Grouped rows and both limits
+remain unchanged.
+
+Reproduce with native clicks in the production-bundle harness before changing
+the editor. Sort picker candidates by immutable entity ID independently of saved
+order; use Lit keyed `repeat` and `live` checked properties. Read the current
+draft for each toggle, reject the thirteenth selection without storing it, and
+retain an empty draft with the existing validation boundary. Ignore equivalent
+HA echoes of the last accepted config (including reordered object keys), but
+accept different external configs and clear stale errors. Never emit invalid
+drafts. No general state-management layer or new dependency is needed.
+The echo comparison canonicalizes object keys at every nesting level, including
+objects in arrays; array order and changed nested values remain significant.
+
+Extend browser and component regressions for label/Space, rapid native clicks,
+row identity/focus, config feedback/reopen, limits, missing/unavailable sensors,
+English/Dutch and unrelated HA refreshes. Reuse the bounded actual HA harness
+for native Lovelace dialog feedback when the optional runtime is available;
+keep it explicitly distinct from the synthetic component host.
+
+Constitution check: all five principles retained; no backend contract, source
+retention, live HA, upstream requests, release or permission changes.
