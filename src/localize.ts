@@ -13,6 +13,16 @@ const en = {
   ready: "Updated",
   stale: "Outdated · last update",
   staleAdvice: "Update failed. Check departures before leaving.",
+  coveragePartial: (verified: number, selected: number) =>
+    `Station coverage incomplete: ${verified} of ${selected} platforms verified for the selected transport types. Departures hidden. Check the OVAPI integration.`,
+  coverageUnavailable:
+    "Station coverage unknown. Departures hidden. Check the OVAPI integration.",
+  coverageExpired:
+    "Station coverage information expired. Departures hidden until the integration updates it.",
+  coverageStale:
+    "Station coverage update failed. Previously verified platforms are still valid; check departures before leaving.",
+  coverageEmpty:
+    "No station platforms match the selected transport types. Check your favourite in the OVAPI integration.",
   empty: "No upcoming departures in this board.",
   filtered: "No departures match your filters.",
   noCommute:
@@ -72,6 +82,16 @@ const nl: typeof en = {
   stale: "Verouderd · laatste update",
   staleAdvice:
     "Bijwerken mislukt. Controleer vertrektijden voordat je vertrekt.",
+  coveragePartial: (verified: number, selected: number) =>
+    `Station niet volledig gedekt: ${verified} van ${selected} perrons geverifieerd voor de geselecteerde vervoertypen. Vertrekken verborgen. Controleer de OVAPI-integratie.`,
+  coverageUnavailable:
+    "Stationsdekking onbekend. Vertrekken verborgen. Controleer de OVAPI-integratie.",
+  coverageExpired:
+    "Informatie over stationsdekking verlopen. Vertrekken verborgen totdat de integratie deze bijwerkt.",
+  coverageStale:
+    "Bijwerken van stationsdekking mislukt. Eerder geverifieerde perrons zijn nog geldig; controleer vertrektijden voordat je vertrekt.",
+  coverageEmpty:
+    "Geen stationsperrons voor de geselecteerde vervoertypen. Controleer je favoriet in de OVAPI-integratie.",
   empty: "Geen komende vertrekken op dit bord.",
   filtered: "Geen vertrekken voor je filters.",
   noCommute:

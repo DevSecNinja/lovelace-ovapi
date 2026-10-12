@@ -1,8 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "../../src/index";
 import type { OvapiDeparturesCard } from "../../src/cards";
+import { watchBoard } from "../../src/subscription";
 import { FakeConnection, hass } from "../fixtures/connection";
-import { board, departure, groupedBoard, NOW } from "../fixtures/boards";
+import {
+  board,
+  coverage,
+  departure,
+  groupedBoard,
+  NOW,
+  unavailableStation,
+} from "../fixtures/boards";
 
 describe("cards", () => {
   beforeEach(() => {
@@ -36,6 +44,231 @@ describe("cards", () => {
     await mounted.card.updateComplete;
     return mounted;
   }
+  it.each([
+    ["ovapi-departures-card", "departures", "live"],
+    ["ovapi-departures-card", "grouped", "metadata"],
+    ["ovapi-commute-card", "departures", "live"],
+    ["ovapi-commute-card", "departures", "metadata"],
+  ])(
+    "irreversibly erases observed %s/%s/%s expiry across clock rollback",
+    async (tag, display_mode, expiry) => {
+      const { card, connection, text } = await mount(tag);
+      card.setConfig({
+        type: `custom:${tag}`,
+        display_mode,
+        entities: [board().entity_id],
+      });
+      const observer = vi.fn();
+      const stop = watchBoard(connection, board().entity_id, observer);
+      const calls = connection.calls;
+      const value = board({
+        coverage: coverage({
+          metadata_expires_at: new Date(
+            NOW + (expiry === "metadata" ? 60_000 : 86_400_000),
+          ).toISOString(),
+        }),
+      });
+      connection.emit(value.entity_id, value);
+      await card.updateComplete;
+      expect(text()).toContain("Synthetic destination");
+      expect(observer.mock.lastCall?.[0].board).toBeDefined();
+
+      // No timer runs: render is the first owner to observe the forward jump.
+      vi.setSystemTime(NOW + 30 * 60_000);
+      card.requestUpdate();
+      await card.updateComplete;
+      await card.updateComplete;
+      expect(text()).not.toContain("Synthetic destination");
+      const erased =
+        expiry === "metadata"
+          ? { status: "unavailable", coverageExpired: true }
+          : { status: "expired", coverage: value.coverage };
+      expect(observer.mock.lastCall?.[0]).toEqual(erased);
+      expect(observer.mock.lastCall?.[0]).not.toHaveProperty("board");
+      expect(vi.getTimerCount()).toBe(expiry === "metadata" ? 1 : 2);
+
+      vi.setSystemTime(NOW);
+      card.requestUpdate();
+      await card.updateComplete;
+      expect(text()).not.toContain("Synthetic destination");
+      expect(card.shadowRoot!.querySelector(".leave")).toBeNull();
+      const late = vi.fn();
+      const stopLate = watchBoard(connection, value.entity_id, late);
+      expect(late.mock.lastCall?.[0]).toEqual(erased);
+      expect(connection.calls).toBe(calls);
+
+      connection.emit(
+        value.entity_id,
+        board({
+          fetched_at: new Date(NOW + 1000).toISOString(),
+          expires_at: new Date(NOW + 29 * 60_000 + 1000).toISOString(),
+          coverage: coverage(),
+        }),
+      );
+      await card.updateComplete;
+      expect(text()).toContain("Synthetic destination");
+      stopLate();
+      stop();
+      card.remove();
+      await card.updateComplete;
+      expect(vi.getTimerCount()).toBe(0);
+    },
+  );
+  it.each([
+    ["ovapi-departures-card", "departures", "en"],
+    ["ovapi-departures-card", "grouped", "en"],
+    ["ovapi-commute-card", "departures", "en"],
+    ["ovapi-departures-card", "departures", "nl"],
+    ["ovapi-departures-card", "grouped", "nl"],
+    ["ovapi-commute-card", "departures", "nl"],
+  ])(
+    "renders honest station coverage in %s/%s/%s",
+    async (tag, display_mode, language) => {
+      const { card, connection, text } = await mount(tag);
+      card.setConfig({
+        type: `custom:${tag}`,
+        entities: [board().entity_id],
+        title: "My station",
+        display_mode,
+        language,
+      });
+      for (const [value, expected] of [
+        [
+          unavailableStation(),
+          language === "en"
+            ? "3 of 4 platforms verified"
+            : "3 van 4 perrons geverifieerd",
+        ],
+        [
+          unavailableStation({
+            status: "unavailable",
+            selected_members: 0,
+            verified_members: 0,
+            missing_members: 0,
+            metadata_fetched_at: null,
+            metadata_expires_at: null,
+          }),
+          language === "en"
+            ? "Station coverage unknown"
+            : "Stationsdekking onbekend",
+        ],
+        [
+          unavailableStation({
+            status: "complete",
+            selected_members: 0,
+            verified_members: 0,
+            missing_members: 0,
+          }),
+          language === "en"
+            ? "No station platforms match"
+            : "Geen stationsperrons",
+        ],
+        [
+          board({ status: "stale", coverage: coverage({ status: "stale" }) }),
+          language === "en"
+            ? "Station coverage update failed"
+            : "Bijwerken van stationsdekking mislukt",
+        ],
+      ] as const) {
+        connection.emit(value.entity_id, value);
+        await card.updateComplete;
+        expect(text()).toContain("My station");
+        expect(
+          card.shadowRoot!.querySelector(".coverage[role=status]")?.textContent,
+        ).toContain(expected);
+        expect(card.shadowRoot!.querySelector(".leave")).toBeNull();
+        if (value.status === "unavailable") {
+          expect(card.shadowRoot!.querySelectorAll(".departure")).toHaveLength(
+            0,
+          );
+          expect(text()).not.toContain("Synthetic destination");
+          expect(text()).not.toContain("No upcoming departures");
+          expect(text()).not.toContain("Geen komende vertrekken");
+          expect(text()).not.toContain("No catchable departure");
+        }
+      }
+      connection.emit(board().entity_id, board({ coverage: coverage() }));
+      await card.updateComplete;
+      expect(card.shadowRoot!.querySelector(".coverage")).toBeNull();
+      expect(text()).toContain("Synthetic destination");
+      connection.emit(board().entity_id, board());
+      await card.updateComplete;
+      expect(card.shadowRoot!.querySelector(".coverage")).toBeNull();
+      expect(text()).toContain("Synthetic destination");
+    },
+  );
+  it("keeps unavailable live-data status explicit alongside valid stale coverage", async () => {
+    const { card, connection, text } = await mount();
+    connection.emit(
+      board().entity_id,
+      unavailableStation({
+        status: "stale",
+        verified_members: 4,
+        missing_members: 0,
+      }),
+    );
+    await card.updateComplete;
+    expect(text()).toContain("Station coverage update failed");
+    expect(text()).toContain("Departure data unavailable");
+  });
+  it("hides departures and advice immediately at metadata expiry, including suspended render clocks", async () => {
+    const { card, connection, text } = await mount("ovapi-commute-card");
+    const snapshot = board({
+      coverage: coverage({
+        metadata_expires_at: new Date(NOW + 60_000).toISOString(),
+      }),
+    });
+    connection.emit(snapshot.entity_id, snapshot);
+    await card.updateComplete;
+    expect(card.shadowRoot!.querySelector(".leave")).not.toBeNull();
+    vi.setSystemTime(NOW + 60_000);
+    card.requestUpdate();
+    await card.updateComplete;
+    expect(text()).toContain("Station coverage information expired");
+    expect(text()).not.toContain("Synthetic destination");
+    expect(card.shadowRoot!.querySelector(".leave")).toBeNull();
+    connection.emit(snapshot.entity_id, snapshot);
+    await card.updateComplete;
+    expect(text()).toContain("Station coverage information expired");
+    expect(connection.calls).toBe(1);
+  });
+  it("clears coverage on hidden/disconnected/detached lifecycle and replaces explanations on new frames", async () => {
+    const { card, connection, text } = await mount();
+    connection.emit(board().entity_id, unavailableStation());
+    await card.updateComplete;
+    expect(text()).toContain("3 of 4");
+    const hidden = vi.spyOn(document, "hidden", "get").mockReturnValue(true);
+    document.dispatchEvent(new Event("visibilitychange"));
+    await card.updateComplete;
+    expect(text()).not.toContain("3 of 4");
+    expect(vi.getTimerCount()).toBe(0);
+    hidden.mockReturnValue(false);
+    document.dispatchEvent(new Event("visibilitychange"));
+    await card.updateComplete;
+    expect(text()).not.toContain("3 of 4");
+    connection.emit(board().entity_id, unavailableStation());
+    await card.updateComplete;
+    expect(text()).toContain("3 of 4");
+    connection.fire("disconnected");
+    await card.updateComplete;
+    expect(text()).not.toContain("3 of 4");
+    connection.fire("ready");
+    connection.emit(board().entity_id, unavailableStation());
+    await card.updateComplete;
+    connection.emit(board().entity_id, {
+      ...unavailableStation(),
+      contract_version: 2,
+    });
+    await card.updateComplete;
+    expect(text()).toContain("Cannot read");
+    expect(text()).not.toContain("3 of 4");
+    connection.emit(board().entity_id, unavailableStation());
+    await card.updateComplete;
+    card.remove();
+    await card.updateComplete;
+    expect(text()).not.toContain("3 of 4");
+    expect(vi.getTimerCount()).toBe(0);
+  });
   it("renders three next route rows, following times and cancellation clocks without cancellation countdowns", async () => {
     const { card } = await mountGrouped();
     const rows = card.shadowRoot!.querySelectorAll(".departure");
