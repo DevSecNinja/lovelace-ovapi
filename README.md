@@ -250,7 +250,9 @@ resources. Regenerate it with `mise run build`; never edit it by hand.
 The optional combined check uses a **separate temporary HA installation**, the
 real backend integration, actual HA config-flow HTTP and WebSocket APIs, the
 real HA frontend and Lovelace resource registration. Only the backend's upstream
-transport is replaced with dynamically dated synthetic data. It is not a live
+HTTP responses are replaced with dynamically dated synthetic data; actual live
+and static-source parsers still run. Unexpected HTTP GETs fail the fixture rather
+than contacting another source. It is not a live
 HA test and does not validate real stop coverage or upstream availability.
 It also opens the native Lovelace card editor with three actual synthetic sensors,
 exercises label/Space selection and an empty draft, observes the host's
@@ -261,6 +263,14 @@ With a reviewed backend checkout available, run in one terminal:
 ```sh
 OVAPI_BACKEND_PATH=/path/to/home-assistant-ovapi mise run ha-server
 ```
+
+For the station-aware backend, add `OVAPI_STATION_E2E=1`. This also provisions
+three synthetic station config entries through HA's public entry setup, using
+the backend-owned Example/Test town fixture: missing bus membership fails closed,
+metro-only coverage remains usable, and tram-only selection has zero matching
+platforms. The fixture replaces the CHB directory/gzip and v0 HTTP responses,
+not the coordinator or its station selection. This setup-to-display check does
+not claim to exercise the backend's station discovery configuration UI.
 
 After the ready message, run in another terminal:
 

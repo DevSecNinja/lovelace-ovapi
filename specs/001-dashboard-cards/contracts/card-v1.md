@@ -81,3 +81,7 @@ Unknown properties inside coverage are discarded, like unknown board properties.
 The backend deliberately withholds affected-mode station boards when known
 Amstel membership cannot be verified in v0. Cards must show the reason rather
 than hide that safety tradeoff or fabricate missing platform schedules.
+
+The shared synthetic producer cases are mirrored in
+`tests/fixtures/station-coverage-v1.json`; provenance, content hash and actual-HA
+boundary evidence are recorded in [verification.md](../verification.md).

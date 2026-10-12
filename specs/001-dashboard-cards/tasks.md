@@ -88,15 +88,15 @@ Dependencies: T028 follows T027; T029 follows T028; T030 follows T029.
 
 ## Scoped follow-up: station coverage explanations
 
-- [ ] T032 Freeze the backend-owned optional v1 coverage invariants and shared
+- [x] T032 Freeze the backend-owned optional v1 coverage invariants and shared
       synthetic fixtures; document the fail-closed compatibility tradeoff.
 - [x] T033 [US1] Validate coverage and earliest expiry; retain only whitelisted
       unavailable explanation; test legacy absence, invalid frames and lifecycle.
 - [x] T034 [US1] [US2] Add minimal EN/NL HA-native warning/status copy for both
       cards and both departure presentations; test zero-selected and no advice.
-- [ ] T035 [US3] Verify production bundle on phone/tablet, light/dark, EN/NL and
+- [x] T035 [US3] Verify production bundle on phone/tablet, light/dark, EN/NL and
       axe; perform one bounded joint actual-HA station and legacy check.
-- [ ] T036 Run required local gates, regenerate bundle, document convergence and
+- [x] T036 Run required local gates, regenerate bundle, document convergence and
       create the companion PR; send head to parent for managed Copilot review.
 
 Dependencies: T033 follows T032; T034 follows T033; T035 follows T034; T036
@@ -104,10 +104,10 @@ follows T035. No new agents, sessions, release or merge.
 
 ## Phase 6: Convergence
 
-- [ ] T037 Verify the backend-owned `station-coverage-v1.json` synthetic producer
+- [x] T037 Verify the backend-owned `station-coverage-v1.json` synthetic producer
       fixtures in consumer contract tests per FR-009 and T032 (partial); current
       consumer-authored fixtures pass but do not prove the producer boundary.
-- [ ] T038 Complete and record the bounded actual-HA station/legacy producer,
+- [x] T038 Complete and record the bounded actual-HA station/legacy producer,
       WebSocket and frontend check per FR-008, T035 and Constitution IV (partial);
       current station browser evidence is the offline component host only.
 

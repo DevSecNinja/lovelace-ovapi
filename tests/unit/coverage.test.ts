@@ -1,10 +1,30 @@
 import { describe, expect, it } from "vitest";
 import { parseBoard } from "../../src/contract";
 import { board, coverage, NOW, unavailableStation } from "../fixtures/boards";
+import producerSnapshots from "../fixtures/station-coverage-v1.json";
 
 const parse = (value: unknown) => parseBoard(value, board().entity_id, NOW);
 
 describe("optional station coverage contract", () => {
+  it.each(Object.entries(producerSnapshots))(
+    "accepts the unchanged backend-produced %s fixture",
+    (_name, snapshot) => {
+      expect(parseBoard(snapshot, snapshot.entity_id, NOW)).toEqual(snapshot);
+    },
+  );
+  it.each(Object.entries(producerSnapshots))(
+    "keeps ordinary v1 fields safe when an old consumer ignores %s coverage",
+    (_name, snapshot) => {
+      const { coverage, ...legacy } = snapshot;
+      expect(parseBoard(legacy, legacy.entity_id, NOW)).toEqual(legacy);
+      if (coverage.status === "partial" || coverage.selected_members === 0) {
+        expect(legacy.status).toBe("unavailable");
+        expect(legacy.departures).toEqual([]);
+        expect(legacy.fetched_at).toBeNull();
+        expect(legacy.expires_at).toBeNull();
+      }
+    },
+  );
   it("preserves legacy absence and whitelists the station record", () => {
     expect(parse(board())).not.toHaveProperty("coverage");
     const value = board({ coverage: coverage() });

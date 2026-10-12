@@ -1,0 +1,139 @@
+{
+  "complete": {
+    "contract_version": 1,
+    "board_id": "synthetic-station",
+    "entity_id": "sensor.synthetic_station_departure_board",
+    "stop": {"id": "chb:NL:P:example", "name": "Synthetic station"},
+    "status": "ready",
+    "fetched_at": "2030-01-15T12:00:00+00:00",
+    "expires_at": "2030-01-15T12:29:00+00:00",
+    "walking_minutes": 0,
+    "departures": [
+      {
+        "id": "station:58726aea31186f703d2930ac87253d57566c35438eaf22655911380227a4de84",
+        "line": "X1",
+        "destination": "Synthetic destination",
+        "transport": "bus",
+        "scheduled_at": "2030-01-15T12:10:00+00:00",
+        "expected_at": null,
+        "cancelled": false,
+        "delay_seconds": null
+      },
+      {
+        "id": "station:727d741bb8aa803c963f64a86cf4d47b7207a9252f2b69e600c9f4924a790452",
+        "line": "X1",
+        "destination": "Synthetic destination",
+        "transport": "metro",
+        "scheduled_at": "2030-01-15T12:11:00+00:00",
+        "expected_at": null,
+        "cancelled": false,
+        "delay_seconds": null
+      }
+    ],
+    "coverage": {
+      "status": "complete",
+      "selected_members": 2,
+      "verified_members": 2,
+      "missing_members": 0,
+      "metadata_fetched_at": "2030-01-15T12:00:00+00:00",
+      "metadata_expires_at": "2030-01-22T00:00:00+00:00"
+    }
+  },
+  "stale": {
+    "contract_version": 1,
+    "board_id": "synthetic-station",
+    "entity_id": "sensor.synthetic_station_departure_board",
+    "stop": {"id": "chb:NL:P:example", "name": "Synthetic station"},
+    "status": "stale",
+    "fetched_at": "2030-01-15T12:00:00+00:00",
+    "expires_at": "2030-01-15T12:29:00+00:00",
+    "walking_minutes": 0,
+    "departures": [
+      {
+        "id": "station:58726aea31186f703d2930ac87253d57566c35438eaf22655911380227a4de84",
+        "line": "X1",
+        "destination": "Synthetic destination",
+        "transport": "bus",
+        "scheduled_at": "2030-01-15T12:10:00+00:00",
+        "expected_at": null,
+        "cancelled": false,
+        "delay_seconds": null
+      },
+      {
+        "id": "station:727d741bb8aa803c963f64a86cf4d47b7207a9252f2b69e600c9f4924a790452",
+        "line": "X1",
+        "destination": "Synthetic destination",
+        "transport": "metro",
+        "scheduled_at": "2030-01-15T12:11:00+00:00",
+        "expected_at": null,
+        "cancelled": false,
+        "delay_seconds": null
+      }
+    ],
+    "coverage": {
+      "status": "stale",
+      "selected_members": 2,
+      "verified_members": 2,
+      "missing_members": 0,
+      "metadata_fetched_at": "2030-01-15T12:00:00+00:00",
+      "metadata_expires_at": "2030-01-22T00:00:00+00:00"
+    }
+  },
+  "partial": {
+    "contract_version": 1,
+    "board_id": "synthetic-station",
+    "entity_id": "sensor.synthetic_station_departure_board",
+    "stop": {"id": "chb:NL:P:example", "name": "Synthetic station"},
+    "status": "unavailable",
+    "fetched_at": null,
+    "expires_at": null,
+    "walking_minutes": 0,
+    "departures": [],
+    "coverage": {
+      "status": "partial",
+      "selected_members": 2,
+      "verified_members": 1,
+      "missing_members": 1,
+      "metadata_fetched_at": "2030-01-15T12:00:00+00:00",
+      "metadata_expires_at": "2030-01-22T00:00:00+00:00"
+    }
+  },
+  "zero_selected": {
+    "contract_version": 1,
+    "board_id": "synthetic-station",
+    "entity_id": "sensor.synthetic_station_departure_board",
+    "stop": {"id": "chb:NL:P:example", "name": "Synthetic station"},
+    "status": "unavailable",
+    "fetched_at": null,
+    "expires_at": null,
+    "walking_minutes": 0,
+    "departures": [],
+    "coverage": {
+      "status": "complete",
+      "selected_members": 0,
+      "verified_members": 0,
+      "missing_members": 0,
+      "metadata_fetched_at": "2030-01-15T12:00:00+00:00",
+      "metadata_expires_at": "2030-01-22T00:00:00+00:00"
+    }
+  },
+  "unavailable": {
+    "contract_version": 1,
+    "board_id": "synthetic-station",
+    "entity_id": "sensor.synthetic_station_departure_board",
+    "stop": {"id": "chb:NL:P:example", "name": "Synthetic station"},
+    "status": "unavailable",
+    "fetched_at": null,
+    "expires_at": null,
+    "walking_minutes": 0,
+    "departures": [],
+    "coverage": {
+      "status": "unavailable",
+      "selected_members": 0,
+      "verified_members": 0,
+      "missing_members": 0,
+      "metadata_fetched_at": null,
+      "metadata_expires_at": null
+    }
+  }
+}
