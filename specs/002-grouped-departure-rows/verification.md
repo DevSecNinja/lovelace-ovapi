@@ -6,7 +6,7 @@ source persistence, dependency changes, release bump or publication.
 ## Results
 
 - `mise run check`: PASS (version relationships, TypeScript and ESLint).
-- `mise run test`: PASS, 100 frontend tests and 25 Node version-guard tests.
+- `mise run test`: PASS, 104 frontend tests and 25 Node version-guard tests.
   Coverage: 100% statements/lines/functions, 99.43% branches overall;
   every source file exceeds 95% lines/functions and 90% branches.
 - `mise run browser`: PASS, 20 production-resource checks across phone/tablet
@@ -16,7 +16,7 @@ source persistence, dependency changes, release bump or publication.
   actionlint and staged secret checks).
 - `mise exec -- dprint check`: PASS.
 - `git diff --check`: PASS.
-- Build regenerated `dist/lovelace-ovapi.js`; packaging check reports 16,368 bytes
+- Build regenerated `dist/lovelace-ovapi.js`; packaging check reports 16,396 bytes
   gzip, within the existing 100 KiB limit. Wire contract and lifecycle module unchanged.
 
 Initial model/UI tests failed before implementation as expected. An early browser
@@ -67,9 +67,25 @@ planning, tasks, implementation prerequisites and convergence. No extension hook
 configured. Reviewed 8 functional requirements, 5 success criteria, 10 acceptance
 scenarios, 5 plan decisions and all 5 constitution principles against current code.
 No missing, contradictory or unrequested functionality. Two low-severity delivery
-gaps appended as T017 (final evidence, completed) and T018 (PR/CI/review, pending).
+gaps appended as T017 (final evidence) and T018 (PR/CI/review); both are completed.
+All 18 implementation/convergence tasks are complete.
 
 ## Delivery
 
-Focused PR/CI and native GitHub Copilot review are pending. The coordinator requests
-the review and relays feedback; this branch must not be merged or published here.
+Delivered [PR #3](https://github.com/DevSecNinja/lovelace-ovapi/pull/3) from current
+merged main. Implementation commit: `1b8de000754c0d557cf7a71230c8b46572c55238`.
+Initial [CI run](https://github.com/DevSecNinja/lovelace-ovapi/actions/runs/38247860141)
+passed all enabled jobs, including version/runtime contracts, shared lint and
+production frontend/offline verification with the reproducible-bundle gate.
+
+[Native GitHub Copilot review](https://github.com/DevSecNinja/lovelace-ovapi/pull/3#pullrequestreview-5490648532)
+reported one low-severity Dutch singular/plural issue. Reproduced the failing
+single-additional-cancellation case and fixed it with singular/plural labels in
+`a4ac118a053852766346299c822b9015bf302573`; four EN/NL count-1/count-2 regressions
+pass. Required local pre-commit/test/browser checks passed again; the production
+bundle was regenerated, not hand-edited.
+
+[Review-fix CI](https://github.com/DevSecNinja/lovelace-ovapi/actions/runs/38248431613)
+passed all enabled jobs on that fix. The coordinator has the exact fix SHA and
+regression evidence for replying to/resolving the review thread. Thread management
+remains with the coordinator; no merge, release or live HA modification occurred.

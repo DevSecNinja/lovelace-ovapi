@@ -49,7 +49,7 @@ preserve old configs, and verify phone/tablet light/dark layout and accessibilit
 - [x] T013 Update `README.md` and `DESIGN.md` with configuration, route/cancellation semantics and unchanged contract.
 - [x] T014 Run targeted/full gates, mechanical design detector and bounded screenshots; regenerate `dist/lovelace-ovapi.js`.
 - [x] T015 Record convergence and results in `specs/002-grouped-departure-rows/verification.md`; run required pre-commit/test/browser before commit.
-- [ ] T016 Commit/push focused PR using `.github/PULL_REQUEST_TEMPLATE.md`, monitor CI and process coordinator-relayed native Copilot feedback.
+- [x] T016 Commit/push focused PR using `.github/PULL_REQUEST_TEMPLATE.md`, monitor CI and process coordinator-relayed native Copilot feedback.
 
 ## Dependencies & Execution Order
 
@@ -75,4 +75,4 @@ confirmation; deliver one focused PR without release or live HA changes.
 ## Phase 7: Convergence
 
 - [x] T017 Complete final full-suite/pre-commit validation and record exact results and bounded visual evidence in `specs/002-grouped-departure-rows/verification.md` per T014-T015 and SC-003/SC-004 (partial).
-- [ ] T018 Complete focused PR/CI delivery and coordinator-relayed native Copilot feedback, recording the outcome in `specs/002-grouped-departure-rows/verification.md` per T016 (partial).
+- [x] T018 Complete focused PR/CI delivery and coordinator-relayed native Copilot feedback, recording the outcome in `specs/002-grouped-departure-rows/verification.md` per T016 (partial).
