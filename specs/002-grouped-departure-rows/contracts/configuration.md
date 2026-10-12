@@ -18,5 +18,10 @@ individual rows. `max_routes` defaults to five grouped rows and accepts 1-20.
 Visual editing shows the applicable limit and preserves the inactive one.
 Following times are bounded to three with no separate setting.
 
+Defaults for `display_mode` and `max_routes` apply only when the setting is omitted
+or undefined. Explicit `null` (including an empty YAML value or `~`) is invalid
+and produces the field-specific configuration error. Legacy `max_departures`
+defaulting behavior is unchanged.
+
 The backend-owned [v1 contract](../../001-dashboard-cards/contracts/card-v1.md)
 is unchanged. No new source fields, messages, refreshes or retained caches.

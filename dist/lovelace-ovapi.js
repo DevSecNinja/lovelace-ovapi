@@ -612,9 +612,9 @@ function De(e) {
 	if (!["custom:ovapi-departures-card", "custom:ovapi-commute-card"].includes(String(t.type))) throw Error("type: select an OVAPI departure or commute card");
 	let r = t.max_departures ?? 5;
 	if (!Number.isInteger(r) || Number(r) < 1 || Number(r) > 20) throw Error("max_departures: use 1 to 20");
-	let i = t.max_routes ?? 5;
+	let i = t.max_routes === void 0 ? 5 : t.max_routes;
 	if (!Number.isInteger(i) || Number(i) < 1 || Number(i) > 20) throw Error("max_routes: use 1 to 20");
-	let a = t.display_mode ?? "departures";
+	let a = t.display_mode === void 0 ? "departures" : t.display_mode;
 	if (a !== "departures" && a !== "grouped") throw Error("display_mode: use departures or grouped");
 	if (t.walking_minutes !== void 0 && (!Number.isInteger(t.walking_minutes) || Number(t.walking_minutes) < 0 || Number(t.walking_minutes) > 120)) throw Error("walking_minutes: use 0 to 120");
 	if (t.title !== void 0 && (typeof t.title != "string" || t.title.length > 120)) throw Error("title: maximum 120 characters");

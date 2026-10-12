@@ -6,7 +6,7 @@ source persistence, dependency changes, release bump or publication.
 ## Results
 
 - `mise run check`: PASS (version relationships, TypeScript and ESLint).
-- `mise run test`: PASS, 104 frontend tests and 25 Node version-guard tests.
+- `mise run test`: PASS, 107 frontend tests and 25 Node version-guard tests.
   Coverage: 100% statements/lines/functions, 99.43% branches overall;
   every source file exceeds 95% lines/functions and 90% branches.
 - `mise run browser`: PASS, 20 production-resource checks across phone/tablet
@@ -16,7 +16,7 @@ source persistence, dependency changes, release bump or publication.
   actionlint and staged secret checks).
 - `mise exec -- dprint check`: PASS.
 - `git diff --check`: PASS.
-- Build regenerated `dist/lovelace-ovapi.js`; packaging check reports 16,396 bytes
+- Build regenerated `dist/lovelace-ovapi.js`; packaging check reports 16,409 bytes
   gzip, within the existing 100 KiB limit. Wire contract and lifecycle module unchanged.
 
 Initial model/UI tests failed before implementation as expected. An early browser
@@ -68,7 +68,7 @@ configured. Reviewed 8 functional requirements, 5 success criteria, 10 acceptanc
 scenarios, 5 plan decisions and all 5 constitution principles against current code.
 No missing, contradictory or unrequested functionality. Two low-severity delivery
 gaps appended as T017 (final evidence) and T018 (PR/CI/review); both are completed.
-All 18 implementation/convergence tasks are complete.
+All 19 implementation/convergence/review tasks are complete.
 
 ## Delivery
 
@@ -89,3 +89,22 @@ bundle was regenerated, not hand-edited.
 passed all enabled jobs on that fix. The coordinator has the exact fix SHA and
 regression evidence for replying to/resolving the review thread. Thread management
 remains with the coordinator; no merge, release or live HA modification occurred.
+
+## Latest-head review: explicit null configuration
+
+The requested rereview found that explicit `null` for `max_routes` or
+`display_mode` silently selected defaults, contrary to the new settings' types.
+Reproduced both failures, then changed only these two defaults to apply when
+undefined. Added direct-null and parsed YAML empty/`null`/`~` cases with exact
+field-specific errors; explicit undefined and legacy `max_departures: null`
+continue to default as before. Existing omitted-setting and zero-rejection tests
+remain in place. No editor behavior, legacy configuration default or wire field
+was changed.
+
+- `mise exec -- npx vitest run tests/unit/model.test.ts --reporter=dot`: PASS,
+  41 model tests after reproducing the two failures.
+- `mise run test`: PASS, 107 frontend and 25 Node version-guard tests.
+- `mise run browser`: PASS, 20 checks and regenerated 16,409-byte gzip bundle.
+
+The rereview finding is summary-only; no new inline thread requires resolution.
+The coordinator posts the fix/CI evidence as a top-level PR comment.

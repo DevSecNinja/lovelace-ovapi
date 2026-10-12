@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { parse as parseYaml } from "yaml";
 import {
   parseConfig,
   visibleDepartures,
@@ -52,6 +53,34 @@ describe("config and time model", () => {
     { max_departures: 21 },
   ])("rejects invalid config %j", (patch) => {
     expect(() => parseConfig({ ...config, ...patch })).toThrow();
+  });
+
+  it.each([
+    ["max_routes", "max_routes: use 1 to 20"],
+    ["display_mode", "display_mode: use departures or grouped"],
+  ])("rejects explicit null and empty YAML values for %s", (field, message) => {
+    expect(() => parseConfig({ ...config, [field]: null })).toThrow(message);
+    for (const value of ["", "null", "~"]) {
+      const yaml: unknown = parseYaml(
+        `type: custom:ovapi-departures-card\nentities:\n  - sensor.amsterdam_departures\n${field}: ${value}\n`,
+      );
+      expect(() => parseConfig(yaml)).toThrow(message);
+    }
+  });
+
+  it("defaults undefined new settings and preserves legacy max_departures null behavior", () => {
+    expect(
+      parseConfig({
+        ...config,
+        display_mode: undefined,
+        max_routes: undefined,
+        max_departures: null,
+      }),
+    ).toMatchObject({
+      display_mode: "departures",
+      max_routes: 5,
+      max_departures: 5,
+    });
   });
 
   describe("grouped departures", () => {

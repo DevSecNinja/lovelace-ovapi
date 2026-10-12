@@ -76,3 +76,7 @@ confirmation; deliver one focused PR without release or live HA changes.
 
 - [x] T017 Complete final full-suite/pre-commit validation and record exact results and bounded visual evidence in `specs/002-grouped-departure-rows/verification.md` per T014-T015 and SC-003/SC-004 (partial).
 - [x] T018 Complete focused PR/CI delivery and coordinator-relayed native Copilot feedback, recording the outcome in `specs/002-grouped-departure-rows/verification.md` per T016 (partial).
+
+## Phase 8: Latest-head review follow-up
+
+- [x] T019 Reject explicit null and empty YAML values for new settings in `src/model.ts`, preserve omitted defaults and legacy `max_departures` behavior, add regressions in `tests/unit/model.test.ts`, rebuild and verify per FR-001/FR-006 and the configuration contract.

@@ -44,14 +44,15 @@ export function parseConfig(value: unknown): CardConfig {
   const max = c.max_departures ?? 5;
   if (!Number.isInteger(max) || Number(max) < 1 || Number(max) > 20)
     throw new Error("max_departures: use 1 to 20");
-  const maxRoutes = c.max_routes ?? 5;
+  const maxRoutes = c.max_routes === undefined ? 5 : c.max_routes;
   if (
     !Number.isInteger(maxRoutes) ||
     Number(maxRoutes) < 1 ||
     Number(maxRoutes) > 20
   )
     throw new Error("max_routes: use 1 to 20");
-  const displayMode = c.display_mode ?? "departures";
+  const displayMode =
+    c.display_mode === undefined ? "departures" : c.display_mode;
   if (displayMode !== "departures" && displayMode !== "grouped")
     throw new Error("display_mode: use departures or grouped");
   if (
