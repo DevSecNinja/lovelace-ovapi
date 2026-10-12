@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OVAPI cards · synthetic demonstration</title>
+    <style>
+      :root {
+        font-family: system-ui, sans-serif;
+        --primary-text-color: #212121;
+        --secondary-text-color: #595959;
+        --primary-color: #006b99;
+        --card-background-color: #fff;
+        --divider-color: #d7dadd;
+        background: #f3f4f5;
+        color: var(--primary-text-color);
+      }
+      :root.dark {
+        --primary-text-color: #f1f1f1;
+        --secondary-text-color: #b8bec4;
+        --primary-color: #77c7ef;
+        --card-background-color: #1c1f22;
+        --divider-color: #42464a;
+        background: #111416;
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        padding: 24px;
+      }
+      main {
+        max-width: 1024px;
+        margin: auto;
+      }
+      h1 {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin: 0 0 8px;
+      }
+      .notice {
+        color: var(--secondary-text-color);
+        margin: 0 0 24px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+        gap: 20px;
+        align-items: start;
+      }
+      .grid > * {
+        min-width: 0;
+      }
+      #editor {
+        margin-top: 24px;
+        max-width: 500px;
+      }
+      @media (max-width: 650px) {
+        body {
+          padding: 16px;
+        }
+        .grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+    </style>
+    <script type="module" src="/dist/lovelace-ovapi.js"></script>
+    <script type="module" src="./main.ts"></script>
+  </head>
+  <body>
+    <main>
+      <h1>Your next departure</h1>
+      <p class="notice">
+        Synthetic demonstration · not live transport information
+      </p>
+      <div class="grid" id="cards"></div>
+      <div id="editor"></div>
+    </main>
+  </body>
+</html>

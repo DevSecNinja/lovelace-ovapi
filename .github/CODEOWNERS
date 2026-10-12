@@ -1,0 +1,8 @@
+# Derived from DevSecNinja/repo-starter; review product changes.
+* @DevSecNinja
+/.github/CODEOWNERS @DevSecNinja
+/.github/workflows/*.yml
+/.mise.toml
+/package.json
+/package-lock.json
+/tests/ha-requirements.txt

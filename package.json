@@ -1,0 +1,37 @@
+{
+  "name": "lovelace-ovapi",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.23.3"
+  },
+  "scripts": {
+    "build": "vite build && node scripts/check-package.mjs",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src tests *.ts scripts/*.mjs",
+    "format": "prettier --write src tests *.ts package.json tsconfig.json hacs.json scripts",
+    "check": "npm run typecheck && npm run lint",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:browser": "npm run build && playwright test",
+    "harness": "vite --host 127.0.0.1 --port 4173 --strictPort"
+  },
+  "dependencies": {
+    "lit": "3.3.3"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.64.0",
+    "@types/node": "26.6.5",
+    "@vitest/coverage-v8": "5.0.3",
+    "eslint": "10.12.0",
+    "happy-dom": "21.0.1",
+    "prettier": "3.9.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.1",
+    "vite": "8.3.4",
+    "vitest": "5.0.3"
+  }
+}
