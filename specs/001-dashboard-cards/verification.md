@@ -315,3 +315,23 @@ meaningfully reordered arrays and changed nested scalar values.
 
 The coordinator owns review-thread replies/resolution and any rereview request.
 No merge, release, live HA update or backend modification occurred.
+
+Correction commit: `c9404f3512d5dbf8e71d9c15159bb3e857b1ffac`.
+[Correction CI](https://github.com/DevSecNinja/lovelace-ovapi/actions/runs/38258875042)
+passed every enabled job. Required pre-commit hooks (explicitly and during
+commit), staged diff hygiene and reproducible-bundle checks also passed again.
+All T027–T031 implementation and review-correction work is complete; the
+coordinator received the exact commit, red/green evidence and CI result for the
+sole review thread. The PR remains open, with thread management owned by the
+coordinator rather than duplicated here.
+
+### Final scoped convergence
+
+Checked the current feature's 8 functional requirements, 5 success criteria,
+11 acceptance scenarios, 7 repair-plan decisions and all 5 constitution
+principles against current source and passing regression evidence. Core model,
+contract, lifecycle, registration and grouped presentation remain compatible;
+the new editor acceptance cases and nested-echo correction are implemented.
+No remaining buildable gap or unrequested product work was found. No empty
+convergence phase or duplicate task was appended. The existing requirements
+checklist remains untouched, and no extension hooks are configured.

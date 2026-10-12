@@ -77,7 +77,7 @@ full production-browser and actual-HA checks.
       toggles; preserve valid config order, invalid drafts and localized errors.
 - [x] T029 [US3] Complete component/browser edge cases and bounded actual HA
       Lovelace editor feedback evidence without live/backend changes.
-- [ ] T030 Run required local gates, regenerate the bundle, record convergence
+- [x] T030 Run required local gates, regenerate the bundle, record convergence
       and create a focused new PR; verify hosted CI and process Copilot feedback.
 
 Dependencies: T028 follows T027; T029 follows T028; T030 follows T029.
