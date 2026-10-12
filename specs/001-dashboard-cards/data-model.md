@@ -18,3 +18,18 @@ breaker. Elapsed departures are omitted. Commute picks earliest noncancelled
 departure whose leave instant has not elapsed. Stale boards never provide an
 imperative leave instruction. Absolute instants drive math; HA timezone drives
 display. Retention uses source expiry, never locally extended age.
+
+Optional station `StationCoverage` contains only status, three bounded member
+counts and two static UTC metadata dates. The parser whitelists it and enforces
+the producer's fail-closed status matrix. `BoardView.coverage` is independent of
+`BoardView.board`: unavailable never retains a board or departures. Live expiry
+discards the board; metadata expiry discards both and replaces coverage with the
+boolean `coverageExpired` reason. Disconnect/removal/hidden page clears everything.
+
+One shared deadline timer targets the earliest live or static expiry; it is not
+an upstream refresh or polling timer. Very distant static deadlines are bounded
+to the platform timeout limit and rechecked, never overflowed. A shared pure
+`currentBoardView` guard also checks cached subscription attachment and rendering
+after clock suspension. Duplicate full replacements retain their origin dates.
+Legacy snapshots lacking coverage and all existing editor/config types remain
+unchanged.

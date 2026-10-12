@@ -1,6 +1,6 @@
-import { board, groupedBoard } from "../fixtures/boards";
+import { board, coverage, groupedBoard } from "../fixtures/boards";
 import { FakeConnection, hass } from "../fixtures/connection";
-import type { BoardSnapshot } from "../../src/contract";
+import type { BoardSnapshot, StationCoverage } from "../../src/contract";
 import type { OvapiDeparturesCard } from "../../src/cards";
 import type { OvapiCardEditor } from "../../src/editor";
 
@@ -88,6 +88,38 @@ function emit(status: BoardSnapshot["status"] = "ready") {
   });
 }
 emit();
+function station(status: StationCoverage["status"] | "zero" | "expiring") {
+  entities.forEach((entity, index) => {
+    const b = snapshot(entity, index === 1);
+    b.coverage = coverage({
+      status: status === "zero" || status === "expiring" ? "complete" : status,
+      metadata_fetched_at: new Date(Date.now() - 86_400_000).toISOString(),
+      metadata_expires_at: new Date(
+        Date.now() + (status === "expiring" ? 1000 : 6 * 86_400_000),
+      ).toISOString(),
+    });
+    if (status === "partial") {
+      b.coverage.verified_members = 3;
+      b.coverage.missing_members = 1;
+    }
+    if (status === "unavailable" || status === "zero") {
+      b.coverage.selected_members = 0;
+      b.coverage.verified_members = 0;
+      if (status === "unavailable") {
+        b.coverage.metadata_fetched_at = null;
+        b.coverage.metadata_expires_at = null;
+      }
+    }
+    if (status === "partial" || status === "unavailable" || status === "zero") {
+      b.status = "unavailable";
+      b.departures = [];
+      b.fetched_at = null;
+      b.expires_at = null;
+    } else if (status === "stale") b.status = "stale";
+    connection.emit(entity, b);
+  });
+}
+if (params.has("coverage")) station("partial");
 const configChanges: Record<string, unknown>[] = [];
 let editor: OvapiCardEditor | undefined;
 if (params.has("editor")) {
@@ -120,6 +152,7 @@ declare global {
       configChanges: typeof configChanges;
       config?: unknown;
       emit: typeof emit;
+      station: typeof station;
       empty: () => void;
       expireSoon: () => void;
       remove: () => void;
@@ -132,6 +165,7 @@ window.demo = {
   editor,
   configChanges,
   emit,
+  station,
   empty: () =>
     entities.forEach((e) =>
       connection.emit(e, { ...snapshot(e), departures: [] }),

@@ -1,5 +1,10 @@
 import { parseBoard } from "./contract";
-import type { BoardSnapshot, HAConnection, Unsubscribe } from "./contract";
+import type {
+  BoardSnapshot,
+  HAConnection,
+  StationCoverage,
+  Unsubscribe,
+} from "./contract";
 
 export type ViewStatus =
   | "loading"
@@ -12,8 +17,33 @@ export type ViewStatus =
 export interface BoardView {
   status: ViewStatus;
   board?: BoardSnapshot;
+  coverage?: StationCoverage;
+  coverageExpired?: true;
 }
 type Listener = (view: BoardView) => void;
+
+export function currentBoardView(view: BoardView, now: number): BoardView {
+  if (
+    view.coverage?.metadata_expires_at &&
+    Date.parse(view.coverage.metadata_expires_at) <= now
+  )
+    return { status: "unavailable", coverageExpired: true };
+  if (view.board && Date.parse(view.board.expires_at!) <= now)
+    return {
+      status: "expired",
+      ...(view.coverage ? { coverage: view.coverage } : {}),
+    };
+  return view;
+}
+
+function deadline(view: BoardView): number {
+  return Math.min(
+    view.board ? Date.parse(view.board.expires_at!) : Infinity,
+    view.coverage?.metadata_expires_at
+      ? Date.parse(view.coverage.metadata_expires_at)
+      : Infinity,
+  );
+}
 
 const connections = new WeakMap<HAConnection, Map<string, BoardSubscription>>();
 
@@ -57,8 +87,14 @@ class BoardSubscription {
   private publish(view: BoardView): void {
     clearTimeout(this.timer);
     this.timer = undefined;
-    this.view = view;
-    this.listeners.forEach((listener) => listener(view));
+    this.view = currentBoardView(view, Date.now());
+    this.listeners.forEach((listener) => listener(this.view));
+    const remaining = deadline(this.view) - Date.now();
+    if (Number.isFinite(remaining))
+      this.timer = setTimeout(
+        () => this.publish(this.view),
+        Math.min(remaining, 2_147_483_647),
+      );
   }
 
   private disconnected = (): void => {
@@ -76,29 +112,16 @@ class BoardSubscription {
       this.publish({ status: "error" });
       return;
     }
-    if (board.status === "unavailable") {
-      this.publish({ status: "unavailable" });
-      return;
-    }
-    const remaining = Date.parse(board.expires_at!) - Date.now();
-    if (remaining <= 0) {
-      this.publish({ status: "expired" });
-      return;
-    }
-    this.publish({ status: board.status, board });
-    this.timer = setTimeout(
-      () => this.publish({ status: "expired" }),
-      remaining,
-    );
+    this.publish({
+      status: board.status,
+      ...(board.status === "unavailable" ? {} : { board }),
+      ...(board.coverage ? { coverage: board.coverage } : {}),
+    });
   };
 
   add(listener: Listener): void {
     this.listeners.add(listener);
-    if (
-      this.view.board &&
-      Date.parse(this.view.board.expires_at!) <= Date.now()
-    )
-      this.publish({ status: "expired" });
+    if (deadline(this.view) <= Date.now()) this.publish(this.view);
     else listener(this.view);
   }
 

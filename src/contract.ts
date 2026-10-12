@@ -27,6 +27,16 @@ export interface BoardSnapshot {
   expires_at: string | null;
   walking_minutes: number;
   departures: Departure[];
+  coverage?: StationCoverage;
+}
+
+export interface StationCoverage {
+  status: "complete" | "partial" | "stale" | "unavailable";
+  selected_members: number;
+  verified_members: number;
+  missing_members: number;
+  metadata_fetched_at: string | null;
+  metadata_expires_at: string | null;
 }
 
 export type Unsubscribe = () => Promise<void>;
@@ -78,6 +88,75 @@ function instant(value: unknown): string {
   )
     throw new Error("Invalid instant");
   return result;
+}
+
+function metadataInstant(value: unknown): string {
+  const result = instant(value);
+  if (
+    !/(?:Z|\+00:00)$/.test(result) ||
+    new Date(result).toISOString().slice(0, 19) !== result.slice(0, 19)
+  )
+    throw new Error("Invalid metadata UTC instant");
+  return result;
+}
+
+function memberCount(value: unknown): number {
+  if (
+    typeof value !== "number" ||
+    !Number.isInteger(value) ||
+    value < 0 ||
+    value > 30
+  )
+    throw new Error("Invalid coverage count");
+  return value;
+}
+
+function stationCoverage(
+  value: unknown,
+  boardStatus: BoardSnapshot["status"],
+  now: number,
+): StationCoverage {
+  const c = record(value);
+  if (
+    c.status !== "complete" &&
+    c.status !== "partial" &&
+    c.status !== "stale" &&
+    c.status !== "unavailable"
+  )
+    throw new Error("Invalid coverage status");
+  const selected = memberCount(c.selected_members);
+  const verified = memberCount(c.verified_members);
+  const missing = memberCount(c.missing_members);
+  const fetched =
+    c.metadata_fetched_at === null
+      ? null
+      : metadataInstant(c.metadata_fetched_at);
+  const expires =
+    c.metadata_expires_at === null
+      ? null
+      : metadataInstant(c.metadata_expires_at);
+  if (
+    verified + missing !== selected ||
+    (c.status === "partial" ? missing === 0 : missing !== 0) ||
+    (c.status === "unavailable"
+      ? selected !== 0 || fetched !== null || expires !== null
+      : fetched === null ||
+        expires === null ||
+        Date.parse(expires) <= Date.parse(fetched) ||
+        Date.parse(fetched) > now + 60_000) ||
+    ((c.status === "partial" || c.status === "unavailable" || selected === 0) &&
+      boardStatus !== "unavailable") ||
+    (c.status === "stale" && boardStatus === "ready")
+  )
+    throw new Error("Inconsistent station coverage");
+  return {
+    status: c.status,
+    selected_members: selected,
+    verified_members: verified,
+    missing_members: missing,
+    metadata_fetched_at: fetched,
+    metadata_expires_at: expires,
+  };
 }
 
 function departure(value: unknown): Departure {
@@ -145,5 +224,14 @@ export function parseBoard(
     expires_at: expires,
     walking_minutes: b.walking_minutes as number,
     departures: b.departures.map(departure),
+    ...(Object.hasOwn(b, "coverage")
+      ? {
+          coverage: stationCoverage(
+            b.coverage,
+            b.status as BoardSnapshot["status"],
+            now,
+          ),
+        }
+      : {}),
   };
 }

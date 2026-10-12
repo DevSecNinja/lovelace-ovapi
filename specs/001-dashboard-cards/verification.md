@@ -1,5 +1,42 @@
 # Verification and convergence
 
+## Station coverage companion (2026-10-12, in progress)
+
+New branch `devsecninja-station-coverage-indicator` starts at merged main
+`e3d8a5cd4f5430ac07c8279c02cb51e7e78a3069`, preserving the merged favourite-selection
+fix. Existing official Spec Kit 1.1.3 feature artifacts were extended in place;
+the implement skill, prerequisite script and all-checked requirements gate were
+used. No extension hooks are installed; no generated tool/provenance changes.
+
+The coverage regression suite failed before implementation (58 assertions),
+then passed with optional-field whitelisting, strict count/date/status validation,
+independent static/live deadlines and small unavailable explanations. Additional
+cases exercise duplicate frames, shared subscribers, suspended clocks, timer
+overflow bounds, source erasure, localized zero-selected/partial/unknown/stale
+states, no commute advice and unchanged single-point behavior.
+
+| Command                     | Result                                                                                             |
+| --------------------------- | -------------------------------------------------------------------------------------------------- |
+| `mise run lint`             | PASS: formatting, YAML, actions, zizmor, versions, typecheck, ESLint                               |
+| `mise run test`             | PASS: 194 frontend tests and 25 Node guards; all per-file thresholds                               |
+| `mise run browser`          | PASS: 40 production-bundle checks; phone/tablet, light/dark, EN/NL, axe, no extra requests/storage |
+| `mise run ha-versions`      | PASS: existing actual HA/frontend/Python pinned runtime preflight                                  |
+| `mise run ha-version-tests` | PASS: 7 Python runtime guard tests                                                                 |
+
+Coverage: 100% statements/lines/functions and 99.33% branches. Rebuilt HACS bundle:
+18,876 bytes gzip, below 100 KiB. No dependency, lockfile, CI, release or protocol
+version changes. The editor and grouping implementations are unchanged.
+
+One batched visual inspection of phone/tablet light/dark coverage screenshots
+in ignored `test-results/` found readable wrapped EN/NL status text and no
+overflow. Mechanical Impeccable check returned `[]`. No redesign or extra
+polishing pass. Screenshots remain local.
+
+**Pending:** copy/verify the backend-owned synthetic producer fixture, then run
+one coordinated bounded actual-HA station/legacy producer-consumer check against
+the backend worktree. The current browser evidence is the component host, not
+actual HA. Pre-commit with staged changes and final delivery remain outstanding.
+
 Verified 2026-10-12 in the isolated `devsecninja-ovapi-dashboard-cards` worktree.
 No release, package publication, merge or live Home Assistant change.
 

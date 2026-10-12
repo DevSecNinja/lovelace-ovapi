@@ -11,7 +11,7 @@ import {
 } from "./model";
 import type { CardConfig, DepartureGroup } from "./model";
 import { clock, labels } from "./localize";
-import { watchBoard } from "./subscription";
+import { currentBoardView, watchBoard } from "./subscription";
 import type { BoardView } from "./subscription";
 import { styles } from "./styles";
 import "./editor";
@@ -135,7 +135,10 @@ export class OvapiDeparturesCard extends LitElement {
           </h2>
         </header>
         ${this.config.entities.map((entity) => {
-          const view = this.views.get(entity) ?? { status: "loading" };
+          const view = currentBoardView(
+            this.views.get(entity) ?? { status: "loading" },
+            Date.now(),
+          );
           const board = view.board;
           if (
             !board ||
@@ -144,11 +147,20 @@ export class OvapiDeparturesCard extends LitElement {
             Date.parse(board.expires_at!) <= Date.now()
           ) {
             const status = board ? "expired" : view.status;
+            const coverage =
+              this.isConnected && !this.paused
+                ? this.renderCoverage(view)
+                : nothing;
             return html`<section>
               <h3>${entity}</h3>
-              <p class="message" role="status">
-                ${t[status === "ready" || status === "stale" ? "loading" : status]}
-              </p>
+              ${coverage}
+              ${
+                coverage === nothing || view.coverage?.status === "stale"
+                  ? html`<p class="message" role="status">
+                      ${t[status === "ready" || status === "stale" ? "loading" : status]}
+                    </p>`
+                  : nothing
+              }
             </section>`;
           }
           return this.renderBoard(board);
@@ -168,8 +180,31 @@ export class OvapiDeparturesCard extends LitElement {
         >
       </p>
       ${board.status === "stale" ? html`<p class="message warning">${t.staleAdvice}</p>` : nothing}
+      ${this.renderCoverage({ status: board.status, coverage: board.coverage })}
       ${this.commute ? this.renderCommute(board) : this.renderDepartures(board)}
     </section>`;
+  }
+
+  private renderCoverage(view: BoardView) {
+    const t = labels(this.config!, this.ha);
+    const coverage = view.coverage;
+    const message = view.coverageExpired
+      ? t.coverageExpired
+      : coverage?.status === "unavailable"
+        ? t.coverageUnavailable
+        : coverage?.status === "partial"
+          ? t.coveragePartial(
+              coverage.verified_members,
+              coverage.selected_members,
+            )
+          : coverage?.selected_members === 0
+            ? t.coverageEmpty
+            : coverage?.status === "stale"
+              ? t.coverageStale
+              : null;
+    return message
+      ? html`<p class="message warning coverage" role="status">${message}</p>`
+      : nothing;
   }
 
   private renderDepartures(board: BoardSnapshot) {

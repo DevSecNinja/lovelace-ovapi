@@ -173,6 +173,37 @@ triggering an upstream fetch. No departure payload is written to browser storage
 logs, files or HA state attributes. A fixed cleanup warning contains no source data.
 The backend owns upstream policy enforcement and omits incomplete display records.
 
+### Station coverage
+
+With a station-aware backend, the optional v1 coverage field adds explanations
+without changing existing single-timing-point cards or requiring equal release
+versions. Coverage counts unique station platforms/quays for the favourite's
+selected bus/tram/metro modes, not active journeys or lines.
+
+- **Station coverage incomplete:** shows verified/selected platform counts.
+  All departures and commute advice are withheld, including in grouped mode.
+- **Station coverage unknown/expired:** no departures are displayed until the
+  integration supplies verified, unexpired membership and live data.
+- **Station coverage update failed:** previously verified metadata is still
+  valid, but any retained departures remain stale and cannot suggest leaving.
+- **No station platforms match the selected transport types:** complete metadata
+  with zero selected platforms, not a claim that no service exists. Review the
+  favourite's transport selection in the integration.
+
+The backend intentionally fails closed for old cards too: partial or unverifiable
+station coverage sends an ordinary unavailable board with empty departures and
+null live timestamps. For example, a known Amstel quay missing from v0 can make
+the affected mode unavailable until verified; this limitation is surfaced, not
+silently omitted. Missing bus membership does not invalidate a metro-only board.
+Cards never fetch station metadata or v0 schedules themselves.
+
+Static station metadata has its own expiry, independent of the 29-minute live
+departure limit. The first deadline removes departures. The small validated
+coverage explanation may survive live-data expiry until its own deadline;
+expired metadata counts/dates are erased. Replayed/cached snapshots never reset
+either deadline. Existing hidden-page, disconnect and removal cleanup clears
+coverage too. No metadata or departures are persisted in browser storage.
+
 See the [versioned contract](specs/001-dashboard-cards/contracts/card-v1.md).
 Do not attach live source payloads when reporting a problem; use synthetic examples.
 
@@ -202,6 +233,7 @@ Screenshots are local ignored artifacts under `test-results/`, never uploaded.
 `mise exec -- npm run harness` serves the labelled synthetic demo on loopback.
 Use `/tests/harness/?grouped&editor` for grouped rows and the visual editor;
 add `theme=dark&language=nl` for the Dutch dark-theme preview.
+Add `coverage` to preview the synthetic incomplete-station warning.
 It is a component harness, **not** a full Home Assistant E2E.
 
 Unit/component tests use synthetic data and fake clocks. Per-file coverage gates

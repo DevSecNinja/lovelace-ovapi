@@ -82,3 +82,31 @@ keep it explicitly distinct from the synthetic component host.
 
 Constitution check: all five principles retained; no backend contract, source
 retention, live HA, upstream requests, release or permission changes.
+
+## Scoped follow-up: station coverage explanations
+
+Branch `devsecninja-station-coverage-indicator`, based on merged main
+`e3d8a5cd4f5430ac07c8279c02cb51e7e78a3069`. Extend this feature's honest-state
+requirements rather than creating a new presentation or configuration version.
+Coordinate the optional additive v1 contract and synthetic fixtures with the
+backend owner before finalizing validation.
+
+Whitelist the small coverage record separately in `BoardView` when unavailable
+so source payloads remain discarded. Reuse the existing single subscription
+deadline timer at the earliest live/metadata deadline and the existing render
+clock guard; no polling timer, HTTP, dependency or persistence. Local metadata
+expiry removes counts/dates along with departures and leaves only a generic
+expired-coverage reason. All lifecycle cleanup clears that reason too.
+
+Reuse native `.message`/`.warning` text and `role=status`. Add EN/NL copy for partial
+verified/selected quay counts, unavailable/expired metadata, failed metadata
+refresh and no quays matching selected transport modes. Complete nonzero boards
+keep their existing presentation. Ordinary stale suppresses commute advice.
+Do not alter editor identity, config echoes, grouping, picker/version handling
+or release numbers.
+
+Constitution check: all five principles retained. Static membership metadata
+and live departures have distinct deadlines; no source-data retention exception.
+Expired metadata cannot extend or revive source data. Verification includes
+producer-shaped fixtures, per-file coverage, production bundle/browser/axe and a
+joint isolated HA run with the backend, never live HA or live OVAPI.

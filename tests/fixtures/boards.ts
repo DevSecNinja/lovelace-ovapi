@@ -1,6 +1,41 @@
-import type { BoardSnapshot, Departure } from "../../src/contract";
+import type {
+  BoardSnapshot,
+  Departure,
+  StationCoverage,
+} from "../../src/contract";
 
 export const NOW = Date.parse("2030-01-15T12:00:00Z");
+
+export function coverage(
+  overrides: Partial<StationCoverage> = {},
+): StationCoverage {
+  return {
+    status: "complete",
+    selected_members: 4,
+    verified_members: 4,
+    missing_members: 0,
+    metadata_fetched_at: "2030-01-14T12:00:00Z",
+    metadata_expires_at: "2030-01-21T12:00:00+00:00",
+    ...overrides,
+  };
+}
+
+export function unavailableStation(
+  overrides: Partial<StationCoverage> = {},
+): BoardSnapshot {
+  return board({
+    status: "unavailable",
+    fetched_at: null,
+    expires_at: null,
+    departures: [],
+    coverage: coverage({
+      status: "partial",
+      verified_members: 3,
+      missing_members: 1,
+      ...overrides,
+    }),
+  });
+}
 
 export function departure(
   minutes: number,
