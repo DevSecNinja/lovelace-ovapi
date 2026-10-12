@@ -7,10 +7,23 @@ import { parseConfig } from "./model";
 import { labels } from "./localize";
 import { styles } from "./styles";
 
+function configKey(config: Record<string, unknown>): string {
+  return JSON.stringify(config, (_key, value: unknown) => {
+    if (value === null || typeof value !== "object" || Array.isArray(value))
+      return value;
+    const object = record(value);
+    return Object.fromEntries(
+      Object.keys(object)
+        .sort()
+        .map((key) => [key, object[key]]),
+    );
+  });
+}
+
 export class OvapiCardEditor extends LitElement {
   static styles = styles;
   private config: Record<string, unknown> = {};
-  private acceptedConfig?: Record<string, unknown>;
+  private acceptedConfig?: string;
   private ha?: HomeAssistant;
   private error = "";
   set hass(hass: HomeAssistant) {
@@ -19,20 +32,11 @@ export class OvapiCardEditor extends LitElement {
   }
   setConfig(config: unknown): void {
     const next = { ...record(config) };
-    const accepted = this.acceptedConfig;
+    const key = configKey(next);
     // HA echoes the last valid config; do not replace an unfinished local draft.
-    if (
-      accepted &&
-      Object.keys(next).length === Object.keys(accepted).length &&
-      Object.entries(next).every(
-        ([key, value]) =>
-          Object.hasOwn(accepted, key) &&
-          JSON.stringify(value) === JSON.stringify(accepted[key]),
-      )
-    )
-      return;
+    if (key === this.acceptedConfig) return;
     this.config = next;
-    this.acceptedConfig = next;
+    this.acceptedConfig = key;
     this.error = "";
     this.requestUpdate();
   }
@@ -74,7 +78,7 @@ export class OvapiCardEditor extends LitElement {
     try {
       parseConfig(next);
       this.error = "";
-      this.acceptedConfig = next;
+      this.acceptedConfig = configKey(next);
       this.dispatchEvent(
         new CustomEvent("config-changed", {
           detail: { config: next },

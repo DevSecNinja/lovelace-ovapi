@@ -81,3 +81,7 @@ full production-browser and actual-HA checks.
       and create a focused new PR; verify hosted CI and process Copilot feedback.
 
 Dependencies: T028 follows T027; T029 follows T028; T030 follows T029.
+
+- [x] T031 Reproduce and fix the native Copilot review's nested-object echo
+      finding; preserve meaningful array order and nested changes, then rerun
+      required gates and report the fix for parent-managed thread resolution.

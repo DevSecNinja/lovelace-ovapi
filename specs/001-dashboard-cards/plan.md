@@ -71,6 +71,8 @@ retain an empty draft with the existing validation boundary. Ignore equivalent
 HA echoes of the last accepted config (including reordered object keys), but
 accept different external configs and clear stale errors. Never emit invalid
 drafts. No general state-management layer or new dependency is needed.
+The echo comparison canonicalizes object keys at every nesting level, including
+objects in arrays; array order and changed nested values remain significant.
 
 Extend browser and component regressions for label/Space, rapid native clicks,
 row identity/focus, config feedback/reopen, limits, missing/unavailable sensors,

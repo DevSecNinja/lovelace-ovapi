@@ -359,6 +359,71 @@ describe("visual editor", () => {
     expect(changes).toEqual([]);
   });
 
+  it("ignores nested object key order in echoes but respects array order and changed nested values", async () => {
+    const { editor, config, changes, checkbox } = await favourites([
+      "sensor.a",
+    ]);
+    const visibility = [
+      { condition: "state", entity: "input_boolean.show", state: "on" },
+      { condition: "screen", media_query: "(min-width: 390px)" },
+    ];
+    const original = {
+      ...config,
+      view_layout: {
+        grid_area: "main",
+        options: { columns: 2, rows: 3 },
+        extra: null,
+      },
+      visibility,
+    };
+    editor.setConfig(original);
+    await editor.updateComplete;
+    checkbox("sensor.a").click();
+    await editor.updateComplete;
+    editor.setConfig({
+      ...config,
+      visibility: [
+        { state: "on", entity: "input_boolean.show", condition: "state" },
+        { media_query: "(min-width: 390px)", condition: "screen" },
+      ],
+      view_layout: {
+        extra: null,
+        options: { rows: 3, columns: 2 },
+        grid_area: "main",
+      },
+    });
+    await editor.updateComplete;
+    expect(checkbox("sensor.a").checked).toBe(false);
+    expect(editor.shadowRoot!.querySelector("[role=alert]")).not.toBeNull();
+    expect(changes).toEqual([]);
+    checkbox("sensor.b").click();
+    await editor.updateComplete;
+    expect(changes).toEqual([{ ...original, entities: ["sensor.b"] }]);
+    checkbox("sensor.b").click();
+    await editor.updateComplete;
+    const reordered = {
+      ...original,
+      entities: ["sensor.b"],
+      visibility: [...visibility].reverse(),
+    };
+    editor.setConfig(reordered);
+    await editor.updateComplete;
+    expect(checkbox("sensor.b").checked).toBe(true);
+    expect(editor.shadowRoot!.querySelector("[role=alert]")).toBeNull();
+    checkbox("sensor.b").click();
+    await editor.updateComplete;
+    editor.setConfig({
+      ...reordered,
+      view_layout: {
+        ...original.view_layout,
+        options: { columns: 4, rows: 3 },
+      },
+    });
+    await editor.updateComplete;
+    expect(checkbox("sensor.b").checked).toBe(true);
+    expect(editor.shadowRoot!.querySelector("[role=alert]")).toBeNull();
+  });
+
   it("restores a rejected thirteenth native checkbox toggle and keeps missing sensors removable", async () => {
     const entities = Array.from(
       { length: 12 },

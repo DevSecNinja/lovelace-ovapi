@@ -282,3 +282,36 @@ criteria, plan and T027–T030 record this scoped bug; no feature reinitializati
 or unexecuted generation command is claimed. The implementation skill's existing
 requirements checklist passed (10/10); no extension hooks are configured.
 PR delivery, hosted CI and parent-coordinated Copilot review remain the final gate.
+
+### Native Copilot review correction
+
+Initial implementation `f7ae9b32633f786932ccecc42a72bf80c89ba223` was delivered in
+[PR #4](https://github.com/DevSecNinja/lovelace-ovapi/pull/4).
+[Hosted CI](https://github.com/DevSecNinja/lovelace-ovapi/actions/runs/38257870640)
+passed every enabled job, including the reproducible bundle gate.
+
+[Native review](https://github.com/DevSecNinja/lovelace-ovapi/pull/4#pullrequestreview-5491701532)
+identified one medium-severity gap: nested config objects with reordered keys
+were not recognized as equivalent echoes. Reproduced it independently in the
+component test and production-browser empty-draft test before fixing it.
+
+The editor now caches a canonical JSON key for the last accepted config. Object
+keys are sorted recursively, including objects inside arrays, while array order
+and changed nested values remain meaningful. No dependency or generic
+state-management layer was introduced. Regressions cover nested `view_layout`,
+HA `visibility` condition objects, nulls, preserved arbitrary properties,
+meaningfully reordered arrays and changed nested scalar values.
+
+- `mise exec -- npx vitest run tests/components/editor.test.ts -t 'nested object key order'`:
+  expected FAIL before correction (the cleared checkbox became checked).
+- `mise exec -- npx playwright test tests/browser/editor.spec.ts --project=phone-light -g 'last favourite'`:
+  expected FAIL before correction (one checked sensor instead of zero).
+- `mise run check`: PASS.
+- `mise run test`: PASS, 113 frontend tests and 25 Node guards; coverage remains
+  100% statements/lines/functions and 99.46% branches.
+- `mise run browser`: PASS, all 36 production checks; rebuilt bundle 17,925 bytes gzip.
+- `mise exec -- node scripts/ha-e2e-browser.mjs`: PASS again with the corrected
+  production bundle, including seven actual HA host echoes and native Save/reopen.
+
+The coordinator owns review-thread replies/resolution and any rereview request.
+No merge, release, live HA update or backend modification occurred.

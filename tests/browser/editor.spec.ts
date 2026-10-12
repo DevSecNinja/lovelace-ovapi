@@ -34,6 +34,10 @@ async function setup(page: Page, dark: boolean, entities = [zuid, amstel]) {
         max_departures: 7,
         lines: ["X1, X2"],
         destinations: ['Stop "A"'],
+        view_layout: { grid_area: "main", options: { columns: 2, rows: 3 } },
+        visibility: [
+          { condition: "state", entity: "input_boolean.show", state: "on" },
+        ],
       });
     },
     { entities, dark },
@@ -160,6 +164,10 @@ test("last favourite is an explicit unsaved draft across HA echoes and refreshes
       language: ha.locale!.language === "nl" ? "nl" : "en",
       entities: ["sensor.amsterdam_departures"],
       type: "custom:ovapi-departures-card",
+      view_layout: { options: { rows: 3, columns: 2 }, grid_area: "main" },
+      visibility: [
+        { state: "on", entity: "input_boolean.show", condition: "state" },
+      ],
     });
     editor!.hass = { ...ha };
   });
