@@ -7,8 +7,9 @@ import {
   nextCommute,
   parseConfig,
   visibleDepartures,
+  groupedDepartures,
 } from "./model";
-import type { CardConfig } from "./model";
+import type { CardConfig, DepartureGroup } from "./model";
 import { clock, labels } from "./localize";
 import { watchBoard } from "./subscription";
 import type { BoardView } from "./subscription";
@@ -56,10 +57,11 @@ export class OvapiDeparturesCard extends LitElement {
     return this.ha;
   }
   getCardSize(): number {
-    return (
-      (this.config?.entities.length ?? 1) *
-      (this.commute ? 5 : (this.config?.max_departures ?? 5) + 2)
-    );
+    const limit =
+      this.config?.display_mode === "grouped"
+        ? this.config.max_routes
+        : (this.config?.max_departures ?? 5);
+    return (this.config?.entities.length ?? 1) * (this.commute ? 5 : limit + 2);
   }
   getGridOptions(): { columns: number; min_columns: number } {
     return { columns: 12, min_columns: 6 };
@@ -173,57 +175,108 @@ export class OvapiDeparturesCard extends LitElement {
   private renderDepartures(board: BoardSnapshot) {
     const config = this.config!;
     const t = labels(config, this.ha);
-    const departures = visibleDepartures(board, config, Date.now()).slice(
-      0,
-      config.max_departures,
-    );
-    if (!departures.length)
+    const now = Date.now();
+    const rows: { departure: Departure; group?: DepartureGroup }[] =
+      config.display_mode === "grouped"
+        ? groupedDepartures(board, config, now).map((group) => ({
+            departure: group.departure,
+            group,
+          }))
+        : visibleDepartures(board, config, now)
+            .slice(0, config.max_departures)
+            .map((departure) => ({ departure }));
+    if (!rows.length)
       return html`<p class="message">
         ${config.lines.length || config.destinations.length ? t.filtered : t.empty}
       </p>`;
     return html`<ol aria-label=${t.departures}>
-      ${departures.map(
-        (d) =>
-          html` <li
-            class="departure ${d.cancelled === true ? "cancelled" : ""}"
-          >
-            <span class="line">${d.line}</span>
-            <div>
-              <div class="destination">${d.destination}</div>
-              <div class="detail">
-                ${d.transport === "unknown" ? t.transport : t[d.transport]} ·
-                ${this.serviceStatus(d)}
-              </div>
-            </div>
-            <div class="time">
-              ${
-                d.cancelled === true
-                  ? nothing
-                  : html`<strong
-                        >${minutesUntil(departureAt(d), Date.now())}
-                        <small>${t.min}</small></strong
-                      ><br />`
-              }
-              <time datetime=${d.expected_at ?? d.scheduled_at}
-                >${clock(departureAt(d), config, this.ha)}</time
-              >
-            </div>
-          </li>`,
-      )}
+      ${rows.map((row) => this.renderDeparture(row.departure, now, row.group))}
     </ol>`;
   }
 
-  private serviceStatus(d: Departure) {
+  private renderDeparture(d: Departure, now: number, group?: DepartureGroup) {
+    const config = this.config!;
+    const t = labels(config, this.ha);
+    const cancellations =
+      group?.cancellations.filter((cancelled) => cancelled !== d) ?? [];
+    return html`<li
+      class="departure ${d.cancelled === true ? "cancelled" : ""}"
+    >
+      <span class="line">${d.line}</span>
+      <div>
+        <div class="destination">${d.destination}</div>
+        <div class="detail">
+          ${d.transport === "unknown" ? t.transport : t[d.transport]} ·
+          <span class=${d.cancelled === true ? "cancelled-label" : ""}
+            >${this.serviceStatus(d)}</span
+          >
+        </div>
+        ${
+          group?.following.length
+            ? html`<div class="following detail">
+                ${t.alsoIn}
+                ${group.following.map((following, i) => {
+                  const minutes = minutesUntil(departureAt(following), now);
+                  const status = this.serviceStatus(following);
+                  return html`${i ? ", " : ""}<time
+                      datetime=${following.expected_at ?? following.scheduled_at}
+                      title=${status}
+                      aria-label="${minutes} ${t.min} · ${status}"
+                      >${minutes}</time
+                    >`;
+                })}
+                ${t.min}
+              </div>`
+            : nothing
+        }
+        ${
+          cancellations.length
+            ? html`<div class="cancellations detail">
+                <span class="cancelled-label">${t.cancelled}</span>:
+                ${cancellations.map(
+                  (cancelled, i) =>
+                    html`${i ? ", " : ""}<time
+                        datetime=${cancelled.expected_at ?? cancelled.scheduled_at}
+                        >${clock(departureAt(cancelled), config, this.ha)}</time
+                      >`,
+                )}
+              </div>`
+            : nothing
+        }
+        ${
+          group?.additionalCancellations
+            ? html`<div class="detail cancelled-label">
+                ${group.additionalCancellations}
+                ${group.additionalCancellations === 1 ? t.oneMoreCancelled : t.moreCancelled}
+              </div>`
+            : nothing
+        }
+      </div>
+      <div class="time">
+        ${
+          d.cancelled === true
+            ? nothing
+            : html`<strong
+                  >${minutesUntil(departureAt(d), now)}
+                  <small>${t.min}</small></strong
+                ><br />`
+        }
+        <time datetime=${d.expected_at ?? d.scheduled_at}
+          >${clock(departureAt(d), config, this.ha)}</time
+        >
+      </div>
+    </li>`;
+  }
+
+  private serviceStatus(d: Departure): string {
     const t = labels(this.config!, this.ha);
-    if (d.cancelled === true)
-      return html`<span class="cancelled-label">${t.cancelled}</span>`;
+    if (d.cancelled === true) return t.cancelled;
     if (d.delay_seconds !== null && d.delay_seconds !== 0) {
       if (Math.abs(d.delay_seconds) < 60) {
-        return html`${t.expected}
-        ${d.delay_seconds < 0 ? t.subMinuteEarly : t.subMinuteLate}`;
+        return `${t.expected} ${d.delay_seconds < 0 ? t.subMinuteEarly : t.subMinuteLate}`;
       }
       const minutes = Math.round(d.delay_seconds / 60);
-      return html`${t.expected} ${minutes >= 0 ? "+" : ""}${minutes} ${t.min}`;
+      return `${t.expected} ${minutes >= 0 ? "+" : ""}${minutes} ${t.min}`;
     }
     if (d.cancelled === null) return t.unknown;
     return d.expected_at === null

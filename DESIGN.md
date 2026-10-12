@@ -75,6 +75,14 @@ than a leave instruction. Status is announced, per-second countdowns are not.
 Editor inputs have 44px targets and 3px visible focus. No authored animation;
 reduced-motion rules remain defensive for inherited styles.
 
+Opt-in grouped rows preserve the same badge/destination/time alignment. One row
+represents transport + line + destination within a favourite; the next usable
+departure remains dominant. A muted "Also in" line gives at most three subsequent
+countdowns. Explicit cancellation clock times follow on a separate line, bounded
+to three with a remaining count. Cancelled-only routes sit last with no countdown.
+Secondary times use tabular numerals and wrap rather than truncating. The visual
+editor shows only the active presentation's limit and explains what a route counts.
+
 ## Do's and Don'ts
 
 Do make source freshness obvious. Do preserve unknown metadata and label it.

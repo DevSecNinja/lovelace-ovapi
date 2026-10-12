@@ -66,6 +66,41 @@ max_departures: 5
 language: auto
 ```
 
+For a compact station-style board, opt into **Grouped routes** in the visual
+editor and choose **Maximum route rows per favourite**:
+
+```yaml
+type: custom:ovapi-departures-card
+entities:
+  - sensor.amsterdam_amstel_departures
+display_mode: grouped
+max_routes: 3
+language: auto
+```
+
+Each row is **transport + line + destination**, not a unique line number.
+Metro 50 to Isolatorweg and metro 50 to Gein count as two rows; bus 50 is separate
+from metro 50. Rows never merge across favourite sensors. The three rows with the
+**next upcoming** noncancelled departures appear first, not recently departed
+vehicles or a frozen set of lines.
+
+For example, departures in 2, 8, 14, 20 and 26 minutes show one row with **2 min**
+and **Also in 8, 14, 20 min** (Dutch: **Ook over**). Following times are bounded to
+three; their live status is available as a tooltip and screen-reader description.
+Distinct vehicles can have the same displayed minute; only identical source events
+are deduplicated. All countdowns round down and advance locally.
+
+Cancelled departures are excluded from the main/following countdowns but retain
+explicit clock-time notices in their displayed route row: up to three cancelled
+times and a count of any additional cancellations. Cancelled-only routes appear
+after usable routes when the route limit leaves room, without a countdown.
+Stale boards remain labelled as outdated.
+
+Existing cards (and new cards unless opted in) keep **Individual departures**.
+`max_departures` still limits individual events; it is not repurposed to count
+routes. Switching modes in the editor preserves both limits. Grouping does not
+change the commute card's catchable-departure selection.
+
 ```yaml
 type: custom:ovapi-commute-card
 title: Leave for the tram
@@ -79,21 +114,25 @@ destinations:
 language: en
 ```
 
-These sensor IDs and the X1 service are **synthetic examples**. Replace them with
+These sensor IDs and services are **synthetic examples**. Replace them with
 your actual entities and supported lines/destinations. The examples do not claim
 coverage at Amsterdam Amstel or Centraal.
 
-| Option            | Default              | Meaning                                          |
-| ----------------- | -------------------- | ------------------------------------------------ |
-| `entities`        | Required             | 1–12 unique OVAPI sensor entity IDs              |
-| `title`           | Localized card title | Optional heading, at most 120 characters         |
-| `lines`           | All                  | Exact, case-insensitive line names               |
-| `destinations`    | All                  | Exact, case-insensitive destination names        |
-| `max_departures`  | `5`                  | 1–20 visible rows per favourite (departure card) |
-| `walking_minutes` | Integration setting  | Optional 0–120 minute card-only override         |
-| `language`        | `auto`               | `en`, `nl`, or HA language                       |
+| Option            | Default              | Meaning                                                              |
+| ----------------- | -------------------- | -------------------------------------------------------------------- |
+| `entities`        | Required             | 1–12 unique OVAPI sensor entity IDs                                  |
+| `title`           | Localized card title | Optional heading, at most 120 characters                             |
+| `lines`           | All                  | Exact, case-insensitive line names                                   |
+| `destinations`    | All                  | Exact, case-insensitive destination names                            |
+| `display_mode`    | `departures`         | `departures` or `grouped` (departure card only)                      |
+| `max_departures`  | `5`                  | 1–20 individual departures per favourite in `departures` mode        |
+| `max_routes`      | `5`                  | 1–20 transport/line/destination rows per favourite in `grouped` mode |
+| `walking_minutes` | Integration setting  | Optional 0–120 minute card-only override                             |
+| `language`        | `auto`               | `en`, `nl`, or HA language                                           |
 
-Line and destination filters intersect. They can only narrow the backend board;
+Line and destination filters intersect; matching and grouping ignore case and
+surrounding whitespace, not internal whitespace or punctuation. Filters apply
+before grouping and limits. They can only narrow the backend board;
 they cannot fetch additional departures. Filters persist as dashboard configuration,
 not as downloaded source data. Time display follows HA's configured time zone and
 12/24-hour preference; calculations use absolute instants, including across DST.
@@ -156,6 +195,8 @@ registration, absence of network/persistence APIs, and bundle size, then tests a
 phone/tablet × light/dark combinations with keyboard and axe assertions.
 Screenshots are local ignored artifacts under `test-results/`, never uploaded.
 `mise exec -- npm run harness` serves the labelled synthetic demo on loopback.
+Use `/tests/harness/?grouped&editor` for grouped rows and the visual editor;
+add `theme=dark&language=nl` for the Dutch dark-theme preview.
 It is a component harness, **not** a full Home Assistant E2E.
 
 Unit/component tests use synthetic data and fake clocks. Per-file coverage gates
@@ -239,7 +280,8 @@ This repository uses official **GitHub Spec Kit**, installed from the pinned
 official source release and initialized for Copilot. Generated `.specify/` scripts,
 templates and `.github/skills/` are retained. Constitution → specification → plan
 → tasks → implementation → convergence evidence lives in
-[`specs/001-dashboard-cards/`](specs/001-dashboard-cards/).
+[`specs/001-dashboard-cards/`](specs/001-dashboard-cards/), with the opt-in grouped
+presentation in [`specs/002-grouped-departure-rows/`](specs/002-grouped-departure-rows/).
 
 Shared lint CI is SHA-pinned to `DevSecNinja/.github` in `.github/workflows/ci.yml`
 with failures enforced.

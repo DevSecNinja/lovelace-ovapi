@@ -120,3 +120,135 @@ test("configuration editor is keyboard accessible with visible focus", async ({
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await editor.screenshot({ path: info.outputPath("editor.png") });
 });
+
+test("grouped production rows: next routes, bounded times, cancellation, themes and accessibility", async ({
+  page,
+}, info) => {
+  const external: string[] = [];
+  page.on("request", (request) => {
+    if (!request.url().startsWith("http://127.0.0.1:4173"))
+      external.push(request.url());
+  });
+  await page.clock.install({ time: new Date("2030-01-15T12:00:00Z") });
+  await page.clock.setFixedTime(new Date("2030-01-15T12:00:00Z"));
+  const dark = info.project.name.includes("dark");
+  await page.goto(
+    `/tests/harness/?grouped&theme=${dark ? "dark" : "light"}&language=${dark ? "nl" : "en"}`,
+  );
+  const card = page.locator("ovapi-departures-card");
+  await expect(card.locator("li")).toHaveCount(6);
+  await expect(card.locator(".destination").first()).toHaveText("Isolatorweg");
+  await expect(card.locator(".time strong").first()).toHaveText("2 min");
+  await expect(card.locator(".following").first()).toHaveText(
+    `${dark ? "Ook over" : "Also in"} 8, 14, 20 min`,
+  );
+  await expect(card.locator(".cancellations").first()).toContainText(
+    dark ? "Vervallen" : "Cancelled",
+  );
+  await expect(card.locator(".cancellations time").first()).toHaveText("13:01");
+  await expect(card.locator(".cancellations strong")).toHaveCount(0);
+  expect(await card.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
+    true,
+  );
+  expect(
+    await card
+      .locator(".departure")
+      .evaluateAll((rows) =>
+        rows.every((row) => row.scrollWidth <= row.clientWidth),
+      ),
+  ).toBe(true);
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await page.screenshot({
+    path: info.outputPath("grouped.png"),
+    fullPage: true,
+  });
+  await card.evaluate((el) => {
+    el.style.width = "240px";
+  });
+  expect(
+    await card
+      .locator(".departure")
+      .evaluateAll((rows) =>
+        rows.every((row) => row.scrollWidth <= row.clientWidth),
+      ),
+  ).toBe(true);
+  await card.evaluate((el) => {
+    el.style.removeProperty("width");
+  });
+  const calls = await page.evaluate(() => window.demo.connection.calls);
+  expect(calls).toBe(2);
+  await page.clock.setFixedTime(new Date("2030-01-15T12:00:01Z"));
+  await page.clock.fastForward(1000);
+  await expect(card.locator(".following").first()).toHaveText(
+    `${dark ? "Ook over" : "Also in"} 7, 13, 19 min`,
+  );
+  await page.clock.setFixedTime(new Date("2030-01-15T12:02:00Z"));
+  await page.clock.fastForward(119_000);
+  await expect(card.locator(".destination").first()).toHaveText("Gein");
+  await expect(card.locator("li")).toHaveCount(6);
+  expect(await page.evaluate(() => window.demo.connection.calls)).toBe(calls);
+  await page.evaluate(() => window.demo.emit("stale"));
+  await expect(card.locator(".warning").first()).toBeVisible();
+  await expect(page.locator("ovapi-commute-card .leave")).toHaveCount(0);
+  await page.evaluate(() => window.demo.expireSoon());
+  await page.clock.setFixedTime(new Date("2030-01-15T12:02:01Z"));
+  await page.clock.fastForward(1000);
+  await expect(card.locator("li")).toHaveCount(0);
+  await expect(card).not.toContainText("Isolatorweg");
+  expect(
+    await page.evaluate(() => [localStorage.length, sessionStorage.length]),
+  ).toEqual([0, 0]);
+  expect(external).toEqual([]);
+});
+
+test("grouped editor round-trip with keyboard mode/limit controls and legacy limit preservation", async ({
+  page,
+}, info) => {
+  await page.goto(
+    `/tests/harness/?grouped&editor&theme=${info.project.name.includes("dark") ? "dark" : "light"}`,
+  );
+  const editor = page.locator("ovapi-card-editor");
+  const mode = editor.getByLabel("Departure display", { exact: true });
+  const limit = editor.getByLabel("Maximum route rows per favourite", {
+    exact: true,
+  });
+  await expect(mode).toHaveValue("grouped");
+  await mode.focus();
+  await page.keyboard.press("Tab");
+  await expect(limit).toBeFocused();
+  expect(
+    await limit.evaluate((el) => getComputedStyle(el).outlineStyle),
+  ).not.toBe("none");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Tab");
+  await expect(limit).toHaveValue("2");
+  expect(await page.evaluate(() => window.demo.config)).toMatchObject({
+    display_mode: "grouped",
+    max_routes: 2,
+    max_departures: 4,
+  });
+  await expect(page.locator("ovapi-departures-card li")).toHaveCount(2);
+  await mode.selectOption("departures");
+  await expect(
+    editor.getByLabel("Maximum departures per stop", { exact: true }),
+  ).toHaveValue("4");
+  await expect(page.locator("ovapi-departures-card li")).toHaveCount(4);
+  await mode.selectOption("grouped");
+  await expect(limit).toHaveValue("2");
+  await expect(page.locator("ovapi-departures-card li")).toHaveCount(2);
+  await limit.fill("0");
+  await page.keyboard.press("Tab");
+  await expect(editor.getByRole("alert")).toContainText("max_routes");
+  await limit.fill("3");
+  await page.keyboard.press("Tab");
+  await expect(editor.getByRole("alert")).toHaveCount(0);
+  await editor.getByLabel("Language", { exact: true }).selectOption("nl");
+  await expect(editor).toContainText("lijn + bestemming");
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await editor.screenshot({ path: info.outputPath("grouped-editor.png") });
+});

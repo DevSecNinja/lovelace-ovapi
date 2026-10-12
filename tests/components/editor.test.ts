@@ -1,9 +1,76 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { OvapiCardEditor } from "../../src/editor";
 import { hass } from "../fixtures/connection";
+import { parseConfig } from "../../src/model";
 
 describe("visual editor", () => {
   afterEach(() => document.body.replaceChildren());
+  it("round-trips mode and separate limits, rejects bad route limits and preserves inactive values", async () => {
+    const editor = new OvapiCardEditor();
+    editor.setConfig({
+      type: "custom:ovapi-departures-card",
+      entities: ["sensor.amsterdam_departures"],
+      max_departures: 7,
+    });
+    document.body.append(editor);
+    await editor.updateComplete;
+    let config: Record<string, unknown> = {};
+    let changes = 0;
+    editor.addEventListener("config-changed", (event) => {
+      config = (event as CustomEvent).detail.config;
+      changes++;
+    });
+    const change = async (id: string, value: string) => {
+      const input = editor.shadowRoot!.querySelector<
+        HTMLInputElement | HTMLSelectElement
+      >(`#${id}`)!;
+      input.value = value;
+      input.dispatchEvent(new Event("change"));
+      await editor.updateComplete;
+    };
+    expect(
+      editor.shadowRoot!.querySelector<HTMLSelectElement>("#display-mode")
+        ?.value,
+    ).toBe("departures");
+    await change("display-mode", "grouped");
+    expect(editor.shadowRoot!.querySelector("#maximum")).toBeNull();
+    expect(
+      editor.shadowRoot!.querySelector<HTMLInputElement>("#max-routes")?.value,
+    ).toBe("5");
+    expect(editor.shadowRoot!.textContent).toContain("line + destination");
+    await change("max-routes", "3");
+    expect(parseConfig(config)).toMatchObject({
+      display_mode: "grouped",
+      max_routes: 3,
+      max_departures: 7,
+    });
+    const count = changes;
+    for (const value of ["0", "21", "1.5", ""]) {
+      await change("max-routes", value);
+      expect(changes).toBe(count);
+      expect(
+        editor.shadowRoot!.querySelector("[role=alert]")?.textContent,
+      ).toContain("max_routes");
+    }
+    await change("max-routes", "20");
+    await change("display-mode", "departures");
+    expect(editor.shadowRoot!.querySelector("#max-routes")).toBeNull();
+    expect(
+      editor.shadowRoot!.querySelector<HTMLInputElement>("#maximum")?.value,
+    ).toBe("7");
+    expect(config.max_routes).toBe(20);
+    await change("display-mode", "grouped");
+    editor.setConfig(config);
+    await editor.updateComplete;
+    expect(
+      editor.shadowRoot!.querySelector<HTMLInputElement>("#max-routes")?.value,
+    ).toBe("20");
+    await change("language", "nl");
+    expect(editor.shadowRoot!.textContent).toContain("lijn + bestemming");
+    editor.setConfig({ ...config, type: "custom:ovapi-commute-card" });
+    await editor.updateComplete;
+    expect(editor.shadowRoot!.querySelector("#display-mode")).toBeNull();
+  });
   it("edits all options, validates ranges and emits composed config changes", async () => {
     const editor = new OvapiCardEditor();
     editor.hass = hass();

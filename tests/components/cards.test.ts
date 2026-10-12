@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "../../src/index";
 import type { OvapiDeparturesCard } from "../../src/cards";
 import { FakeConnection, hass } from "../fixtures/connection";
-import { board, NOW } from "../fixtures/boards";
+import { board, departure, groupedBoard, NOW } from "../fixtures/boards";
 
 describe("cards", () => {
   beforeEach(() => {
@@ -23,6 +23,246 @@ describe("cards", () => {
     await card.updateComplete;
     return { card, connection, text: () => card.shadowRoot!.textContent! };
   }
+  async function mountGrouped(extra: Record<string, unknown> = {}) {
+    const mounted = await mount();
+    mounted.card.setConfig({
+      type: "custom:ovapi-departures-card",
+      entities: [board().entity_id],
+      display_mode: "grouped",
+      max_routes: 3,
+      ...extra,
+    });
+    mounted.connection.emit(board().entity_id, groupedBoard());
+    await mounted.card.updateComplete;
+    return mounted;
+  }
+  it("renders three next route rows, following times and cancellation clocks without cancellation countdowns", async () => {
+    const { card } = await mountGrouped();
+    const rows = card.shadowRoot!.querySelectorAll(".departure");
+    expect(rows).toHaveLength(3);
+    expect(rows[0]!.querySelector(".time strong")?.textContent).toContain("2");
+    expect(
+      rows[0]!
+        .querySelector(".following")
+        ?.textContent?.replace(/\s+/g, " ")
+        .trim(),
+    ).toBe("Also in 8, 14, 20 min");
+    expect(rows[0]!.querySelector(".cancellations")?.textContent).toContain(
+      "Cancelled",
+    );
+    expect(rows[0]!.querySelector(".cancellations time")?.textContent).toBe(
+      "13:01",
+    );
+    expect(rows[0]!.querySelector(".cancellations strong")).toBeNull();
+    expect(rows[0]!.classList.contains("cancelled")).toBe(false);
+    expect(card.getCardSize()).toBe(5);
+  });
+  it("keeps following status accessible and displays unknown transport/status without inventing on-time", async () => {
+    const { card, connection, text } = await mountGrouped();
+    connection.emit(
+      board().entity_id,
+      board({
+        departures: [
+          departure(2, { transport: "unknown", cancelled: null }),
+          departure(8, { transport: "unknown", cancelled: null }),
+          departure(14, {
+            transport: "unknown",
+            expected_at: new Date(NOW + 15 * 60_000).toISOString(),
+            delay_seconds: 60,
+          }),
+        ],
+      }),
+    );
+    await card.updateComplete;
+    expect(text()).toContain("Service");
+    expect(text()).toContain("Live status unknown");
+    expect(text()).not.toContain("On time");
+    const times = card.shadowRoot!.querySelectorAll(".following time");
+    expect(times[0]?.getAttribute("title")).toContain("Live status unknown");
+    expect(times[1]?.getAttribute("title")).toContain("+1 min");
+    expect(times[0]?.getAttribute("aria-label")).toContain("8 min");
+  });
+  it("bounds cancellation notices and handles only-cancelled routes and single departures", async () => {
+    const { card, connection } = await mountGrouped();
+    connection.emit(
+      board().entity_id,
+      board({
+        departures: [
+          ...[2, 3, 4, 5, 6].map((m) => departure(m, { cancelled: true })),
+          departure(7, { line: "51" }),
+        ],
+      }),
+    );
+    await card.updateComplete;
+    const rows = card.shadowRoot!.querySelectorAll(".departure");
+    expect(rows[0]!.querySelector(".following")).toBeNull();
+    expect(rows[1]!.classList.contains("cancelled")).toBe(true);
+    expect(rows[1]!.querySelector("strong")).toBeNull();
+    expect(rows[1]!.querySelectorAll("time")).toHaveLength(3);
+    expect(rows[1]!.textContent?.replace(/\s+/g, " ")).toContain(
+      "2 more cancelled",
+    );
+    expect(rows[1]!.querySelector(".time time")?.textContent).toBe("13:02");
+  });
+  it("uses Dutch grouped copy and keeps old configurations and commute behavior unchanged", async () => {
+    const { card, connection, text } = await mountGrouped({ language: "nl" });
+    expect(text()).toContain("Ook over");
+    expect(text()).toContain("Vervallen");
+    card.setConfig({
+      type: "custom:ovapi-departures-card",
+      entities: [board().entity_id],
+      max_departures: 4,
+      max_routes: 1,
+    });
+    connection.emit(board().entity_id, groupedBoard());
+    await card.updateComplete;
+    expect(card.shadowRoot!.querySelectorAll("li")).toHaveLength(4);
+    expect(card.shadowRoot!.querySelector(".following")).toBeNull();
+    expect(card.getCardSize()).toBe(6);
+    const commute = await mount("ovapi-commute-card");
+    commute.card.setConfig({
+      type: "custom:ovapi-commute-card",
+      entities: [board().entity_id],
+      display_mode: "grouped",
+      max_routes: 1,
+      walking_minutes: 0,
+    });
+    commute.connection.emit(board().entity_id, groupedBoard());
+    await commute.card.updateComplete;
+    expect(
+      commute.card.shadowRoot!.querySelector(".leave strong")?.textContent,
+    ).toContain("2");
+    expect(commute.card.shadowRoot!.querySelector(".following")).toBeNull();
+  });
+  it.each([
+    ["en", 1, "1 more cancelled"],
+    ["en", 2, "2 more cancelled"],
+    ["nl", 1, "1 andere vervallen rit"],
+    ["nl", 2, "2 andere vervallen ritten"],
+  ])(
+    "renders %s additional cancellation count %i grammatically",
+    async (language, count, expected) => {
+      const { card, connection } = await mountGrouped({ language });
+      connection.emit(
+        board().entity_id,
+        board({
+          departures: Array.from({ length: 3 + count }, (_, i) =>
+            departure(i + 1, { cancelled: true }),
+          ),
+        }),
+      );
+      await card.updateComplete;
+      const label = card.shadowRoot!.querySelector(".detail.cancelled-label")!;
+      expect(label.textContent?.replace(/\s+/g, " ").trim()).toBe(expected);
+    },
+  );
+  it("keeps boards separate, filters before limits and labels empty grouped results", async () => {
+    const second = "sensor.second";
+    const { card, connection, text } = await mountGrouped({
+      entities: [board().entity_id, second],
+      max_routes: 1,
+      destinations: ["Gein"],
+    });
+    connection.emit(second, {
+      ...groupedBoard(),
+      entity_id: second,
+      board_id: "second",
+    });
+    await card.updateComplete;
+    expect(card.shadowRoot!.querySelectorAll("section")).toHaveLength(2);
+    expect(card.shadowRoot!.querySelectorAll(".departure")).toHaveLength(2);
+    expect(
+      card.shadowRoot!.querySelectorAll(".destination")[0]?.textContent,
+    ).toBe("Gein");
+    expect(
+      card.shadowRoot!.querySelectorAll(".destination")[1]?.textContent,
+    ).toBe("Gein");
+    connection.emit(board().entity_id, board({ departures: [] }));
+    await card.updateComplete;
+    expect(text()).toContain("No departures match your filters");
+    card.setConfig({
+      type: "custom:ovapi-departures-card",
+      entities: [board().entity_id],
+      display_mode: "grouped",
+    });
+    connection.emit(board().entity_id, board({ departures: [] }));
+    await card.updateComplete;
+    expect(text()).toContain("No upcoming departures");
+  });
+  it("advances grouped rows and conservative minute edges locally, then erases at exact expiry", async () => {
+    const { card, connection, text } = await mountGrouped({ max_routes: 1 });
+    const calls = connection.calls;
+    await vi.advanceTimersByTimeAsync(1000);
+    await card.updateComplete;
+    expect(
+      card.shadowRoot!.querySelector(".time strong")?.textContent,
+    ).toContain("1");
+    expect(
+      card
+        .shadowRoot!.querySelector(".following")
+        ?.textContent?.replace(/\s+/g, " ")
+        .trim(),
+    ).toBe("Also in 7, 13, 19 min");
+    await vi.advanceTimersByTimeAsync(119_000);
+    await card.updateComplete;
+    expect(card.shadowRoot!.querySelector(".destination")?.textContent).toBe(
+      "Gein",
+    );
+    expect(card.shadowRoot!.querySelector(".cancellations")).toBeNull();
+    expect(connection.calls).toBe(calls);
+    connection.emit(
+      board().entity_id,
+      board({
+        departures: [departure(40)],
+        expires_at: new Date(NOW + 180_000).toISOString(),
+      }),
+    );
+    await card.updateComplete;
+    await vi.advanceTimersByTimeAsync(59_999);
+    await card.updateComplete;
+    expect(text()).toContain("Isolatorweg");
+    await vi.advanceTimersByTimeAsync(1);
+    await card.updateComplete;
+    expect(text()).toContain("expired");
+    expect(text()).not.toContain("Isolatorweg");
+    card.remove();
+    await card.updateComplete;
+    expect(vi.getTimerCount()).toBe(0);
+  });
+  it("retains grouped stale/error states and erases on hide, disconnect and detach", async () => {
+    const { card, connection, text } = await mountGrouped();
+    connection.emit(board().entity_id, { ...groupedBoard(), status: "stale" });
+    await card.updateComplete;
+    expect(text()).toContain("Outdated");
+    expect(text()).toContain("Also in");
+    expect(text()).toContain("Check departures");
+    connection.emit(board().entity_id, {
+      ...groupedBoard(),
+      departures: [{ ...departure(2), expected_at: "bad" }],
+    });
+    await card.updateComplete;
+    expect(text()).toContain("Cannot read");
+    expect(text()).not.toContain("Isolatorweg");
+    connection.emit(board().entity_id, groupedBoard());
+    await card.updateComplete;
+    window.dispatchEvent(new Event("pagehide"));
+    await card.updateComplete;
+    expect(text()).not.toContain("Isolatorweg");
+    expect(vi.getTimerCount()).toBe(0);
+    window.dispatchEvent(new Event("pageshow"));
+    connection.emit(board().entity_id, groupedBoard());
+    await card.updateComplete;
+    connection.fire("disconnected");
+    await card.updateComplete;
+    expect(text()).not.toContain("Isolatorweg");
+    connection.fire("ready");
+    connection.emit(board().entity_id, groupedBoard());
+    await card.updateComplete;
+    card.remove();
+    await card.updateComplete;
+    expect(text()).not.toContain("Isolatorweg");
+    expect(vi.getTimerCount()).toBe(0);
+  });
   it("renders loading, departures, delays, cancellation, stale, empty and expiry honestly", async () => {
     const { card, connection, text } = await mount();
     expect(text()).toContain("Connecting");

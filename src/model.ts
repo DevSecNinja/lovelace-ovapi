@@ -7,7 +7,9 @@ export interface CardConfig {
   title?: string;
   lines: string[];
   destinations: string[];
+  display_mode: "departures" | "grouped";
   max_departures: number;
+  max_routes: number;
   walking_minutes?: number;
   language: "auto" | "en" | "nl";
 }
@@ -42,6 +44,17 @@ export function parseConfig(value: unknown): CardConfig {
   const max = c.max_departures ?? 5;
   if (!Number.isInteger(max) || Number(max) < 1 || Number(max) > 20)
     throw new Error("max_departures: use 1 to 20");
+  const maxRoutes = c.max_routes === undefined ? 5 : c.max_routes;
+  if (
+    !Number.isInteger(maxRoutes) ||
+    Number(maxRoutes) < 1 ||
+    Number(maxRoutes) > 20
+  )
+    throw new Error("max_routes: use 1 to 20");
+  const displayMode =
+    c.display_mode === undefined ? "departures" : c.display_mode;
+  if (displayMode !== "departures" && displayMode !== "grouped")
+    throw new Error("display_mode: use departures or grouped");
   if (
     c.walking_minutes !== undefined &&
     (!Number.isInteger(c.walking_minutes) ||
@@ -65,6 +78,8 @@ export function parseConfig(value: unknown): CardConfig {
     lines: strings(c.lines ?? [], "lines"),
     destinations: strings(c.destinations ?? [], "destinations"),
     max_departures: max as number,
+    display_mode: displayMode,
+    max_routes: maxRoutes as number,
     ...(c.walking_minutes !== undefined
       ? { walking_minutes: c.walking_minutes as number }
       : {}),
@@ -77,14 +92,17 @@ export const departureAt = (d: Departure): number =>
 export const minutesUntil = (at: number, now: number): number =>
   Math.max(0, Math.floor((at - now) / 60_000));
 
+const normalized = (value: string): string => value.trim().toLowerCase();
+const compareDepartures = (a: Departure, b: Departure): number =>
+  departureAt(a) - departureAt(b) || a.id.localeCompare(b.id);
+
 export function visibleDepartures(
   board: BoardSnapshot,
   config: CardConfig,
   now: number,
 ): Departure[] {
   const matches = (filters: string[], value: string) =>
-    !filters.length ||
-    filters.some((f) => f.toLowerCase() === value.toLowerCase());
+    !filters.length || filters.some((f) => normalized(f) === normalized(value));
   return board.departures
     .filter(
       (d) =>
@@ -92,9 +110,68 @@ export function visibleDepartures(
         matches(config.lines, d.line) &&
         matches(config.destinations, d.destination),
     )
+    .sort(compareDepartures);
+}
+
+export interface DepartureGroup {
+  departure: Departure;
+  following: Departure[];
+  cancellations: Departure[];
+  additionalCancellations: number;
+}
+
+export function groupedDepartures(
+  board: BoardSnapshot,
+  config: CardConfig,
+  now: number,
+): DepartureGroup[] {
+  const groups = new Map<
+    string,
+    { upcoming: Departure[]; cancelled: Departure[] }
+  >();
+  const seen = new Set<string>();
+  for (const d of visibleDepartures(board, config, now)) {
+    // v1 has no source-point key: only collapse identical events, never minute values.
+    const identity = JSON.stringify([
+      d.id,
+      d.transport,
+      d.line,
+      d.destination,
+      Date.parse(d.scheduled_at),
+      d.expected_at === null ? null : Date.parse(d.expected_at),
+      d.cancelled,
+      d.delay_seconds,
+    ]);
+    if (seen.has(identity)) continue;
+    seen.add(identity);
+    const key = JSON.stringify([
+      d.transport,
+      normalized(d.line),
+      normalized(d.destination),
+    ]);
+    let group = groups.get(key);
+    if (!group) {
+      group = { upcoming: [], cancelled: [] };
+      groups.set(key, group);
+    }
+    (d.cancelled === true ? group.cancelled : group.upcoming).push(d);
+  }
+  return [...groups.entries()]
+    .map(([key, group]) => ({
+      key,
+      departure: (group.upcoming[0] ?? group.cancelled[0])!,
+      following: group.upcoming.slice(1, 4),
+      cancellations: group.cancelled.slice(0, 3),
+      additionalCancellations: Math.max(0, group.cancelled.length - 3),
+    }))
     .sort(
-      (a, b) => departureAt(a) - departureAt(b) || a.id.localeCompare(b.id),
-    );
+      (a, b) =>
+        Number(a.departure.cancelled === true) -
+          Number(b.departure.cancelled === true) ||
+        compareDepartures(a.departure, b.departure) ||
+        a.key.localeCompare(b.key),
+    )
+    .slice(0, config.max_routes);
 }
 
 export function nextCommute(

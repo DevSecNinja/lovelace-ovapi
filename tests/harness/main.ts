@@ -1,10 +1,11 @@
-import { board } from "../fixtures/boards";
+import { board, groupedBoard } from "../fixtures/boards";
 import { FakeConnection, hass } from "../fixtures/connection";
 import type { BoardSnapshot } from "../../src/contract";
 import type { OvapiDeparturesCard } from "../../src/cards";
 import type { OvapiCardEditor } from "../../src/editor";
 
 const params = new URLSearchParams(location.search);
+const grouped = params.has("grouped");
 document.documentElement.classList.toggle(
   "dark",
   params.get("theme") === "dark",
@@ -25,7 +26,12 @@ ha.states[entities[1]!] = {
 await customElements.whenDefined("ovapi-departures-card");
 const cards = ["ovapi-departures-card", "ovapi-commute-card"].map((tag) => {
   const card = document.createElement(tag) as OvapiDeparturesCard;
-  card.setConfig({ type: `custom:${tag}`, entities, max_departures: 4 });
+  card.setConfig({
+    type: `custom:${tag}`,
+    entities,
+    max_departures: 4,
+    ...(grouped ? { display_mode: "grouped", max_routes: 3 } : {}),
+  });
   card.hass = ha;
   document.querySelector("#cards")!.append(card);
   return card;
@@ -60,6 +66,13 @@ function snapshot(entity: string, second = false): BoardSnapshot {
     cancelled: i === 1,
     delay_seconds: i === 2 ? null : 120,
   }));
+  if (grouped) {
+    b.departures = groupedBoard(now).departures;
+    if (second) {
+      b.departures.find((d) => d.id === "synthetic-opposite")!.destination =
+        "A very long synthetic destination to demonstrate readable wrapping";
+    }
+  }
   return b;
 }
 function emit(status: BoardSnapshot["status"] = "ready") {
@@ -81,6 +94,14 @@ if (params.has("editor")) {
   editor.setConfig({
     type: "custom:ovapi-departures-card",
     entities: [entities[0]],
+    ...(grouped
+      ? { display_mode: "grouped", max_routes: 3, max_departures: 4 }
+      : {}),
+  });
+  editor.addEventListener("config-changed", (event) => {
+    window.demo.config = (event as CustomEvent).detail.config;
+    cards[0]!.setConfig(window.demo.config);
+    emit();
   });
   document.querySelector("#editor")!.append(editor);
 }
@@ -88,6 +109,7 @@ declare global {
   interface Window {
     demo: {
       connection: FakeConnection;
+      config?: unknown;
       emit: typeof emit;
       empty: () => void;
       expireSoon: () => void;
