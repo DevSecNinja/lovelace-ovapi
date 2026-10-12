@@ -1,6 +1,6 @@
 import { LitElement, html, nothing } from "lit";
 import type { HomeAssistant } from "./contract";
-import { record } from "./contract";
+import { record, isSupportedContract } from "./contract";
 import { parseConfig } from "./model";
 import { labels } from "./localize";
 import { styles } from "./styles";
@@ -22,6 +22,13 @@ export class OvapiCardEditor extends LitElement {
   private change(key: string, value: unknown): void {
     const next = { ...this.config, [key]: value };
     if (value === undefined) delete next[key];
+    for (const filter of ["lines", "destinations"]) {
+      if (Array.isArray(next[filter])) {
+        next[filter] = next[filter].filter(
+          (entry) => typeof entry !== "string" || entry.trim(),
+        );
+      }
+    }
     this.config = next;
     try {
       parseConfig(next);
@@ -42,6 +49,20 @@ export class OvapiCardEditor extends LitElement {
   private input(event: Event): HTMLInputElement {
     return event.target as HTMLInputElement;
   }
+  private filters(key: "lines" | "destinations"): string[] {
+    return Array.isArray(this.config[key]) ? this.config[key] : [];
+  }
+  private addFilter(key: "lines" | "destinations"): void {
+    this.config = { ...this.config, [key]: [...this.filters(key), ""] };
+    this.requestUpdate();
+    void this.updateComplete.then(() => {
+      this.shadowRoot
+        ?.querySelector<HTMLTextAreaElement>(
+          `#${key}-${this.filters(key).length - 1}`,
+        )
+        ?.focus();
+    });
+  }
   protected render() {
     const language =
       this.config.language === "nl" || this.config.language === "en"
@@ -58,7 +79,7 @@ export class OvapiCardEditor extends LitElement {
           .filter(
             ([id, state]) =>
               id.startsWith("sensor.") &&
-              state.attributes.contract_version === 1 &&
+              isSupportedContract(state.attributes.contract_version) &&
               typeof state.attributes.board_id === "string",
           )
           .map(([id]) => id),
@@ -93,19 +114,42 @@ export class OvapiCardEditor extends LitElement {
       />
       ${(["lines", "destinations"] as const).map(
         (key) =>
-          html` <label for=${key}>${t[key]}</label
-            ><input
-              id=${key}
-              .value=${Array.isArray(this.config[key]) ? this.config[key].join(", ") : ""}
-              @change=${(e: Event) =>
-                this.change(
-                  key,
-                  this.input(e)
-                    .value.split(",")
-                    .map((s) => s.trim())
-                    .filter(Boolean),
-                )}
-            />`,
+          html`<fieldset class="filters">
+            <legend>${t[key]}</legend>
+            ${this.filters(key).map(
+              (value, index) => html`
+                <label for="${key}-${index}">${t[key]} ${index + 1}</label>
+                <div class="filter-row">
+                  <textarea
+                    id="${key}-${index}"
+                    rows="1"
+                    .value=${value}
+                    @change=${(e: Event) =>
+                      this.change(
+                        key,
+                        this.filters(key).map((current, i) =>
+                          i === index ? this.input(e).value : current,
+                        ),
+                      )}
+                  ></textarea>
+                  <button
+                    type="button"
+                    aria-label="${t.removeFilter} ${t[key]} ${index + 1}"
+                    @click=${() =>
+                      this.change(
+                        key,
+                        this.filters(key).filter((_, i) => i !== index),
+                      )}
+                  >
+                    ${t.removeFilter}
+                  </button>
+                </div>
+              `,
+            )}
+            <button type="button" @click=${() => this.addFilter(key)}>
+              ${t.addFilter} ${t[key]}
+            </button>
+          </fieldset>`,
       )}
       <p class="detail">${t.editorHelp}</p>
       <label for="walking">${t.walking}</label

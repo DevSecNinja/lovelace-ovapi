@@ -26,4 +26,6 @@ omits incomplete source records rather than fabricating display metadata.
 Source data stays only in ephemeral memory. Erase on expiry/disconnect/unsubscribe.
 No payload logs, browser storage, Recorder, diagnostics or real-source fixtures.
 Ready includes successful empty data; stale is failed refresh with valid retained
-data; unavailable never implies no service or cancellation.
+data. None of these board statuses implies cancellation or absence of service.
+A null departure field means that information is unknown. The consumer whitelists
+the defined properties and discards unrecognized extra properties for retention safety.

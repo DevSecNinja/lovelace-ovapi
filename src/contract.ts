@@ -1,3 +1,11 @@
+export const CARD_CONTRACT_VERSION = 1;
+
+export function isSupportedContract(
+  value: unknown,
+): value is typeof CARD_CONTRACT_VERSION {
+  return value === CARD_CONTRACT_VERSION;
+}
+
 export interface Departure {
   id: string;
   line: string;
@@ -10,7 +18,7 @@ export interface Departure {
 }
 
 export interface BoardSnapshot {
-  contract_version: 1;
+  contract_version: typeof CARD_CONTRACT_VERSION;
   board_id: string;
   entity_id: string;
   stop: { id: string; name: string };
@@ -99,7 +107,8 @@ export function parseBoard(
   now: number,
 ): BoardSnapshot {
   const b = record(value);
-  if (b.contract_version !== 1) throw new Error("Unsupported contract version");
+  if (!isSupportedContract(b.contract_version))
+    throw new Error("Unsupported contract version");
   if (
     b.entity_id !== entity ||
     !["ready", "stale", "unavailable"].includes(String(b.status)) ||
@@ -127,7 +136,7 @@ export function parseBoard(
     throw new Error("Invalid source validity");
   }
   return {
-    contract_version: 1,
+    contract_version: CARD_CONTRACT_VERSION,
     board_id: text(b.board_id),
     entity_id: entity,
     stop: { id: text(stop.id), name: text(stop.name) },

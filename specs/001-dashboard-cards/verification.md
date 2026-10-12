@@ -136,3 +136,51 @@ branch only after review/merge. The inherited shared-lint workflow requires
 `security-events: write` on its caller job even with uploads disabled; all other
 jobs remain read-only. Optional standalone macOS media-library warnings are
 unrelated to the verified OVAPI path.
+
+## Follow-up: version relationships and review feedback (2026-10-12)
+
+The earlier results above are point-in-time evidence, not editable version pins.
+This follow-up audits the active package/lock metadata, installed dependencies,
+`.mise.toml`, CI, HACS metadata, isolated HA requirements and startup, Spec Kit
+provenance, wire parser/picker/editor, generated bundle and maintained user docs.
+No independent bundle release field exists, so no runtime banner was invented.
+Constitution, lockfile and HA storage-schema versions are not release versions.
+
+Package release authority remains `package.json`; backend releases and protocol
+v1 stay independent. `npm ci`/strict engines and standard SemVer/TOML/YAML parsers
+guard exact pins and package/lock/installed agreement. The broad original Node
+engine included odd majors unsupported by locked dependencies: the lower bound
+was not raised, but the declared range now fits all locked dependency engines.
+CI derives exact minimum and development Node jobs (deduplicated when equal) and
+asserts the installed runtime matches its matrix value. CI mise may be newer than
+the minimum; their relationship is an inequality, not forced equality.
+
+The lightweight HA CI gate checks actual installed distributions with Python's
+`packaging`, each `Requires-Python`, the mise Python pin and HA's actual frontend
+manifest. It does not run the full optional HA E2E or invent a minimum-HA claim.
+HA server startup runs the same preflight. Maintained commands read version
+authorities rather than duplicating Python/Spec Kit/mise patch numbers.
+
+Targeted review outcomes:
+
+- Nonzero sub-minute delays preserve early/late direction in English/Dutch.
+  Explicit assertions cover ±1/29/30/59/60 seconds and regular minutes, with
+  existing zero/unknown/cancelled behavior preserved.
+- Individual filter fields preserve commas, quotes and embedded newlines;
+  existing arrays round-trip. Keyboard addition/removal and axe checks exercise
+  real production controls rather than comma splitting.
+- Visibility tests now mock `document.hidden=true`, assert source erasure,
+  zero timers/unsubscribe, reject late data, then restore visibility/resubscribe.
+- Spec/contract distinguish null source values from discarded extra properties;
+  none of the board statuses implies cancellation or absence of service.
+- CODEOWNERS exceptions remain inherited from the inspected repo-starter policy:
+  they apply to all authors of those paths, not conditionally to bots. CI applies.
+
+Validation: `mise run lint` passed; 73 frontend tests passed with 99.64% lines,
+98.31% branches and 100% functions; 25 Node version mutation/coherent-upgrade
+tests and 7 Python runtime guard tests passed. `mise run browser` passed all 12
+production checks including new keyboard filter cases. The regenerated bundle
+is 15,148 bytes gzip. No HA wire shape or tested runtime pin changed; this
+follow-up uses the earlier actual HA E2E evidence, not a claim of a new full run.
+Transient local ENOSPC failures were retried after space recovered; no shared
+caches, other worktrees or screenshot evidence were deleted.

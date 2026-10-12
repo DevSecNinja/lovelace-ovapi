@@ -75,8 +75,10 @@ test("offline countdown, status replacement, expiry and cleanup", async ({
 
 test("configuration editor is keyboard accessible with visible focus", async ({
   page,
-}) => {
-  await page.goto("/tests/harness/?editor");
+}, info) => {
+  await page.goto(
+    `/tests/harness/?editor&theme=${info.project.name.includes("dark") ? "dark" : "light"}`,
+  );
   const editor = page.locator("ovapi-card-editor");
   await expect(editor.getByLabel("Amsterdam Amstel")).toBeChecked();
   await page.keyboard.press("Tab");
@@ -90,7 +92,31 @@ test("configuration editor is keyboard accessible with visible focus", async ({
   await expect(editor.getByLabel("Amsterdam Centraal")).toBeChecked();
   await editor.getByLabel("Walking minutes", { exact: false }).fill("9");
   await editor.getByLabel("Title", { exact: true }).fill("Morning commute");
+  await editor
+    .getByRole("button", { name: "Add Destinations", exact: true })
+    .focus();
+  await page.keyboard.press("Enter");
+  await expect(
+    editor.getByLabel("Destinations 1", { exact: true }),
+  ).toBeFocused();
+  await page.keyboard.type("Station, west");
+  await page.keyboard.press("Tab");
+  await expect(
+    editor.getByLabel("Destinations 1", { exact: true }),
+  ).toHaveValue("Station, west");
+  await editor.getByRole("button", { name: "Add Lines", exact: true }).click();
+  await editor.getByLabel("Lines 1", { exact: true }).fill("X1, X2");
+  await page.keyboard.press("Tab");
+  await expect(editor.getByLabel("Lines 1", { exact: true })).toHaveValue(
+    "X1, X2",
+  );
+  await expect(
+    editor.getByRole("button", { name: "Remove Lines 1", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("Space");
+  await expect(editor.getByLabel("Lines 1", { exact: true })).toHaveCount(0);
   await editor.getByLabel("Language", { exact: true }).selectOption("nl");
   await expect(editor).toContainText("Favoriete OVAPI-sensoren");
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+  await editor.screenshot({ path: info.outputPath("editor.png") });
 });

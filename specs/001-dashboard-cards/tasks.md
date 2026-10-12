@@ -52,3 +52,19 @@ US1/US2 implementation sequential; their pure tests are independently executable
 Editor work and model tests could run in parallel, but this session implements
 directly without delegation. Deliver incrementally and validate each layer before
 full production-browser and actual-HA checks.
+
+## Follow-up: Version guards and targeted review
+
+- [x] T020 Audit active release, lockfile, Node, HA/frontend/Python, mise/CI and
+      Spec Kit sources; distinguish them from historical evidence and wire versions.
+- [x] T021 Enforce coherent relationships through `scripts/check-versions.mjs`,
+      `scripts/check_ha_runtime.py`, standard parsers and mandatory package/CI gates.
+- [x] T022 Add negative mutations and coherent upgrade cases in `tests/tooling/`;
+      derive minimum/development Node CI matrix without auto-raising compatibility.
+- [x] T023 Reuse one runtime protocol guard for parser/picker/editor, preserving
+      independent literal v1 fixtures and malformed/future-version regressions.
+- [x] T024 Fix signed sub-minute status, value-preserving filter controls and
+      actual hidden-page regression in `src/` and unit/component/browser tests.
+- [x] T025 Clarify null values versus extra properties, board-status semantics,
+      inherited CODEOWNERS exceptions and version maintenance guidance.
+- [x] T026 Run final verification, regenerate bundle and push the same review PR.

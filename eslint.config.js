@@ -6,11 +6,12 @@ export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ["scripts/*.mjs"],
+    files: ["scripts/*.mjs", "tests/tooling/*.mjs"],
     languageOptions: { globals: {
       console: "readonly", process: "readonly", URL: "readonly",
       localStorage: "readonly", document: "readonly", setTimeout: "readonly", clearTimeout: "readonly",
       requestAnimationFrame: "readonly", innerWidth: "readonly",
+      structuredClone: "readonly",
     } },
   },
 ];

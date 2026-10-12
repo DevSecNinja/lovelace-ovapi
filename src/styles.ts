@@ -147,7 +147,9 @@ export const styles = css`
     margin: 14px 0 6px;
   }
   input,
-  select {
+  select,
+  textarea,
+  button {
     font: inherit;
     color: inherit;
     width: 100%;
@@ -156,6 +158,25 @@ export const styles = css`
     background: var(--ha-card-background, var(--card-background-color, #fff));
     border: 1px solid var(--ovapi-muted);
     border-radius: 6px;
+  }
+  textarea {
+    resize: vertical;
+  }
+  button {
+    width: auto;
+    cursor: pointer;
+  }
+  .filters {
+    margin-top: 20px;
+  }
+  .filter-row {
+    display: flex;
+    align-items: start;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .filter-row textarea {
+    min-width: 0;
   }
   .choice {
     display: flex;
@@ -174,12 +195,16 @@ export const styles = css`
     accent-color: var(--ovapi-accent);
   }
   input:focus-visible,
-  select:focus-visible {
+  select:focus-visible,
+  textarea:focus-visible,
+  button:focus-visible {
     outline: 3px solid var(--ovapi-accent);
     outline-offset: 3px;
   }
   input:hover,
-  select:hover {
+  select:hover,
+  textarea:hover,
+  button:hover {
     border-color: var(--primary-text-color, #212121);
   }
   .editor {

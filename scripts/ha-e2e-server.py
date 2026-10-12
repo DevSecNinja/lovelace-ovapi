@@ -1,6 +1,6 @@
 """Bounded actual Home Assistant runtime; synthetic upstream, loopback only.
 
-Run using the backend's pinned HA Python environment. No live HA is read or changed.
+Run with mise run ha-server. No live HA is read or changed.
 """
 
 import asyncio
@@ -14,6 +14,10 @@ import sys
 import tempfile
 from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
+
+from check_ha_runtime import check_runtime
+
+check_runtime()
 
 from homeassistant import bootstrap, loader
 from homeassistant.auth.const import GROUP_ID_ADMIN

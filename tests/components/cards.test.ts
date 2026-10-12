@@ -11,6 +11,7 @@ describe("cards", () => {
   });
   afterEach(() => {
     document.body.replaceChildren();
+    vi.restoreAllMocks();
     vi.useRealTimers();
   });
   async function mount(tag = "ovapi-departures-card") {
@@ -69,6 +70,9 @@ describe("cards", () => {
       board().entity_id,
     ]);
     expect(OvapiDeparturesCard.getStubConfig().entities).toEqual([]);
+    const future = hass();
+    future.states[board().entity_id]!.attributes.contract_version = 2;
+    expect(OvapiDeparturesCard.getStubConfig(future).entities).toEqual([]);
     const card = new OvapiDeparturesCard();
     document.body.append(card);
     await card.updateComplete;
@@ -130,6 +134,44 @@ describe("cards", () => {
       expect(text()).toContain(expected);
     }
   });
+  it.each(["en", "nl"] as const)(
+    "preserves delay direction at sub-minute boundaries in %s",
+    async (language) => {
+      const { card, connection } = await mount();
+      card.setConfig({
+        type: "custom:ovapi-departures-card",
+        entities: [board().entity_id],
+        language,
+      });
+      for (const seconds of [
+        1, 29, 30, 59, 60, 120, 150, -1, -29, -30, -59, -60, -120, -150,
+      ]) {
+        const b = board();
+        b.departures[0]!.delay_seconds = seconds;
+        connection.emit(b.entity_id, b);
+        await card.updateComplete;
+        const status =
+          card.shadowRoot!.querySelector(".departure .detail")!.textContent!;
+        if (Math.abs(seconds) < 60) {
+          expect(status).toContain(
+            language === "en"
+              ? seconds < 0
+                ? "<1 min early"
+                : "<1 min late"
+              : seconds < 0
+                ? "<1 min eerder"
+                : "<1 min later",
+          );
+        } else {
+          expect(status).toContain(
+            `${seconds < 0 ? "" : "+"}${Math.round(seconds / 60)} min`,
+          );
+        }
+        expect(status).not.toContain("+0");
+        expect(status).not.toContain("-0");
+      }
+    },
+  );
   it("suppresses stale/cancelled commute advice, handles leave-now and no-catchable", async () => {
     const { card, connection, text } = await mount("ovapi-commute-card");
     connection.emit(board().entity_id, board({ status: "stale" }));
@@ -159,8 +201,22 @@ describe("cards", () => {
     window.dispatchEvent(new Event("pageshow"));
     await card.updateComplete;
     expect(connection.calls).toBe(2);
+    connection.emit(board().entity_id, board());
+    await card.updateComplete;
+    const unsubscribed = connection.unsubscriptions;
+    const hidden = vi.spyOn(document, "hidden", "get").mockReturnValue(true);
     document.dispatchEvent(new Event("visibilitychange"));
     await card.updateComplete;
+    expect(text()).not.toContain("Synthetic");
+    expect(vi.getTimerCount()).toBe(0);
+    expect(connection.unsubscriptions).toBe(unsubscribed + 1);
+    connection.emit(board().entity_id, board());
+    await card.updateComplete;
+    expect(text()).not.toContain("Synthetic");
+    hidden.mockReturnValue(false);
+    document.dispatchEvent(new Event("visibilitychange"));
+    await card.updateComplete;
+    expect(connection.calls).toBe(3);
     connection.emit(board().entity_id, board());
     await card.updateComplete;
     card.remove();

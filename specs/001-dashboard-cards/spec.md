@@ -77,7 +77,8 @@ duplicate/very large lists, timezone/midnight/DST, long untrusted destination te
 - **FR-002**: Support multiple favourites and optional exact line/destination filters.
 - **FR-003**: Respect backend freshness and erase expired/disconnected data.
 - **FR-004**: Never create upstream requests, refresh on countdown, persist or log departures.
-- **FR-005**: Preserve unknown fields; cancelled services cannot suggest leaving.
+- **FR-005**: Preserve unknown source values as null; discard unrecognized extra
+  properties rather than retaining them. Cancelled services cannot suggest leaving.
 - **FR-006**: Provide English/Dutch copy, HA-local times, theme compatibility and accessible editing.
 - **FR-007**: Package both cards in one HACS-compatible resource with install documentation.
 - **FR-008**: Verify offline with synthetic fixtures and a bounded actual isolated HA check.

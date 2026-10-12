@@ -1,4 +1,7 @@
-# Derived from DevSecNinja/repo-starter; review product changes.
+# Inherited from DevSecNinja/repo-starter/.github/CODEOWNERS:
+# https://github.com/DevSecNinja/repo-starter/blob/main/.github/CODEOWNERS
+# Ownerless entries exempt routine workflow/tool/dependency metadata from automatic
+# owner requests for ALL authors, not just bots. Normal CI still applies.
 * @DevSecNinja
 /.github/CODEOWNERS @DevSecNinja
 /.github/workflows/*.yml

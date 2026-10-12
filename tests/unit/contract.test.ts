@@ -1,8 +1,29 @@
 import { describe, expect, it } from "vitest";
-import { parseBoard } from "../../src/contract";
+import {
+  CARD_CONTRACT_VERSION,
+  isSupportedContract,
+  parseBoard,
+} from "../../src/contract";
 import { board, NOW } from "../fixtures/boards";
 
 describe("v1 runtime contract", () => {
+  it.each([undefined, null, 0, 2, "1", 1.1, true])(
+    "rejects unsupported/malformed wire version %s",
+    (version) => {
+      expect(isSupportedContract(version)).toBe(false);
+      expect(() =>
+        parseBoard(
+          { ...board(), contract_version: version },
+          board().entity_id,
+          NOW,
+        ),
+      ).toThrow("Unsupported contract version");
+    },
+  );
+  it("keeps protocol v1 independent of package release metadata", () => {
+    expect(CARD_CONTRACT_VERSION).toBe(1);
+    expect(isSupportedContract(board().contract_version)).toBe(true);
+  });
   it("rejects missing display metadata and accepts bounded source values", () => {
     const b = board();
     b.departures[0]!.line = "";

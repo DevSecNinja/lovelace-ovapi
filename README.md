@@ -46,6 +46,8 @@ No live Home Assistant installation is modified by development or tests.
 
 Choose favourite OVAPI sensors in the visual editor. Each sensor is configured in
 the backend integration; the cards only display its existing board.
+Add/remove individual line and destination fields. Each field is one exact value;
+commas, quotes and line breaks within a name are preserved rather than split.
 
 ```yaml
 type: custom:ovapi-departures-card
@@ -109,6 +111,8 @@ Backend polling is always-on and conservative; there are no travel-window schedu
   not a claim that no service exists.
 - **Live status unknown / Scheduled:** source information is incomplete; the card
   does not turn unknown into “on time”.
+- Nonzero delays below a minute show **<1 min early/late** (Dutch: **eerder/later**),
+  never a misleading signed zero. Larger delays round to the nearest minute.
 - **Cancelled:** text identifies cancellation, and no actionable countdown appears.
 
 Source snapshots are retained only in memory until their original expiry, never
@@ -123,8 +127,9 @@ Do not attach live source payloads when reporting a problem; use synthetic examp
 
 ## Development and verification
 
-Tools are pinned in `.mise.toml`, packages in `package-lock.json`. No global tool
-defaults are changed. Requires mise >=2026.9.15.
+Tools and the minimum mise version are declared in `.mise.toml`; packages are
+locked in `package-lock.json`. The supported build Node range is `package.json`
+`engines.node`. No global tool defaults are changed.
 
 ```sh
 mise trust
@@ -134,6 +139,8 @@ mise run lint
 mise run test
 mise exec -- npx playwright install chromium
 mise run browser
+mise run ha-versions
+mise run ha-version-tests
 mise exec -- lefthook run pre-commit
 ```
 
@@ -164,9 +171,7 @@ HA test and does not validate real stop coverage or upstream availability.
 With a reviewed backend checkout available, run in one terminal:
 
 ```sh
-OVAPI_BACKEND_PATH=/path/to/home-assistant-ovapi \
-  mise exec -- uv run --python 3.14.8 --no-project \
-  --with-requirements tests/ha-requirements.txt python scripts/ha-e2e-server.py
+OVAPI_BACKEND_PATH=/path/to/home-assistant-ovapi mise run ha-server
 ```
 
 After the ready message, run in another terminal:
@@ -181,15 +186,56 @@ after the check. Screenshots stay in `.ha-e2e/evidence/` (ignored). No backend
 checkout or shared Python environment is changed. Minimal standalone HA on macOS
 may log optional Supervisor/media-library warnings unrelated to these cards.
 
+### Version maintenance
+
+`npm run versions` is mandatory in install/check/test/build (therefore browser/CI).
+It uses standard SemVer, TOML and YAML parsers to check release/lock/installed
+dependency agreement, exact tool pins, supported Node engines, CI mise at least
+the declared minimum, and installed Spec Kit provenance. `npm ci` and strict
+engines remain the package manager's authority for lock installation.
+
+- **Release bump:** `package.json` owns the cards release. Use
+  `npm version <version> --no-git-tag-version` to update package and lock metadata;
+  rebuild the bundle. There is no separate runtime release banner/version to sync.
+  Backend releases and wire protocol numbers are independent.
+- **Dependencies/tools:** update the manifest/pins and regenerate the lock with
+  npm, then run the gates. Dependency updates must not silently raise support
+  minimums. CI derives both the Node engine minimum and development pin, testing
+  both if they differ. The original unbounded Node range incorrectly included
+  unsupported odd majors; it was constrained without raising the minimum.
+  Commands require the pinned development Node or exact tested minimum for
+  reproducibility, even when another patch is within the declared engine range.
+- **Compatibility changes:** deliberately edit `engines.node` and verify the
+  complete declared range fits dependencies. `.mise.toml` owns tool pins and the
+  minimum mise; CI may run a newer mise. Renovate's existing presets manage pins
+  and full action SHAs; version comments are retained, not used instead of SHAs.
+- **HA target:** `tests/ha-requirements.txt` owns the tested optional E2E environment,
+  not a minimum-HA claim. `mise run ha-versions` verifies every installed pin,
+  Python against `.mise.toml` and package `Requires-Python`, and frontend against
+  the actual HA manifest. This check and its mutation tests run in CI; the full
+  setup-to-display E2E remains local/optional. `mise run ha-server` performs the
+  same preflight before starting. Adding a HACS HA minimum requires an exact
+  minimum-runtime test and revising the explicit no-unverified-claim guard.
+  Run the full isolated E2E before recording a new HA target as tested; metadata
+  compatibility alone does not prove frontend behavior or HA storage-schema compatibility.
+- **Contract:** `CARD_CONTRACT_VERSION` owns the consumer's supported wire version.
+  Parser, picker and editor share its guard; independent v1 synthetic fixtures and
+  rejection tests prevent accidental “support” for future/malformed versions.
+  Breaking protocol changes require backend coordination and new fixtures.
+- **Spec Kit:** upgrade through Specify CLI, then update its pinned source task
+  and generated provenance together. Do not edit provenance to disguise an upgrade.
+  Historical spec/research/verification records are dated evidence, not active pins.
+
 ## Repository conventions and Spec Kit
 
-This repository uses official **GitHub Spec Kit v1.1.3**, installed from the pinned
+This repository uses official **GitHub Spec Kit**, installed from the pinned
 official source release and initialized for Copilot. Generated `.specify/` scripts,
 templates and `.github/skills/` are retained. Constitution → specification → plan
 → tasks → implementation → convergence evidence lives in
 [`specs/001-dashboard-cards/`](specs/001-dashboard-cards/).
 
-Shared lint CI is SHA-pinned to `DevSecNinja/.github` v3.2.0 with failures enforced.
+Shared lint CI is SHA-pinned to `DevSecNinja/.github` in `.github/workflows/ci.yml`
+with failures enforced.
 That reusable workflow declares `security-events: write` internally, so GitHub
 requires the calling lint job to grant it even with SARIF uploads disabled. The
 permission is scoped to that job; frontend verification remains read-only.

@@ -1,5 +1,6 @@
 import { LitElement, html, nothing } from "lit";
 import type { HomeAssistant, BoardSnapshot, Departure } from "./contract";
+import { isSupportedContract } from "./contract";
 import {
   departureAt,
   minutesUntil,
@@ -32,7 +33,7 @@ export class OvapiDeparturesCard extends LitElement {
         .filter(
           ([id, state]) =>
             id.startsWith("sensor.") &&
-            state.attributes.contract_version === 1 &&
+            isSupportedContract(state.attributes.contract_version) &&
             typeof state.attributes.board_id === "string",
         )
         .slice(0, 1)
@@ -217,6 +218,10 @@ export class OvapiDeparturesCard extends LitElement {
     if (d.cancelled === true)
       return html`<span class="cancelled-label">${t.cancelled}</span>`;
     if (d.delay_seconds !== null && d.delay_seconds !== 0) {
+      if (Math.abs(d.delay_seconds) < 60) {
+        return html`${t.expected}
+        ${d.delay_seconds < 0 ? t.subMinuteEarly : t.subMinuteLate}`;
+      }
       const minutes = Math.round(d.delay_seconds / 60);
       return html`${t.expected} ${minutes >= 0 ? "+" : ""}${minutes} ${t.min}`;
     }

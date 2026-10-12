@@ -1,8 +1,8 @@
 # Third-party notices
 
-## Lit 3.3.3, lit-html and @lit/reactive-element
+## Lit, lit-html and @lit/reactive-element
 
-The production resource bundles Lit under the BSD 3-Clause License.
+The production resource bundles the package-lock.json versions of Lit under the BSD 3-Clause License.
 
 Copyright (c) 2017 Google LLC. All rights reserved.
 
@@ -29,10 +29,11 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
 OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 THE POSSIBILITY OF SUCH DAMAGE.
 
-## GitHub Spec Kit v1.1.3
+## GitHub Spec Kit
 
 Generated `.specify/` infrastructure and `.github/skills/speckit-*` originate from
-[GitHub Spec Kit](https://github.com/github/spec-kit/tree/v1.1.3).
+[GitHub Spec Kit](https://github.com/github/spec-kit).
+The installed version is recorded in `.specify/integration.json`.
 
 MIT License
 
