@@ -582,7 +582,7 @@ function ke(e, t, n) {
 	let r = B(e);
 	if (r.status !== "complete" && r.status !== "partial" && r.status !== "stale" && r.status !== "unavailable") throw Error("Invalid coverage status");
 	let i = U(r.selected_members), a = U(r.verified_members), o = U(r.missing_members), s = r.metadata_fetched_at === null ? null : Oe(r.metadata_fetched_at), c = r.metadata_expires_at === null ? null : Oe(r.metadata_expires_at);
-	if (a + o !== i || (r.status === "partial" ? o === 0 : o !== 0) || (r.status === "unavailable" ? i !== 0 || s !== null || c !== null : s === null || c === null || Date.parse(c) <= Date.parse(s) || Date.parse(s) > n + 6e4) || (r.status === "partial" || r.status === "unavailable" || i === 0) && t !== "unavailable" || r.status === "stale" && t === "ready") throw Error("Inconsistent station coverage");
+	if (a + o !== i || (r.status === "partial" ? o === 0 : o !== 0) || r.status === "stale" && i === 0 || (r.status === "unavailable" ? i !== 0 || s !== null || c !== null : s === null || c === null || Date.parse(c) <= Date.parse(s) || Date.parse(s) > n + 6e4) || (r.status === "partial" || r.status === "unavailable" || i === 0) && t !== "unavailable" || r.status === "stale" && t === "ready") throw Error("Inconsistent station coverage");
 	return {
 		status: r.status,
 		selected_members: i,
@@ -916,14 +916,21 @@ var Ve = /* @__PURE__ */ new WeakMap(), He = class {
 			...t.coverage ? { coverage: t.coverage } : {}
 		});
 	};
+	current() {
+		return Be(this.view) <= Date.now() && this.publish(this.view), this.view;
+	}
 	add(e) {
-		this.listeners.add(e), Be(this.view) <= Date.now() ? this.publish(this.view) : e(this.view);
+		let t = this.current();
+		this.listeners.add(e), e(t);
 	}
 	remove(e) {
 		return this.listeners.delete(e), !this.listeners.size && (this.disposed = !0, this.publish({ status: "unavailable" }), this.connection.removeEventListener("disconnected", this.disconnected), this.connection.removeEventListener("ready", this.ready), this.unsubscribe && this.release(this.unsubscribe), !0);
 	}
 };
-function Ue(e, t, n) {
+function Ue(e, t) {
+	return Ve.get(e)?.get(t)?.current();
+}
+function We(e, t, n) {
 	let r = Ve.get(e);
 	r || (r = /* @__PURE__ */ new Map(), Ve.set(e, r));
 	let i = r.get(t);
@@ -935,7 +942,7 @@ function Ue(e, t, n) {
 }
 //#endregion
 //#region src/styles.ts
-var We = o`
+var Ge = o`
   :host {
     display: block;
     container-type: inline-size;
@@ -1207,10 +1214,10 @@ var We = o`
 	BOOLEAN_ATTRIBUTE: 4,
 	EVENT: 5,
 	ELEMENT: 6
-}, Ge = (e) => (...t) => ({
+}, Ke = (e) => (...t) => ({
 	_$litDirective$: e,
 	values: t
-}), Ke = class {
+}), qe = class {
 	constructor(e) {}
 	get _$AU() {
 		return this._$AM._$AU;
@@ -1224,9 +1231,9 @@ var We = o`
 	update(e, t) {
 		return this.render(...t);
 	}
-}, { I: qe } = we, Je = (e) => e, Ye = (e) => e.strings === void 0, Xe = () => document.createComment(""), Q = (e, t, n) => {
+}, { I: Je } = we, Ye = (e) => e, Xe = (e) => e.strings === void 0, Ze = () => document.createComment(""), Q = (e, t, n) => {
 	let r = e._$AA.parentNode, i = t === void 0 ? e._$AB : t._$AA;
-	if (n === void 0) n = new qe(r.insertBefore(Xe(), i), r.insertBefore(Xe(), i), e, e.options);
+	if (n === void 0) n = new Je(r.insertBefore(Ze(), i), r.insertBefore(Ze(), i), e, e.options);
 	else {
 		let t = n._$AB.nextSibling, a = n._$AM, o = a !== e;
 		if (o) {
@@ -1236,18 +1243,18 @@ var We = o`
 		if (t !== i || o) {
 			let e = n._$AA;
 			for (; e !== t;) {
-				let t = Je(e).nextSibling;
-				Je(r).insertBefore(e, i), e = t;
+				let t = Ye(e).nextSibling;
+				Ye(r).insertBefore(e, i), e = t;
 			}
 		}
 	}
 	return n;
-}, $ = (e, t, n = e) => (e._$AI(t, n), e), Ze = {}, Qe = (e, t = Ze) => e._$AH = t, $e = (e) => e._$AH, et = (e) => {
+}, $ = (e, t, n = e) => (e._$AI(t, n), e), Qe = {}, $e = (e, t = Qe) => e._$AH = t, et = (e) => e._$AH, tt = (e) => {
 	e._$AR(), e._$AA.remove();
-}, tt = Ge(class extends Ke {
+}, nt = Ke(class extends qe {
 	constructor(e) {
 		if (super(e), e.type !== Z.PROPERTY && e.type !== Z.ATTRIBUTE && e.type !== Z.BOOLEAN_ATTRIBUTE) throw Error("The `live` directive is not allowed on child or event bindings");
-		if (!Ye(e)) throw Error("`live` bindings can only contain a single expression");
+		if (!Xe(e)) throw Error("`live` bindings can only contain a single expression");
 	}
 	render(e) {
 		return e;
@@ -1260,13 +1267,13 @@ var We = o`
 		} else if (e.type === Z.BOOLEAN_ATTRIBUTE) {
 			if (!!t === n.hasAttribute(r)) return A;
 		} else if (e.type === Z.ATTRIBUTE && n.getAttribute(r) === t + "") return A;
-		return Qe(e), t;
+		return $e(e), t;
 	}
-}), nt = (e, t, n) => {
+}), rt = (e, t, n) => {
 	let r = /* @__PURE__ */ new Map();
 	for (let i = t; i <= n; i++) r.set(e[i], i);
 	return r;
-}, rt = Ge(class extends Ke {
+}, it = Ke(class extends qe {
 	constructor(e) {
 		if (super(e), e.type !== Z.CHILD) throw Error("repeat() can only be used in text expressions");
 	}
@@ -1284,7 +1291,7 @@ var We = o`
 		return this.dt(e, t, n).values;
 	}
 	update(e, [t, n, r]) {
-		let i = $e(e), { values: a, keys: o } = this.dt(t, n, r);
+		let i = et(e), { values: a, keys: o } = this.dt(t, n, r);
 		if (!Array.isArray(i)) return this.ut = o, a;
 		let s = this.ut ??= [], c = [], l, u, d = 0, f = i.length - 1, p = 0, m = a.length - 1;
 		for (; d <= f && p <= m;) if (i[d] === null) d++;
@@ -1293,7 +1300,7 @@ var We = o`
 		else if (s[f] === o[m]) c[m] = $(i[f], a[m]), f--, m--;
 		else if (s[d] === o[m]) c[m] = $(i[d], a[m]), Q(e, c[m + 1], i[d]), d++, m--;
 		else if (s[f] === o[p]) c[p] = $(i[f], a[p]), Q(e, i[d], i[f]), f--, p++;
-		else if (l === void 0 && (l = nt(o, p, m), u = nt(s, d, f)), l.has(s[d])) {
+		else if (l === void 0 && (l = rt(o, p, m), u = rt(s, d, f)), l.has(s[d])) {
 			if (l.has(s[f])) {
 				let t = u.get(o[p]), n = t === void 0 ? null : i[t];
 				if (n === null) {
@@ -1301,30 +1308,30 @@ var We = o`
 					$(t, a[p]), c[p] = t;
 				} else c[p] = $(n, a[p]), Q(e, i[d], n), i[t] = null;
 				p++;
-			} else et(i[f]), f--;
-		} else et(i[d]), d++;
+			} else tt(i[f]), f--;
+		} else tt(i[d]), d++;
 		for (; p <= m;) {
 			let t = Q(e, c[m + 1]);
 			$(t, a[p]), c[p++] = t;
 		}
 		for (; d <= f;) {
 			let e = i[d++];
-			e !== null && et(e);
+			e !== null && tt(e);
 		}
-		return this.ut = o, Qe(e, c), A;
+		return this.ut = o, $e(e, c), A;
 	}
 });
 //#endregion
 //#region src/editor.ts
-function it(e) {
+function at(e) {
 	return JSON.stringify(e, (e, t) => {
 		if (typeof t != "object" || !t || Array.isArray(t)) return t;
 		let n = B(t);
 		return Object.fromEntries(Object.keys(n).sort().map((e) => [e, n[e]]));
 	});
 }
-var at = class extends R {
-	static styles = We;
+var ot = class extends R {
+	static styles = Ge;
 	config = {};
 	acceptedConfig;
 	ha;
@@ -1333,7 +1340,7 @@ var at = class extends R {
 		this.ha = e, this.requestUpdate();
 	}
 	setConfig(e) {
-		let t = { ...B(e) }, n = it(t);
+		let t = { ...B(e) }, n = at(t);
 		n !== this.acceptedConfig && (this.config = t, this.acceptedConfig = n, this.error = "", this.requestUpdate());
 	}
 	selectedEntities() {
@@ -1352,7 +1359,7 @@ var at = class extends R {
 		for (let e of ["lines", "destinations"]) Array.isArray(n[e]) && (n[e] = n[e].filter((e) => typeof e != "string" || e.trim()));
 		this.config = n;
 		try {
-			Me(n), this.error = "", this.acceptedConfig = it(n), this.dispatchEvent(new CustomEvent("config-changed", {
+			Me(n), this.error = "", this.acceptedConfig = at(n), this.dispatchEvent(new CustomEvent("config-changed", {
 				detail: { config: n },
 				bubbles: !0,
 				composed: !0
@@ -1381,11 +1388,11 @@ var at = class extends R {
 		return k`<div class="editor">
       <fieldset>
         <legend>${t.entities}</legend>
-        ${a.length ? rt(a, (e) => e, (e) => k`<label class="choice">
+        ${a.length ? it(a, (e) => e, (e) => k`<label class="choice">
                     <input
                       type="checkbox"
                       .value=${e}
-                      .checked=${tt(i.includes(e))}
+                      .checked=${nt(i.includes(e))}
                       @change=${(t) => this.toggleEntity(e, this.input(t).checked)}
                     />
                     ${String(this.ha?.states[e]?.attributes.friendly_name ?? e)}
@@ -1477,14 +1484,13 @@ var at = class extends R {
     </div>`;
 	}
 };
-customElements.get("ovapi-card-editor") || customElements.define("ovapi-card-editor", at);
+customElements.get("ovapi-card-editor") || customElements.define("ovapi-card-editor", ot);
 //#endregion
 //#region src/cards.ts
-var ot = class extends R {
-	static styles = We;
+var st = class extends R {
+	static styles = Ge;
 	config;
 	ha;
-	views = /* @__PURE__ */ new Map();
 	stops = [];
 	tick;
 	paused = !1;
@@ -1533,11 +1539,11 @@ var ot = class extends R {
 		this.paused = document.hidden, this.restart();
 	};
 	clear() {
-		this.stops.forEach((e) => e()), this.stops = [], this.views.clear(), clearInterval(this.tick), this.tick = void 0;
+		this.stops.forEach((e) => e()), this.stops = [], clearInterval(this.tick), this.tick = void 0;
 	}
 	restart() {
-		this.clear(), this.isConnected && !this.paused && this.config && this.ha && (this.stops = this.config.entities.map((e) => Ue(this.ha.connection, e, (t) => {
-			this.views.set(e, t), this.requestUpdate();
+		this.clear(), this.isConnected && !this.paused && this.config && this.ha && (this.stops = this.config.entities.map((e) => We(this.ha.connection, e, () => {
+			this.requestUpdate();
 		})), this.tick = setInterval(() => this.requestUpdate(), 1e3)), this.requestUpdate();
 	}
 	render() {
@@ -1555,14 +1561,14 @@ var ot = class extends R {
           </h2>
         </header>
         ${this.config.entities.map((t) => {
-			let n = ze(this.views.get(t) ?? { status: "loading" }, Date.now()), r = n.board;
-			if (!r || !this.isConnected || this.paused || Date.parse(r.expires_at) <= Date.now()) {
-				let i = r ? "expired" : n.status, a = this.isConnected && !this.paused ? this.renderCoverage(n) : j;
+			let n = (this.isConnected && !this.paused && this.ha ? Ue(this.ha.connection, t) : void 0) ?? { status: "loading" }, r = n.board;
+			if (!r) {
+				let r = n.status, i = this.renderCoverage(n);
 				return k`<section>
               <h3>${t}</h3>
-              ${a}
-              ${a === j || n.coverage?.status === "stale" ? k`<p class="message" role="status">
-                      ${e[i === "ready" || i === "stale" ? "loading" : i]}
+              ${i}
+              ${i === j || n.coverage?.status === "stale" ? k`<p class="message" role="status">
+                      ${e[r === "ready" || r === "stale" ? "loading" : r]}
                     </p>` : j}
             </section>`;
 			}
@@ -1689,7 +1695,7 @@ var ot = class extends R {
         >
       </p>`;
 	}
-}, st = class extends ot {
+}, ct = class extends st {
 	get commute() {
 		return !0;
 	}
@@ -1698,12 +1704,12 @@ var ot = class extends R {
 //#region src/index.ts
 for (let [e, t, n, r] of [[
 	"ovapi-departures-card",
-	ot,
+	st,
 	"OVAPI departures",
 	"Upcoming departures with honest freshness and cancellation status."
 ], [
 	"ovapi-commute-card",
-	st,
+	ct,
 	"OVAPI commute",
 	"When to leave for your favourite stops, including walking time."
 ]]) customElements.get(e) || customElements.define(e, t), window.customCards ??= [], window.customCards.some((t) => t.type === e) || window.customCards.push({

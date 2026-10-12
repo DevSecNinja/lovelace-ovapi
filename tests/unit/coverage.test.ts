@@ -76,6 +76,12 @@ describe("optional station coverage contract", () => {
     { ...coverage(), verified_members: 3 },
     { ...coverage(), verified_members: 3, missing_members: 1 },
     { ...coverage(), status: "partial" },
+    {
+      ...coverage(),
+      status: "stale",
+      selected_members: 0,
+      verified_members: 0,
+    },
     { ...coverage(), status: "unavailable" },
     {
       ...coverage(),
@@ -142,4 +148,15 @@ describe("optional station coverage contract", () => {
     });
     expect(parse(value)).toEqual(value);
   });
+  it.each([0, 2, "1", null, true])(
+    "does not let coverage bypass version rejection: %s",
+    (contract_version) => {
+      expect(() =>
+        parse({
+          ...unavailableStation(),
+          contract_version,
+        }),
+      ).toThrow("Unsupported contract version");
+    },
+  );
 });

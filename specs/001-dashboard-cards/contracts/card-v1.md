@@ -60,7 +60,7 @@ metro-only favourite. Counts are not lines, directions or active journeys.
 | stale       | Failed refresh with retained valid metadata; missing 0, verified = selected | stale or unavailable, never ready                                 |
 | unavailable | All counts 0; both metadata dates null                                      | unavailable only                                                  |
 
-Zero selected members requires ordinary unavailable, even for complete coverage.
+Known metadata with zero selected members requires coverage complete and ordinary unavailable.
 It means no station platforms match the selected modes, not no active service.
 Every ordinary unavailable board still requires `departures:[]` and null live
 timestamps. Partial and unverifiable station results therefore fail closed for

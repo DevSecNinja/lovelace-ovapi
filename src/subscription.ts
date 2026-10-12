@@ -22,7 +22,7 @@ export interface BoardView {
 }
 type Listener = (view: BoardView) => void;
 
-export function currentBoardView(view: BoardView, now: number): BoardView {
+function currentBoardView(view: BoardView, now: number): BoardView {
   if (
     view.coverage?.metadata_expires_at &&
     Date.parse(view.coverage.metadata_expires_at) <= now
@@ -119,10 +119,15 @@ class BoardSubscription {
     });
   };
 
-  add(listener: Listener): void {
-    this.listeners.add(listener);
+  current(): BoardView {
     if (deadline(this.view) <= Date.now()) this.publish(this.view);
-    else listener(this.view);
+    return this.view;
+  }
+
+  add(listener: Listener): void {
+    const view = this.current();
+    this.listeners.add(listener);
+    listener(view);
   }
 
   remove(listener: Listener): boolean {
@@ -135,6 +140,13 @@ class BoardSubscription {
     if (this.unsubscribe) this.release(this.unsubscribe);
     return true;
   }
+}
+
+export function readBoard(
+  connection: HAConnection,
+  entity: string,
+): BoardView | undefined {
+  return connections.get(connection)?.get(entity)?.current();
 }
 
 export function watchBoard(

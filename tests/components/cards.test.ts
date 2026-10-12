@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "../../src/index";
 import type { OvapiDeparturesCard } from "../../src/cards";
+import { watchBoard } from "../../src/subscription";
 import { FakeConnection, hass } from "../fixtures/connection";
 import {
   board,
@@ -43,6 +44,76 @@ describe("cards", () => {
     await mounted.card.updateComplete;
     return mounted;
   }
+  it.each([
+    ["ovapi-departures-card", "departures", "live"],
+    ["ovapi-departures-card", "grouped", "metadata"],
+    ["ovapi-commute-card", "departures", "live"],
+    ["ovapi-commute-card", "departures", "metadata"],
+  ])(
+    "irreversibly erases observed %s/%s/%s expiry across clock rollback",
+    async (tag, display_mode, expiry) => {
+      const { card, connection, text } = await mount(tag);
+      card.setConfig({
+        type: `custom:${tag}`,
+        display_mode,
+        entities: [board().entity_id],
+      });
+      const observer = vi.fn();
+      const stop = watchBoard(connection, board().entity_id, observer);
+      const calls = connection.calls;
+      const value = board({
+        coverage: coverage({
+          metadata_expires_at: new Date(
+            NOW + (expiry === "metadata" ? 60_000 : 86_400_000),
+          ).toISOString(),
+        }),
+      });
+      connection.emit(value.entity_id, value);
+      await card.updateComplete;
+      expect(text()).toContain("Synthetic destination");
+      expect(observer.mock.lastCall?.[0].board).toBeDefined();
+
+      // No timer runs: render is the first owner to observe the forward jump.
+      vi.setSystemTime(NOW + 30 * 60_000);
+      card.requestUpdate();
+      await card.updateComplete;
+      await card.updateComplete;
+      expect(text()).not.toContain("Synthetic destination");
+      const erased =
+        expiry === "metadata"
+          ? { status: "unavailable", coverageExpired: true }
+          : { status: "expired", coverage: value.coverage };
+      expect(observer.mock.lastCall?.[0]).toEqual(erased);
+      expect(observer.mock.lastCall?.[0]).not.toHaveProperty("board");
+      expect(vi.getTimerCount()).toBe(expiry === "metadata" ? 1 : 2);
+
+      vi.setSystemTime(NOW);
+      card.requestUpdate();
+      await card.updateComplete;
+      expect(text()).not.toContain("Synthetic destination");
+      expect(card.shadowRoot!.querySelector(".leave")).toBeNull();
+      const late = vi.fn();
+      const stopLate = watchBoard(connection, value.entity_id, late);
+      expect(late.mock.lastCall?.[0]).toEqual(erased);
+      expect(connection.calls).toBe(calls);
+
+      connection.emit(
+        value.entity_id,
+        board({
+          fetched_at: new Date(NOW + 1000).toISOString(),
+          expires_at: new Date(NOW + 29 * 60_000 + 1000).toISOString(),
+          coverage: coverage(),
+        }),
+      );
+      await card.updateComplete;
+      expect(text()).toContain("Synthetic destination");
+      stopLate();
+      stop();
+      card.remove();
+      await card.updateComplete;
+      expect(vi.getTimerCount()).toBe(0);
+    },
+  );
   it.each([
     ["ovapi-departures-card", "departures", "en"],
     ["ovapi-departures-card", "grouped", "en"],

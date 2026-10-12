@@ -28,8 +28,10 @@ boolean `coverageExpired` reason. Disconnect/removal/hidden page clears everythi
 
 One shared deadline timer targets the earliest live or static expiry; it is not
 an upstream refresh or polling timer. Very distant static deadlines are bounded
-to the platform timeout limit and rechecked, never overflowed. A shared pure
-`currentBoardView` guard also checks cached subscription attachment and rendering
-after clock suspension. Duplicate full replacements retain their origin dates.
+to the platform timeout limit and rechecked, never overflowed. Subscription reads
+persist expiry before returning a view, including attachment and rendering after
+clock suspension. Cards do not own a second snapshot cache: they read through
+`readBoard`, while listeners only request an update. An observed expired board
+therefore cannot reappear after clock rollback. Duplicate full replacements retain their origin dates.
 Legacy snapshots lacking coverage and all existing editor/config types remain
 unchanged.

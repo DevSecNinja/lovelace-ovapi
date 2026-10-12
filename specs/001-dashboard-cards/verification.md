@@ -15,16 +15,17 @@ cases exercise duplicate frames, shared subscribers, suspended clocks, timer
 overflow bounds, source erasure, localized zero-selected/partial/unknown/stale
 states, no commute advice and unchanged single-point behavior.
 
-| Command                     | Result                                                                                             |
-| --------------------------- | -------------------------------------------------------------------------------------------------- |
-| `mise run lint`             | PASS: formatting, YAML, actions, zizmor, versions, typecheck, ESLint                               |
-| `mise run test`             | PASS: 194 frontend tests and 25 Node guards; all per-file thresholds                               |
-| `mise run browser`          | PASS: 40 production-bundle checks; phone/tablet, light/dark, EN/NL, axe, no extra requests/storage |
-| `mise run ha-versions`      | PASS: existing actual HA/frontend/Python pinned runtime preflight                                  |
-| `mise run ha-version-tests` | PASS: 7 Python runtime guard tests                                                                 |
+| Command                                | Result                                                                                             |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `mise run lint`                        | PASS: formatting, YAML, actions, zizmor, versions, typecheck, ESLint                               |
+| `mise run test`                        | PASS: 205 frontend tests and 25 Node guards; all per-file thresholds                               |
+| `mise run browser`                     | PASS: 40 production-bundle checks; phone/tablet, light/dark, EN/NL, axe, no extra requests/storage |
+| `mise run ha-versions`                 | PASS: existing actual HA/frontend/Python pinned runtime preflight                                  |
+| `mise run ha-version-tests`            | PASS: 7 Python runtime guard tests                                                                 |
+| `mise exec -- lefthook run pre-commit` | PASS with staged changes before commit `e94e386`: frontend, Markdown, YAML, Actions and secrets    |
 
-Coverage: 100% statements/lines/functions and 99.33% branches. Rebuilt HACS bundle:
-18,876 bytes gzip, below 100 KiB. No dependency, lockfile, CI, release or protocol
+Coverage: 100% statements/lines/functions and 99.55% branches. Rebuilt HACS bundle:
+18,869 bytes gzip, below 100 KiB. No dependency, lockfile, CI, release or protocol
 version changes. The editor and grouping implementations are unchanged.
 
 One batched visual inspection of phone/tablet light/dark coverage screenshots
@@ -35,7 +36,22 @@ polishing pass. Screenshots remain local.
 **Pending:** copy/verify the backend-owned synthetic producer fixture, then run
 one coordinated bounded actual-HA station/legacy producer-consumer check against
 the backend worktree. The current browser evidence is the component host, not
-actual HA. Pre-commit with staged changes and final delivery remain outstanding.
+actual HA. Initial hosted PR checks passed; final delivery remains outstanding.
+
+### Native Copilot review follow-up
+
+The review found that render-time clock-jump expiry returned a sanitized copy but
+left two cached owners retaining the original board. Four real-card regressions
+failed before the fix: live or metadata expiry observed without timer execution,
+then clock rollback, both departure/commute variants, and a late shared subscriber.
+The fix removes the card cache entirely. `readBoard` checks the subscription's
+deadline and publishes the erased state before returning it; all subscribers see
+the same sanitized state, and remaining timers are cleared/rearmed safely.
+Tests verify no departure/advice resurrection, erased snapshot references,
+reentrant readers, shared subscribers and recovery only from a new valid frame.
+
+The stale pending-pre-commit sentence was corrected above; earlier historical
+execution sections below remain unchanged.
 
 Verified 2026-10-12 in the isolated `devsecninja-ovapi-dashboard-cards` worktree.
 No release, package publication, merge or live Home Assistant change.

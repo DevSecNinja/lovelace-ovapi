@@ -138,6 +138,7 @@ function stationCoverage(
   if (
     verified + missing !== selected ||
     (c.status === "partial" ? missing === 0 : missing !== 0) ||
+    (c.status === "stale" && selected === 0) ||
     (c.status === "unavailable"
       ? selected !== 0 || fetched !== null || expires !== null
       : fetched === null ||

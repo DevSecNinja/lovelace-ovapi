@@ -1,9 +1,27 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { watchBoard } from "../../src/subscription";
+import { readBoard, watchBoard } from "../../src/subscription";
 import { FakeConnection } from "../fixtures/connection";
 import { board, coverage, NOW, unavailableStation } from "../fixtures/boards";
 
 describe("ephemeral shared subscriptions", () => {
+  it("reads one owned snapshot, erases observed expiry before reentrant listeners and never creates a subscription", () => {
+    const c = new FakeConnection();
+    expect(readBoard(c, board().entity_id)).toBeUndefined();
+    const listener = vi.fn(() => readBoard(c, board().entity_id));
+    const stop = watchBoard(c, board().entity_id, listener);
+    c.emit(board().entity_id, board());
+    expect(readBoard(c, board().entity_id)?.board).toBeDefined();
+    vi.setSystemTime(NOW + 30 * 60_000);
+    expect(readBoard(c, board().entity_id)).toEqual({ status: "expired" });
+    expect(listener.mock.lastCall).toBeDefined();
+    expect(listener.mock.results.at(-1)?.value).toEqual({ status: "expired" });
+    vi.setSystemTime(NOW);
+    expect(readBoard(c, board().entity_id)).toEqual({ status: "expired" });
+    expect(vi.getTimerCount()).toBe(0);
+    expect(c.calls).toBe(1);
+    stop();
+    expect(readBoard(c, board().entity_id)).toBeUndefined();
+  });
   it("retains only whitelisted unavailable coverage, shares it, and erases on disconnect/unsubscribe", async () => {
     const c = new FakeConnection(),
       a = vi.fn(),

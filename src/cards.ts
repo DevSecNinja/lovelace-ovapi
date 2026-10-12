@@ -11,7 +11,7 @@ import {
 } from "./model";
 import type { CardConfig, DepartureGroup } from "./model";
 import { clock, labels } from "./localize";
-import { currentBoardView, watchBoard } from "./subscription";
+import { readBoard, watchBoard } from "./subscription";
 import type { BoardView } from "./subscription";
 import { styles } from "./styles";
 import "./editor";
@@ -20,7 +20,6 @@ export class OvapiDeparturesCard extends LitElement {
   static styles = styles;
   private config?: CardConfig;
   private ha?: HomeAssistant;
-  private views = new Map<string, BoardView>();
   private stops: (() => void)[] = [];
   private tick?: ReturnType<typeof setInterval>;
   private paused = false;
@@ -102,7 +101,6 @@ export class OvapiDeparturesCard extends LitElement {
   private clear(): void {
     this.stops.forEach((stop) => stop());
     this.stops = [];
-    this.views.clear();
     clearInterval(this.tick);
     this.tick = undefined;
   }
@@ -110,8 +108,7 @@ export class OvapiDeparturesCard extends LitElement {
     this.clear();
     if (this.isConnected && !this.paused && this.config && this.ha) {
       this.stops = this.config.entities.map((entity) =>
-        watchBoard(this.ha!.connection, entity, (view) => {
-          this.views.set(entity, view);
+        watchBoard(this.ha!.connection, entity, () => {
           this.requestUpdate();
         }),
       );
@@ -135,22 +132,13 @@ export class OvapiDeparturesCard extends LitElement {
           </h2>
         </header>
         ${this.config.entities.map((entity) => {
-          const view = currentBoardView(
-            this.views.get(entity) ?? { status: "loading" },
-            Date.now(),
-          );
+          const view = (this.isConnected && !this.paused && this.ha
+            ? readBoard(this.ha.connection, entity)
+            : undefined) ?? { status: "loading" };
           const board = view.board;
-          if (
-            !board ||
-            !this.isConnected ||
-            this.paused ||
-            Date.parse(board.expires_at!) <= Date.now()
-          ) {
-            const status = board ? "expired" : view.status;
-            const coverage =
-              this.isConnected && !this.paused
-                ? this.renderCoverage(view)
-                : nothing;
+          if (!board) {
+            const status = view.status;
+            const coverage = this.renderCoverage(view);
             return html`<section>
               <h3>${entity}</h3>
               ${coverage}

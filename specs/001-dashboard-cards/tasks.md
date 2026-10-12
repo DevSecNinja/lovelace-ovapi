@@ -101,3 +101,15 @@ Dependencies: T028 follows T027; T029 follows T028; T030 follows T029.
 
 Dependencies: T033 follows T032; T034 follows T033; T035 follows T034; T036
 follows T035. No new agents, sessions, release or merge.
+
+## Phase 6: Convergence
+
+- [ ] T037 Verify the backend-owned `station-coverage-v1.json` synthetic producer
+      fixtures in consumer contract tests per FR-009 and T032 (partial); current
+      consumer-authored fixtures pass but do not prove the producer boundary.
+- [ ] T038 Complete and record the bounded actual-HA station/legacy producer,
+      WebSocket and frontend check per FR-008, T035 and Constitution IV (partial);
+      current station browser evidence is the offline component host only.
+
+These close the already-tracked T032/T035 evidence obligations, not additional
+product scope. T038 depends on T037 and backend runtime readiness.

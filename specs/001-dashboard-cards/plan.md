@@ -93,8 +93,9 @@ backend owner before finalizing validation.
 
 Whitelist the small coverage record separately in `BoardView` when unavailable
 so source payloads remain discarded. Reuse the existing single subscription
-deadline timer at the earliest live/metadata deadline and the existing render
-clock guard; no polling timer, HTTP, dependency or persistence. Local metadata
+deadline timer at the earliest live/metadata deadline. Rendering reads through
+the subscription's expiry guard, which persists erasure before returning a view;
+cards hold no duplicate snapshot cache. No polling timer, HTTP, dependency or persistence. Local metadata
 expiry removes counts/dates along with departures and leaves only a generic
 expired-coverage reason. All lifecycle cleanup clears that reason too.
 
