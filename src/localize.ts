@@ -48,6 +48,7 @@ const en = {
   groupedHelp:
     "One row per transport + line + destination, soonest first. Opposite directions count separately. Up to three following times; cancelled-only routes appear last.",
   alsoIn: "Also in",
+  oneMoreCancelled: "more cancelled",
   moreCancelled: "more cancelled",
   language: "Language",
   auto: "Automatic",
@@ -104,6 +105,7 @@ const nl: typeof en = {
   groupedHelp:
     "Een rij per vervoertype + lijn + bestemming, eerstvolgende bovenaan. Tegengestelde richtingen tellen apart. Tot drie volgende tijden; routes met alleen vervallen ritten staan onderaan.",
   alsoIn: "Ook over",
+  oneMoreCancelled: "andere vervallen rit",
   moreCancelled: "andere vervallen ritten",
   language: "Taal",
   auto: "Automatisch",

@@ -246,7 +246,8 @@ export class OvapiDeparturesCard extends LitElement {
         ${
           group?.additionalCancellations
             ? html`<div class="detail cancelled-label">
-                ${group.additionalCancellations} ${t.moreCancelled}
+                ${group.additionalCancellations}
+                ${group.additionalCancellations === 1 ? t.oneMoreCancelled : t.moreCancelled}
               </div>`
             : nothing
         }

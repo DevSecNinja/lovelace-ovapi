@@ -730,6 +730,7 @@ var Ae = {
 	maxRoutes: "Maximum route rows per favourite",
 	groupedHelp: "One row per transport + line + destination, soonest first. Opposite directions count separately. Up to three following times; cancelled-only routes appear last.",
 	alsoIn: "Also in",
+	oneMoreCancelled: "more cancelled",
 	moreCancelled: "more cancelled",
 	language: "Language",
 	auto: "Automatic",
@@ -779,6 +780,7 @@ var Ae = {
 	maxRoutes: "Maximum routerijen per favoriet",
 	groupedHelp: "Een rij per vervoertype + lijn + bestemming, eerstvolgende bovenaan. Tegengestelde richtingen tellen apart. Tot drie volgende tijden; routes met alleen vervallen ritten staan onderaan.",
 	alsoIn: "Ook over",
+	oneMoreCancelled: "andere vervallen rit",
 	moreCancelled: "andere vervallen ritten",
 	language: "Taal",
 	auto: "Automatisch",
@@ -1433,7 +1435,8 @@ var $ = class extends B {
                       >`)}
               </div>` : j}
         ${n?.additionalCancellations ? k`<div class="detail cancelled-label">
-                ${n.additionalCancellations} ${i.moreCancelled}
+                ${n.additionalCancellations}
+                ${n.additionalCancellations === 1 ? i.oneMoreCancelled : i.moreCancelled}
               </div>` : j}
       </div>
       <div class="time">

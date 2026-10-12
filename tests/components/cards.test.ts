@@ -99,7 +99,9 @@ describe("cards", () => {
     expect(rows[1]!.classList.contains("cancelled")).toBe(true);
     expect(rows[1]!.querySelector("strong")).toBeNull();
     expect(rows[1]!.querySelectorAll("time")).toHaveLength(3);
-    expect(rows[1]!.textContent).toContain("2 more cancelled");
+    expect(rows[1]!.textContent?.replace(/\s+/g, " ")).toContain(
+      "2 more cancelled",
+    );
     expect(rows[1]!.querySelector(".time time")?.textContent).toBe("13:02");
   });
   it("uses Dutch grouped copy and keeps old configurations and commute behavior unchanged", async () => {
@@ -132,6 +134,28 @@ describe("cards", () => {
     ).toContain("2");
     expect(commute.card.shadowRoot!.querySelector(".following")).toBeNull();
   });
+  it.each([
+    ["en", 1, "1 more cancelled"],
+    ["en", 2, "2 more cancelled"],
+    ["nl", 1, "1 andere vervallen rit"],
+    ["nl", 2, "2 andere vervallen ritten"],
+  ])(
+    "renders %s additional cancellation count %i grammatically",
+    async (language, count, expected) => {
+      const { card, connection } = await mountGrouped({ language });
+      connection.emit(
+        board().entity_id,
+        board({
+          departures: Array.from({ length: 3 + count }, (_, i) =>
+            departure(i + 1, { cancelled: true }),
+          ),
+        }),
+      );
+      await card.updateComplete;
+      const label = card.shadowRoot!.querySelector(".detail.cancelled-label")!;
+      expect(label.textContent?.replace(/\s+/g, " ").trim()).toBe(expected);
+    },
+  );
   it("keeps boards separate, filters before limits and labels empty grouped results", async () => {
     const second = "sensor.second";
     const { card, connection, text } = await mountGrouped({
