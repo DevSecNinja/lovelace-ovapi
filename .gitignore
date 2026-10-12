@@ -1,0 +1,11 @@
+node_modules/
+coverage/
+test-results/
+playwright-report/
+.venv/
+.ha-e2e/
+.DS_Store
+.env*
+*.log
+__pycache__/
+.impeccable/hook.cache.json

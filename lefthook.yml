@@ -1,0 +1,13 @@
+---
+pre-commit:
+  commands:
+    frontend:
+      run: mise run check
+    markdown:
+      run: mise exec -- dprint check
+    yaml:
+      run: git ls-files -z '*.yaml' '*.yml' | xargs -0 mise exec -- yamlfmt -lint
+    actions:
+      run: mise exec -- actionlint
+    secrets:
+      run: mise exec -- gitleaks git --pre-commit --staged --redact --no-banner
