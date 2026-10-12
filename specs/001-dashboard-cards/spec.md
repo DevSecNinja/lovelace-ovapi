@@ -62,6 +62,18 @@ A user installs one resource, chooses either card and configures it visually.
    favourites, walking duration, line/destination filters, title and language.
 2. **Given** a small phone or wall tablet, **When** using either HA theme, **Then**
    content wraps without overflow and controls have visible keyboard focus.
+3. **Given** at least three sensors and a saved order different from HA state order,
+   **When** favourites are toggled by label or Space, including rapid changes,
+   **Then** remaining picker rows retain identity, order and focus; checkbox state
+   matches the latest intended selection without sorting the saved favourites.
+4. **Given** the last favourite is deselected, **When** HA echoes the last valid
+   config or refreshes states, **Then** the empty local draft and localized error
+   remain visible, no invalid config is emitted, and choosing another sensor emits
+   only that replacement. A different external config replaces the draft.
+5. **Given** twelve favourites, including missing/unavailable sensors, **When**
+   another is selected, **Then** it remains unchecked with a localized error;
+   existing selections remain removable. Unchanged selection and HA refreshes
+   do not emit config changes or churn card subscriptions.
 
 ### Edge Cases
 

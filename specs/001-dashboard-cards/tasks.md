@@ -68,3 +68,16 @@ full production-browser and actual-HA checks.
 - [x] T025 Clarify null values versus extra properties, board-status semantics,
       inherited CODEOWNERS exceptions and version maintenance guidance.
 - [x] T026 Run final verification, regenerate bundle and push the same review PR.
+
+## Scoped follow-up: stable favourite selection
+
+- [x] T027 [US3] Reproduce multi-sensor native label/Space selection, empty-draft
+      HA echo, rapid clicks and limit rejection with red production browser tests.
+- [x] T028 [US3] Stabilize picker order/identity/checked state and current-draft
+      toggles; preserve valid config order, invalid drafts and localized errors.
+- [x] T029 [US3] Complete component/browser edge cases and bounded actual HA
+      Lovelace editor feedback evidence without live/backend changes.
+- [ ] T030 Run required local gates, regenerate the bundle, record convergence
+      and create a focused new PR; verify hosted CI and process Copilot feedback.
+
+Dependencies: T028 follows T027; T029 follows T028; T030 follows T029.
