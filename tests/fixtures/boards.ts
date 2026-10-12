@@ -1,6 +1,50 @@
-import type { BoardSnapshot } from "../../src/contract";
+import type { BoardSnapshot, Departure } from "../../src/contract";
 
 export const NOW = Date.parse("2030-01-15T12:00:00Z");
+
+export function departure(
+  minutes: number,
+  overrides: Partial<Departure> = {},
+  now = NOW,
+): Departure {
+  return {
+    id: `synthetic-metro-${minutes}`,
+    line: "50",
+    destination: "Isolatorweg",
+    transport: "metro",
+    scheduled_at: new Date(now + minutes * 60_000).toISOString(),
+    expected_at: null,
+    cancelled: false,
+    delay_seconds: null,
+    ...overrides,
+  };
+}
+
+export function groupedBoard(now = NOW): BoardSnapshot {
+  return board({
+    fetched_at: new Date(now).toISOString(),
+    expires_at: new Date(now + 29 * 60_000).toISOString(),
+    departures: [
+      ...[2, 8, 14, 20, 26].map((m) => departure(m, {}, now)),
+      departure(1, { id: "synthetic-cancelled", cancelled: true }, now),
+      departure(3, { id: "synthetic-opposite", destination: "Gein" }, now),
+      departure(4, { id: "synthetic-bus", transport: "bus" }, now),
+      departure(5, { id: "synthetic-tram", transport: "tram" }, now),
+      departure(6, { id: "synthetic-other-line", line: "51" }, now),
+      departure(
+        7,
+        {
+          id: "synthetic-unknown",
+          line: "?",
+          transport: "unknown",
+          cancelled: null,
+        },
+        now,
+      ),
+    ],
+  });
+}
+
 export function board(overrides: Partial<BoardSnapshot> = {}): BoardSnapshot {
   return {
     contract_version: 1,

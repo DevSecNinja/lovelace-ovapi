@@ -69,6 +69,8 @@ export class OvapiCardEditor extends LitElement {
         ? this.config.language
         : "auto";
     const t = labels({ language }, this.ha);
+    const departures = this.config.type !== "custom:ovapi-commute-card";
+    const grouped = departures && this.config.display_mode === "grouped";
     const selected = Array.isArray(this.config.entities)
       ? this.config.entities.filter((e): e is string => typeof e === "string")
       : [];
@@ -162,16 +164,44 @@ export class OvapiCardEditor extends LitElement {
         .value=${String(this.config.walking_minutes ?? "")}
         @change=${(e: Event) => this.change("walking_minutes", this.input(e).value === "" ? undefined : Number(this.input(e).value))}
       />
-      <label for="maximum">${t.maximum}</label
-      ><input
-        id="maximum"
-        type="number"
-        min="1"
-        max="20"
-        step="1"
-        .value=${String(this.config.max_departures ?? 5)}
-        @change=${(e: Event) => this.change("max_departures", Number(this.input(e).value))}
-      />
+      ${
+        departures
+          ? html`<label for="display-mode">${t.displayMode}</label>
+              <select
+                id="display-mode"
+                .value=${this.config.display_mode ?? "departures"}
+                @change=${(e: Event) => this.change("display_mode", this.input(e).value)}
+              >
+                <option value="departures">${t.individual}</option>
+                <option value="grouped">${t.grouped}</option>
+              </select>`
+          : nothing
+      }
+      ${
+        grouped
+          ? html`<label for="max-routes">${t.maxRoutes}</label>
+              <input
+                id="max-routes"
+                type="number"
+                min="1"
+                max="20"
+                step="1"
+                aria-describedby="grouped-help"
+                .value=${String(this.config.max_routes ?? 5)}
+                @change=${(e: Event) => this.change("max_routes", Number(this.input(e).value))}
+              />
+              <p id="grouped-help" class="detail">${t.groupedHelp}</p>`
+          : html`<label for="maximum">${t.maximum}</label
+              ><input
+                id="maximum"
+                type="number"
+                min="1"
+                max="20"
+                step="1"
+                .value=${String(this.config.max_departures ?? 5)}
+                @change=${(e: Event) => this.change("max_departures", Number(this.input(e).value))}
+              />`
+      }
       <label for="language">${t.language}</label
       ><select
         id="language"

@@ -93,6 +93,11 @@ export const styles = css`
     font-weight: 500;
     overflow-wrap: anywhere;
   }
+  .following,
+  .cancellations {
+    margin-top: 4px;
+    font-variant-numeric: tabular-nums;
+  }
   .time {
     text-align: end;
     font-variant-numeric: tabular-nums;

@@ -59,11 +59,11 @@ var e = globalThis, t = e.ShadowRoot && (e.ShadyCSS === void 0 || e.ShadyCSS.nat
 	let t = "";
 	for (let n of e.cssRules) t += n.cssText;
 	return a(t);
-})(e) : e, { is: l, defineProperty: u, getOwnPropertyDescriptor: d, getOwnPropertyNames: ee, getOwnPropertySymbols: te, getPrototypeOf: ne } = Object, f = globalThis, p = f.trustedTypes, re = p ? p.emptyScript : "", ie = f.reactiveElementPolyfillSupport, m = (e, t) => e, h = {
+})(e) : e, { is: l, defineProperty: u, getOwnPropertyDescriptor: d, getOwnPropertyNames: ee, getOwnPropertySymbols: te, getPrototypeOf: ne } = Object, f = globalThis, re = f.trustedTypes, ie = re ? re.emptyScript : "", ae = f.reactiveElementPolyfillSupport, p = (e, t) => e, m = {
 	toAttribute(e, t) {
 		switch (t) {
 			case Boolean:
-				e = e ? re : null;
+				e = e ? ie : null;
 				break;
 			case Object:
 			case Array: e = e == null ? e : JSON.stringify(e);
@@ -88,23 +88,23 @@ var e = globalThis, t = e.ShadowRoot && (e.ShadyCSS === void 0 || e.ShadyCSS.nat
 		}
 		return n;
 	}
-}, g = (e, t) => !l(e, t), _ = {
+}, h = (e, t) => !l(e, t), g = {
 	attribute: !0,
 	type: String,
-	converter: h,
+	converter: m,
 	reflect: !1,
 	useDefault: !1,
-	hasChanged: g
+	hasChanged: h
 };
 Symbol.metadata ??= Symbol("metadata"), f.litPropertyMetadata ??= /* @__PURE__ */ new WeakMap();
-var v = class extends HTMLElement {
+var _ = class extends HTMLElement {
 	static addInitializer(e) {
 		this._$Ei(), (this.l ??= []).push(e);
 	}
 	static get observedAttributes() {
 		return this.finalize(), this._$Eh && [...this._$Eh.keys()];
 	}
-	static createProperty(e, t = _) {
+	static createProperty(e, t = g) {
 		if (t.state && (t.attribute = !1), this._$Ei(), this.prototype.hasOwnProperty(e) && ((t = Object.create(t)).wrapped = !0), this.elementProperties.set(e, t), !t.noAccessor) {
 			let n = Symbol(), r = this.getPropertyDescriptor(e, n, t);
 			r !== void 0 && u(this.prototype, e, r);
@@ -130,16 +130,16 @@ var v = class extends HTMLElement {
 		};
 	}
 	static getPropertyOptions(e) {
-		return this.elementProperties.get(e) ?? _;
+		return this.elementProperties.get(e) ?? g;
 	}
 	static _$Ei() {
-		if (this.hasOwnProperty(m("elementProperties"))) return;
+		if (this.hasOwnProperty(p("elementProperties"))) return;
 		let e = ne(this);
 		e.finalize(), e.l !== void 0 && (this.l = [...e.l]), this.elementProperties = new Map(e.elementProperties);
 	}
 	static finalize() {
-		if (this.hasOwnProperty(m("finalized"))) return;
-		if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(m("properties"))) {
+		if (this.hasOwnProperty(p("finalized"))) return;
+		if (this.finalized = !0, this._$Ei(), this.hasOwnProperty(p("properties"))) {
 			let e = this.properties, t = [...ee(e), ...te(e)];
 			for (let n of t) this.createProperty(n, e[n]);
 		}
@@ -201,14 +201,14 @@ var v = class extends HTMLElement {
 	_$ET(e, t) {
 		let n = this.constructor.elementProperties.get(e), r = this.constructor._$Eu(e, n);
 		if (r !== void 0 && !0 === n.reflect) {
-			let i = (n.converter?.toAttribute === void 0 ? h : n.converter).toAttribute(t, n.type);
+			let i = (n.converter?.toAttribute === void 0 ? m : n.converter).toAttribute(t, n.type);
 			this._$Em = e, i == null ? this.removeAttribute(r) : this.setAttribute(r, i), this._$Em = null;
 		}
 	}
 	_$AK(e, t) {
 		let n = this.constructor, r = n._$Eh.get(e);
 		if (r !== void 0 && this._$Em !== r) {
-			let e = n.getPropertyOptions(r), i = typeof e.converter == "function" ? { fromAttribute: e.converter } : e.converter?.fromAttribute === void 0 ? h : e.converter;
+			let e = n.getPropertyOptions(r), i = typeof e.converter == "function" ? { fromAttribute: e.converter } : e.converter?.fromAttribute === void 0 ? m : e.converter;
 			this._$Em = r;
 			let a = i.fromAttribute(t, e.type);
 			this[r] = a ?? this._$Ej?.get(r) ?? a, this._$Em = null;
@@ -217,7 +217,7 @@ var v = class extends HTMLElement {
 	requestUpdate(e, t, n, r = !1, i) {
 		if (e !== void 0) {
 			let a = this.constructor;
-			if (!1 === r && (i = this[e]), n ??= a.getPropertyOptions(e), !((n.hasChanged ?? g)(i, t) || n.useDefault && n.reflect && i === this._$Ej?.get(e) && !this.hasAttribute(a._$Eu(e, n)))) return;
+			if (!1 === r && (i = this[e]), n ??= a.getPropertyOptions(e), !((n.hasChanged ?? h)(i, t) || n.useDefault && n.reflect && i === this._$Ej?.get(e) && !this.hasAttribute(a._$Eu(e, n)))) return;
 			this.C(e, t, n);
 		}
 		!1 === this.isUpdatePending && (this._$ES = this._$EP());
@@ -281,89 +281,89 @@ var v = class extends HTMLElement {
 	updated(e) {}
 	firstUpdated(e) {}
 };
-v.elementStyles = [], v.shadowRootOptions = { mode: "open" }, v[m("elementProperties")] = /* @__PURE__ */ new Map(), v[m("finalized")] = /* @__PURE__ */ new Map(), ie?.({ ReactiveElement: v }), (f.reactiveElementVersions ??= []).push("2.1.2");
+_.elementStyles = [], _.shadowRootOptions = { mode: "open" }, _[p("elementProperties")] = /* @__PURE__ */ new Map(), _[p("finalized")] = /* @__PURE__ */ new Map(), ae?.({ ReactiveElement: _ }), (f.reactiveElementVersions ??= []).push("2.1.2");
 //#endregion
 //#region node_modules/lit-html/lit-html.js
-var y = globalThis, ae = (e) => e, b = y.trustedTypes, oe = b ? b.createPolicy("lit-html", { createHTML: (e) => e }) : void 0, x = "$lit$", S = `lit$${Math.random().toFixed(9).slice(2)}$`, C = "?" + S, se = `<${C}>`, w = document, T = () => w.createComment(""), E = (e) => e === null || typeof e != "object" && typeof e != "function", D = Array.isArray, ce = (e) => D(e) || typeof e?.[Symbol.iterator] == "function", O = "[ 	\n\f\r]", k = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, A = /-->/g, j = />/g, M = RegExp(`>|${O}(?:([^\\s"'>=/]+)(${O}*=${O}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`, "g"), le = /'/g, ue = /"/g, N = /^(?:script|style|textarea|title)$/i, P = ((e) => (t, ...n) => ({
+var v = globalThis, oe = (e) => e, y = v.trustedTypes, se = y ? y.createPolicy("lit-html", { createHTML: (e) => e }) : void 0, ce = "$lit$", b = `lit$${Math.random().toFixed(9).slice(2)}$`, x = "?" + b, le = `<${x}>`, S = document, C = () => S.createComment(""), w = (e) => e === null || typeof e != "object" && typeof e != "function", T = Array.isArray, ue = (e) => T(e) || typeof e?.[Symbol.iterator] == "function", E = "[ 	\n\f\r]", D = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, de = /-->/g, fe = />/g, O = RegExp(`>|${E}(?:([^\\s"'>=/]+)(${E}*=${E}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`, "g"), pe = /'/g, me = /"/g, he = /^(?:script|style|textarea|title)$/i, k = ((e) => (t, ...n) => ({
 	_$litType$: e,
 	strings: t,
 	values: n
-}))(1), F = Symbol.for("lit-noChange"), I = Symbol.for("lit-nothing"), L = /* @__PURE__ */ new WeakMap(), R = w.createTreeWalker(w, 129);
-function z(e, t) {
-	if (!D(e) || !e.hasOwnProperty("raw")) throw Error("invalid template strings array");
-	return oe === void 0 ? t : oe.createHTML(t);
+}))(1), A = Symbol.for("lit-noChange"), j = Symbol.for("lit-nothing"), M = /* @__PURE__ */ new WeakMap(), N = S.createTreeWalker(S, 129);
+function P(e, t) {
+	if (!T(e) || !e.hasOwnProperty("raw")) throw Error("invalid template strings array");
+	return se === void 0 ? t : se.createHTML(t);
 }
-var de = (e, t) => {
-	let n = e.length - 1, r = [], i, a = t === 2 ? "<svg>" : t === 3 ? "<math>" : "", o = k;
+var ge = (e, t) => {
+	let n = e.length - 1, r = [], i, a = t === 2 ? "<svg>" : t === 3 ? "<math>" : "", o = D;
 	for (let t = 0; t < n; t++) {
 		let n = e[t], s, c, l = -1, u = 0;
-		for (; u < n.length && (o.lastIndex = u, c = o.exec(n), c !== null);) u = o.lastIndex, o === k ? c[1] === "!--" ? o = A : c[1] === void 0 ? c[2] === void 0 ? c[3] !== void 0 && (o = M) : (N.test(c[2]) && (i = RegExp("</" + c[2], "g")), o = M) : o = j : o === M ? c[0] === ">" ? (o = i ?? k, l = -1) : c[1] === void 0 ? l = -2 : (l = o.lastIndex - c[2].length, s = c[1], o = c[3] === void 0 ? M : c[3] === "\"" ? ue : le) : o === ue || o === le ? o = M : o === A || o === j ? o = k : (o = M, i = void 0);
-		let d = o === M && e[t + 1].startsWith("/>") ? " " : "";
-		a += o === k ? n + se : l >= 0 ? (r.push(s), n.slice(0, l) + x + n.slice(l) + S + d) : n + S + (l === -2 ? t : d);
+		for (; u < n.length && (o.lastIndex = u, c = o.exec(n), c !== null);) u = o.lastIndex, o === D ? c[1] === "!--" ? o = de : c[1] === void 0 ? c[2] === void 0 ? c[3] !== void 0 && (o = O) : (he.test(c[2]) && (i = RegExp("</" + c[2], "g")), o = O) : o = fe : o === O ? c[0] === ">" ? (o = i ?? D, l = -1) : c[1] === void 0 ? l = -2 : (l = o.lastIndex - c[2].length, s = c[1], o = c[3] === void 0 ? O : c[3] === "\"" ? me : pe) : o === me || o === pe ? o = O : o === de || o === fe ? o = D : (o = O, i = void 0);
+		let d = o === O && e[t + 1].startsWith("/>") ? " " : "";
+		a += o === D ? n + le : l >= 0 ? (r.push(s), n.slice(0, l) + ce + n.slice(l) + b + d) : n + b + (l === -2 ? t : d);
 	}
-	return [z(e, a + (e[n] || "<?>") + (t === 2 ? "</svg>" : t === 3 ? "</math>" : "")), r];
-}, B = class e {
+	return [P(e, a + (e[n] || "<?>") + (t === 2 ? "</svg>" : t === 3 ? "</math>" : "")), r];
+}, F = class e {
 	constructor({ strings: t, _$litType$: n }, r) {
 		let i;
 		this.parts = [];
-		let a = 0, o = 0, s = t.length - 1, c = this.parts, [l, u] = de(t, n);
-		if (this.el = e.createElement(l, r), R.currentNode = this.el.content, n === 2 || n === 3) {
+		let a = 0, o = 0, s = t.length - 1, c = this.parts, [l, u] = ge(t, n);
+		if (this.el = e.createElement(l, r), N.currentNode = this.el.content, n === 2 || n === 3) {
 			let e = this.el.content.firstChild;
 			e.replaceWith(...e.childNodes);
 		}
-		for (; (i = R.nextNode()) !== null && c.length < s;) {
+		for (; (i = N.nextNode()) !== null && c.length < s;) {
 			if (i.nodeType === 1) {
-				if (i.hasAttributes()) for (let e of i.getAttributeNames()) if (e.endsWith(x)) {
-					let t = u[o++], n = i.getAttribute(e).split(S), r = /([.?@])?(.*)/.exec(t);
+				if (i.hasAttributes()) for (let e of i.getAttributeNames()) if (e.endsWith(ce)) {
+					let t = u[o++], n = i.getAttribute(e).split(b), r = /([.?@])?(.*)/.exec(t);
 					c.push({
 						type: 1,
 						index: a,
 						name: r[2],
 						strings: n,
-						ctor: r[1] === "." ? pe : r[1] === "?" ? me : r[1] === "@" ? he : U
+						ctor: r[1] === "." ? ve : r[1] === "?" ? ye : r[1] === "@" ? be : R
 					}), i.removeAttribute(e);
-				} else e.startsWith(S) && (c.push({
+				} else e.startsWith(b) && (c.push({
 					type: 6,
 					index: a
 				}), i.removeAttribute(e));
-				if (N.test(i.tagName)) {
-					let e = i.textContent.split(S), t = e.length - 1;
+				if (he.test(i.tagName)) {
+					let e = i.textContent.split(b), t = e.length - 1;
 					if (t > 0) {
-						i.textContent = b ? b.emptyScript : "";
-						for (let n = 0; n < t; n++) i.append(e[n], T()), R.nextNode(), c.push({
+						i.textContent = y ? y.emptyScript : "";
+						for (let n = 0; n < t; n++) i.append(e[n], C()), N.nextNode(), c.push({
 							type: 2,
 							index: ++a
 						});
-						i.append(e[t], T());
+						i.append(e[t], C());
 					}
 				}
 			} else if (i.nodeType === 8) {
-				if (i.data === C) c.push({
+				if (i.data === x) c.push({
 					type: 2,
 					index: a
 				});
 				else {
 					let e = -1;
-					for (; (e = i.data.indexOf(S, e + 1)) !== -1;) c.push({
+					for (; (e = i.data.indexOf(b, e + 1)) !== -1;) c.push({
 						type: 7,
 						index: a
-					}), e += S.length - 1;
+					}), e += b.length - 1;
 				}
 			}
 			a++;
 		}
 	}
 	static createElement(e, t) {
-		let n = w.createElement("template");
+		let n = S.createElement("template");
 		return n.innerHTML = e, n;
 	}
 };
-function V(e, t, n = e, r) {
-	if (t === F) return t;
-	let i = r === void 0 ? n._$Cl : n._$Co?.[r], a = E(t) ? void 0 : t._$litDirective$;
-	return i?.constructor !== a && (i?._$AO?.(!1), a === void 0 ? i = void 0 : (i = new a(e), i._$AT(e, n, r)), r === void 0 ? n._$Cl = i : (n._$Co ??= [])[r] = i), i !== void 0 && (t = V(e, i._$AS(e, t.values), i, r)), t;
+function I(e, t, n = e, r) {
+	if (t === A) return t;
+	let i = r === void 0 ? n._$Cl : n._$Co?.[r], a = w(t) ? void 0 : t._$litDirective$;
+	return i?.constructor !== a && (i?._$AO?.(!1), a === void 0 ? i = void 0 : (i = new a(e), i._$AT(e, n, r)), r === void 0 ? n._$Cl = i : (n._$Co ??= [])[r] = i), i !== void 0 && (t = I(e, i._$AS(e, t.values), i, r)), t;
 }
-var fe = class {
+var _e = class {
 	constructor(e, t) {
 		this._$AV = [], this._$AN = void 0, this._$AD = e, this._$AM = t;
 	}
@@ -374,28 +374,28 @@ var fe = class {
 		return this._$AM._$AU;
 	}
 	u(e) {
-		let { el: { content: t }, parts: n } = this._$AD, r = (e?.creationScope ?? w).importNode(t, !0);
-		R.currentNode = r;
-		let i = R.nextNode(), a = 0, o = 0, s = n[0];
+		let { el: { content: t }, parts: n } = this._$AD, r = (e?.creationScope ?? S).importNode(t, !0);
+		N.currentNode = r;
+		let i = N.nextNode(), a = 0, o = 0, s = n[0];
 		for (; s !== void 0;) {
 			if (a === s.index) {
 				let t;
-				s.type === 2 ? t = new H(i, i.nextSibling, this, e) : s.type === 1 ? t = new s.ctor(i, s.name, s.strings, this, e) : s.type === 6 && (t = new ge(i, this, e)), this._$AV.push(t), s = n[++o];
+				s.type === 2 ? t = new L(i, i.nextSibling, this, e) : s.type === 1 ? t = new s.ctor(i, s.name, s.strings, this, e) : s.type === 6 && (t = new xe(i, this, e)), this._$AV.push(t), s = n[++o];
 			}
-			a !== s?.index && (i = R.nextNode(), a++);
+			a !== s?.index && (i = N.nextNode(), a++);
 		}
-		return R.currentNode = w, r;
+		return N.currentNode = S, r;
 	}
 	p(e) {
 		let t = 0;
 		for (let n of this._$AV) n !== void 0 && (n.strings === void 0 ? n._$AI(e[t]) : (n._$AI(e, n, t), t += n.strings.length - 2)), t++;
 	}
-}, H = class e {
+}, L = class e {
 	get _$AU() {
 		return this._$AM?._$AU ?? this._$Cv;
 	}
 	constructor(e, t, n, r) {
-		this.type = 2, this._$AH = I, this._$AN = void 0, this._$AA = e, this._$AB = t, this._$AM = n, this.options = r, this._$Cv = r?.isConnected ?? !0;
+		this.type = 2, this._$AH = j, this._$AN = void 0, this._$AA = e, this._$AB = t, this._$AM = n, this.options = r, this._$Cv = r?.isConnected ?? !0;
 	}
 	get parentNode() {
 		let e = this._$AA.parentNode, t = this._$AM;
@@ -408,7 +408,7 @@ var fe = class {
 		return this._$AB;
 	}
 	_$AI(e, t = this) {
-		e = V(this, e, t), E(e) ? e === I || e == null || e === "" ? (this._$AH !== I && this._$AR(), this._$AH = I) : e !== this._$AH && e !== F && this._(e) : e._$litType$ === void 0 ? e.nodeType === void 0 ? ce(e) ? this.k(e) : this._(e) : this.T(e) : this.$(e);
+		e = I(this, e, t), w(e) ? e === j || e == null || e === "" ? (this._$AH !== j && this._$AR(), this._$AH = j) : e !== this._$AH && e !== A && this._(e) : e._$litType$ === void 0 ? e.nodeType === void 0 ? ue(e) ? this.k(e) : this._(e) : this.T(e) : this.$(e);
 	}
 	O(e) {
 		return this._$AA.parentNode.insertBefore(e, this._$AB);
@@ -417,36 +417,36 @@ var fe = class {
 		this._$AH !== e && (this._$AR(), this._$AH = this.O(e));
 	}
 	_(e) {
-		this._$AH !== I && E(this._$AH) ? this._$AA.nextSibling.data = e : this.T(w.createTextNode(e)), this._$AH = e;
+		this._$AH !== j && w(this._$AH) ? this._$AA.nextSibling.data = e : this.T(S.createTextNode(e)), this._$AH = e;
 	}
 	$(e) {
-		let { values: t, _$litType$: n } = e, r = typeof n == "number" ? this._$AC(e) : (n.el === void 0 && (n.el = B.createElement(z(n.h, n.h[0]), this.options)), n);
+		let { values: t, _$litType$: n } = e, r = typeof n == "number" ? this._$AC(e) : (n.el === void 0 && (n.el = F.createElement(P(n.h, n.h[0]), this.options)), n);
 		if (this._$AH?._$AD === r) this._$AH.p(t);
 		else {
-			let e = new fe(r, this), n = e.u(this.options);
+			let e = new _e(r, this), n = e.u(this.options);
 			e.p(t), this.T(n), this._$AH = e;
 		}
 	}
 	_$AC(e) {
-		let t = L.get(e.strings);
-		return t === void 0 && L.set(e.strings, t = new B(e)), t;
+		let t = M.get(e.strings);
+		return t === void 0 && M.set(e.strings, t = new F(e)), t;
 	}
 	k(t) {
-		D(this._$AH) || (this._$AH = [], this._$AR());
+		T(this._$AH) || (this._$AH = [], this._$AR());
 		let n = this._$AH, r, i = 0;
-		for (let a of t) i === n.length ? n.push(r = new e(this.O(T()), this.O(T()), this, this.options)) : r = n[i], r._$AI(a), i++;
+		for (let a of t) i === n.length ? n.push(r = new e(this.O(C()), this.O(C()), this, this.options)) : r = n[i], r._$AI(a), i++;
 		i < n.length && (this._$AR(r && r._$AB.nextSibling, i), n.length = i);
 	}
 	_$AR(e = this._$AA.nextSibling, t) {
 		for (this._$AP?.(!1, !0, t); e !== this._$AB;) {
-			let t = ae(e).nextSibling;
-			ae(e).remove(), e = t;
+			let t = oe(e).nextSibling;
+			oe(e).remove(), e = t;
 		}
 	}
 	setConnected(e) {
 		this._$AM === void 0 && (this._$Cv = e, this._$AP?.(e));
 	}
-}, U = class {
+}, R = class {
 	get tagName() {
 		return this.element.tagName;
 	}
@@ -454,47 +454,47 @@ var fe = class {
 		return this._$AM._$AU;
 	}
 	constructor(e, t, n, r, i) {
-		this.type = 1, this._$AH = I, this._$AN = void 0, this.element = e, this.name = t, this._$AM = r, this.options = i, n.length > 2 || n[0] !== "" || n[1] !== "" ? (this._$AH = Array(n.length - 1).fill(/* @__PURE__ */ new String()), this.strings = n) : this._$AH = I;
+		this.type = 1, this._$AH = j, this._$AN = void 0, this.element = e, this.name = t, this._$AM = r, this.options = i, n.length > 2 || n[0] !== "" || n[1] !== "" ? (this._$AH = Array(n.length - 1).fill(/* @__PURE__ */ new String()), this.strings = n) : this._$AH = j;
 	}
 	_$AI(e, t = this, n, r) {
 		let i = this.strings, a = !1;
-		if (i === void 0) e = V(this, e, t, 0), a = !E(e) || e !== this._$AH && e !== F, a && (this._$AH = e);
+		if (i === void 0) e = I(this, e, t, 0), a = !w(e) || e !== this._$AH && e !== A, a && (this._$AH = e);
 		else {
 			let r = e, o, s;
-			for (e = i[0], o = 0; o < i.length - 1; o++) s = V(this, r[n + o], t, o), s === F && (s = this._$AH[o]), a ||= !E(s) || s !== this._$AH[o], s === I ? e = I : e !== I && (e += (s ?? "") + i[o + 1]), this._$AH[o] = s;
+			for (e = i[0], o = 0; o < i.length - 1; o++) s = I(this, r[n + o], t, o), s === A && (s = this._$AH[o]), a ||= !w(s) || s !== this._$AH[o], s === j ? e = j : e !== j && (e += (s ?? "") + i[o + 1]), this._$AH[o] = s;
 		}
 		a && !r && this.j(e);
 	}
 	j(e) {
-		e === I ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
+		e === j ? this.element.removeAttribute(this.name) : this.element.setAttribute(this.name, e ?? "");
 	}
-}, pe = class extends U {
+}, ve = class extends R {
 	constructor() {
 		super(...arguments), this.type = 3;
 	}
 	j(e) {
-		this.element[this.name] = e === I ? void 0 : e;
+		this.element[this.name] = e === j ? void 0 : e;
 	}
-}, me = class extends U {
+}, ye = class extends R {
 	constructor() {
 		super(...arguments), this.type = 4;
 	}
 	j(e) {
-		this.element.toggleAttribute(this.name, !!e && e !== I);
+		this.element.toggleAttribute(this.name, !!e && e !== j);
 	}
-}, he = class extends U {
+}, be = class extends R {
 	constructor(e, t, n, r, i) {
 		super(e, t, n, r, i), this.type = 5;
 	}
 	_$AI(e, t = this) {
-		if ((e = V(this, e, t, 0) ?? I) === F) return;
-		let n = this._$AH, r = e === I && n !== I || e.capture !== n.capture || e.once !== n.once || e.passive !== n.passive, i = e !== I && (n === I || r);
+		if ((e = I(this, e, t, 0) ?? j) === A) return;
+		let n = this._$AH, r = e === j && n !== j || e.capture !== n.capture || e.once !== n.once || e.passive !== n.passive, i = e !== j && (n === j || r);
 		r && this.element.removeEventListener(this.name, this, n), i && this.element.addEventListener(this.name, this, e), this._$AH = e;
 	}
 	handleEvent(e) {
 		typeof this._$AH == "function" ? this._$AH.call(this.options?.host ?? this.element, e) : this._$AH.handleEvent(e);
 	}
-}, ge = class {
+}, xe = class {
 	constructor(e, t, n) {
 		this.element = e, this.type = 6, this._$AN = void 0, this._$AM = t, this.options = n;
 	}
@@ -502,18 +502,18 @@ var fe = class {
 		return this._$AM._$AU;
 	}
 	_$AI(e) {
-		V(this, e);
+		I(this, e);
 	}
-}, _e = y.litHtmlPolyfillSupport;
-_e?.(B, H), (y.litHtmlVersions ??= []).push("3.3.3");
-var ve = (e, t, n) => {
+}, Se = v.litHtmlPolyfillSupport;
+Se?.(F, L), (v.litHtmlVersions ??= []).push("3.3.3");
+var Ce = (e, t, n) => {
 	let r = n?.renderBefore ?? t, i = r._$litPart$;
 	if (i === void 0) {
 		let e = n?.renderBefore ?? null;
-		r._$litPart$ = i = new H(t.insertBefore(T(), e), e, void 0, n ?? {});
+		r._$litPart$ = i = new L(t.insertBefore(C(), e), e, void 0, n ?? {});
 	}
 	return i._$AI(e), i;
-}, W = globalThis, G = class extends v {
+}, z = globalThis, B = class extends _ {
 	constructor() {
 		super(...arguments), this.renderOptions = { host: this }, this._$Do = void 0;
 	}
@@ -523,7 +523,7 @@ var ve = (e, t, n) => {
 	}
 	update(e) {
 		let t = this.render();
-		this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(e), this._$Do = ve(t, this.renderRoot, this.renderOptions);
+		this.hasUpdated || (this.renderOptions.isConnected = this.isConnected), super.update(e), this._$Do = Ce(t, this.renderRoot, this.renderOptions);
 	}
 	connectedCallback() {
 		super.connectedCallback(), this._$Do?.setConnected(!0);
@@ -532,30 +532,30 @@ var ve = (e, t, n) => {
 		super.disconnectedCallback(), this._$Do?.setConnected(!1);
 	}
 	render() {
-		return F;
+		return A;
 	}
 };
-G._$litElement$ = !0, G.finalized = !0, W.litElementHydrateSupport?.({ LitElement: G });
-var ye = W.litElementPolyfillSupport;
-ye?.({ LitElement: G }), (W.litElementVersions ??= []).push("4.2.2");
-function K(e) {
+B._$litElement$ = !0, B.finalized = !0, z.litElementHydrateSupport?.({ LitElement: B });
+var we = z.litElementPolyfillSupport;
+we?.({ LitElement: B }), (z.litElementVersions ??= []).push("4.2.2");
+function V(e) {
 	return e === 1;
 }
-function q(e) {
+function H(e) {
 	if (!e || typeof e != "object" || Array.isArray(e)) throw Error("Expected an object");
 	return e;
 }
-function J(e) {
+function U(e) {
 	if (typeof e != "string" || !e.trim().length || e.length > 512) throw Error("Invalid text");
 	return e;
 }
-function Y(e) {
-	let t = J(e);
+function W(e) {
+	let t = U(e);
 	if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(t) || !Number.isFinite(Date.parse(t))) throw Error("Invalid instant");
 	return t;
 }
-function be(e) {
-	let t = q(e);
+function Te(e) {
+	let t = H(e);
 	if (![
 		"bus",
 		"tram",
@@ -563,91 +563,130 @@ function be(e) {
 		"unknown"
 	].includes(String(t.transport)) || t.cancelled !== null && typeof t.cancelled != "boolean" || !(t.delay_seconds === null || Number.isSafeInteger(t.delay_seconds))) throw Error("Invalid departure");
 	return {
-		id: J(t.id),
-		line: J(t.line),
-		destination: J(t.destination),
+		id: U(t.id),
+		line: U(t.line),
+		destination: U(t.destination),
 		transport: t.transport,
-		scheduled_at: Y(t.scheduled_at),
-		expected_at: t.expected_at === null ? null : Y(t.expected_at),
+		scheduled_at: W(t.scheduled_at),
+		expected_at: t.expected_at === null ? null : W(t.expected_at),
 		cancelled: t.cancelled,
 		delay_seconds: t.delay_seconds
 	};
 }
-function xe(e, t, n) {
-	let r = q(e);
-	if (!K(r.contract_version)) throw Error("Unsupported contract version");
+function Ee(e, t, n) {
+	let r = H(e);
+	if (!V(r.contract_version)) throw Error("Unsupported contract version");
 	if (r.entity_id !== t || ![
 		"ready",
 		"stale",
 		"unavailable"
 	].includes(String(r.status)) || !Number.isSafeInteger(r.walking_minutes) || Number(r.walking_minutes) < 0 || !Array.isArray(r.departures) || r.departures.length > 5e3) throw Error("Invalid board");
-	let i = q(r.stop), a = r.fetched_at === null ? null : Y(r.fetched_at), o = r.expires_at === null ? null : Y(r.expires_at);
+	let i = H(r.stop), a = r.fetched_at === null ? null : W(r.fetched_at), o = r.expires_at === null ? null : W(r.expires_at);
 	if (r.status === "unavailable") {
 		if (a !== null || o !== null || r.departures.length) throw Error("Unavailable board contains source data");
 	} else if (a === null || o === null || Date.parse(o) <= Date.parse(a) || Date.parse(o) - Date.parse(a) > 174e4 || Date.parse(a) > n + 6e4) throw Error("Invalid source validity");
 	return {
 		contract_version: 1,
-		board_id: J(r.board_id),
+		board_id: U(r.board_id),
 		entity_id: t,
 		stop: {
-			id: J(i.id),
-			name: J(i.name)
+			id: U(i.id),
+			name: U(i.name)
 		},
 		status: r.status,
 		fetched_at: a,
 		expires_at: o,
 		walking_minutes: r.walking_minutes,
-		departures: r.departures.map(be)
+		departures: r.departures.map(Te)
 	};
 }
 //#endregion
 //#region src/model.ts
-function X(e, t) {
+function G(e, t) {
 	if (!Array.isArray(e) || e.some((e) => typeof e != "string" || !e.trim() || e.length > 512)) throw Error(`${t}: use a list of non-empty strings`);
 	return [...new Set(e.map((e) => e.trim()))];
 }
-function Se(e) {
-	let t = q(e), n = X(t.entities, "entities");
+function De(e) {
+	let t = H(e), n = G(t.entities, "entities");
 	if (n.length < 1 || n.length > 12 || n.some((e) => !/^sensor\.[a-z0-9_]+$/.test(e))) throw Error("entities: select 1 to 12 OVAPI sensors");
 	if (!["custom:ovapi-departures-card", "custom:ovapi-commute-card"].includes(String(t.type))) throw Error("type: select an OVAPI departure or commute card");
 	let r = t.max_departures ?? 5;
 	if (!Number.isInteger(r) || Number(r) < 1 || Number(r) > 20) throw Error("max_departures: use 1 to 20");
+	let i = t.max_routes ?? 5;
+	if (!Number.isInteger(i) || Number(i) < 1 || Number(i) > 20) throw Error("max_routes: use 1 to 20");
+	let a = t.display_mode ?? "departures";
+	if (a !== "departures" && a !== "grouped") throw Error("display_mode: use departures or grouped");
 	if (t.walking_minutes !== void 0 && (!Number.isInteger(t.walking_minutes) || Number(t.walking_minutes) < 0 || Number(t.walking_minutes) > 120)) throw Error("walking_minutes: use 0 to 120");
 	if (t.title !== void 0 && (typeof t.title != "string" || t.title.length > 120)) throw Error("title: maximum 120 characters");
-	let i = t.language ?? "auto";
+	let o = t.language ?? "auto";
 	if (![
 		"auto",
 		"en",
 		"nl"
-	].includes(String(i))) throw Error("language: use auto, en or nl");
+	].includes(String(o))) throw Error("language: use auto, en or nl");
 	return {
 		type: t.type,
 		entities: n,
 		...t.title === void 0 ? {} : { title: t.title },
-		lines: X(t.lines ?? [], "lines"),
-		destinations: X(t.destinations ?? [], "destinations"),
+		lines: G(t.lines ?? [], "lines"),
+		destinations: G(t.destinations ?? [], "destinations"),
 		max_departures: r,
+		display_mode: a,
+		max_routes: i,
 		...t.walking_minutes === void 0 ? {} : { walking_minutes: t.walking_minutes },
-		language: i
+		language: o
 	};
 }
-var Z = (e) => Date.parse(e.expected_at ?? e.scheduled_at), Ce = (e, t) => Math.max(0, Math.floor((e - t) / 6e4));
-function we(e, t, n) {
-	let r = (e, t) => !e.length || e.some((e) => e.toLowerCase() === t.toLowerCase());
-	return e.departures.filter((e) => Z(e) > n && r(t.lines, e.line) && r(t.destinations, e.destination)).sort((e, t) => Z(e) - Z(t) || e.id.localeCompare(t.id));
+var K = (e) => Date.parse(e.expected_at ?? e.scheduled_at), q = (e, t) => Math.max(0, Math.floor((e - t) / 6e4)), J = (e) => e.trim().toLowerCase(), Y = (e, t) => K(e) - K(t) || e.id.localeCompare(t.id);
+function X(e, t, n) {
+	let r = (e, t) => !e.length || e.some((e) => J(e) === J(t));
+	return e.departures.filter((e) => K(e) > n && r(t.lines, e.line) && r(t.destinations, e.destination)).sort(Y);
 }
-function Te(e, t, n) {
+function Oe(e, t, n) {
+	let r = /* @__PURE__ */ new Map(), i = /* @__PURE__ */ new Set();
+	for (let a of X(e, t, n)) {
+		let e = JSON.stringify([
+			a.id,
+			a.transport,
+			a.line,
+			a.destination,
+			Date.parse(a.scheduled_at),
+			a.expected_at === null ? null : Date.parse(a.expected_at),
+			a.cancelled,
+			a.delay_seconds
+		]);
+		if (i.has(e)) continue;
+		i.add(e);
+		let t = JSON.stringify([
+			a.transport,
+			J(a.line),
+			J(a.destination)
+		]), n = r.get(t);
+		n || (n = {
+			upcoming: [],
+			cancelled: []
+		}, r.set(t, n)), (a.cancelled === !0 ? n.cancelled : n.upcoming).push(a);
+	}
+	return [...r.entries()].map(([e, t]) => ({
+		key: e,
+		departure: t.upcoming[0] ?? t.cancelled[0],
+		following: t.upcoming.slice(1, 4),
+		cancellations: t.cancelled.slice(0, 3),
+		additionalCancellations: Math.max(0, t.cancelled.length - 3)
+	})).sort((e, t) => Number(e.departure.cancelled === !0) - Number(t.departure.cancelled === !0) || Y(e.departure, t.departure) || e.key.localeCompare(t.key)).slice(0, t.max_routes);
+}
+function ke(e, t, n) {
 	if (e.status !== "ready") return;
-	let r = t.walking_minutes ?? e.walking_minutes, i = we(e, t, n).find((e) => e.cancelled !== !0 && Z(e) - r * 6e4 >= n);
+	let r = t.walking_minutes ?? e.walking_minutes, i = X(e, t, n).find((e) => e.cancelled !== !0 && K(e) - r * 6e4 >= n);
 	return i ? {
 		departure: i,
-		leaveAt: Z(i) - r * 6e4,
+		leaveAt: K(i) - r * 6e4,
 		walking: r
 	} : void 0;
 }
 //#endregion
 //#region src/localize.ts
-var Ee = {
+var Ae = {
 	departures: "Departures",
 	commute: "Time to leave",
 	loading: "Connecting to your departure board…",
@@ -685,11 +724,18 @@ var Ee = {
 	removeFilter: "Remove",
 	walking: "Walking minutes (empty = integration setting)",
 	maximum: "Maximum departures per stop",
+	displayMode: "Departure display",
+	individual: "Individual departures",
+	grouped: "Grouped routes",
+	maxRoutes: "Maximum route rows per favourite",
+	groupedHelp: "One row per transport + line + destination, soonest first. Opposite directions count separately. Up to three following times; cancelled-only routes appear last.",
+	alsoIn: "Also in",
+	moreCancelled: "more cancelled",
 	language: "Language",
 	auto: "Automatic",
 	choose: "Choose one or more OVAPI sensors.",
 	editorHelp: "One exact value per field; commas are part of the name. Filters narrow the existing board and never request more data."
-}, De = {
+}, je = {
 	departures: "Vertrektijden",
 	commute: "Tijd om te vertrekken",
 	loading: "Verbinding met je vertrekbord…",
@@ -727,20 +773,27 @@ var Ee = {
 	removeFilter: "Verwijderen",
 	walking: "Looptijd in minuten (leeg = integratie-instelling)",
 	maximum: "Maximum vertrekken per halte",
+	displayMode: "Vertrekweergave",
+	individual: "Afzonderlijke vertrekken",
+	grouped: "Gegroepeerde routes",
+	maxRoutes: "Maximum routerijen per favoriet",
+	groupedHelp: "Een rij per vervoertype + lijn + bestemming, eerstvolgende bovenaan. Tegengestelde richtingen tellen apart. Tot drie volgende tijden; routes met alleen vervallen ritten staan onderaan.",
+	alsoIn: "Ook over",
+	moreCancelled: "andere vervallen ritten",
 	language: "Taal",
 	auto: "Automatisch",
 	choose: "Kies een of meer OVAPI-sensoren.",
 	editorHelp: "Een exacte waarde per veld; komma's horen bij de naam. Filters beperken het bestaande bord en vragen nooit extra gegevens op."
 };
-function Oe(e, t) {
+function Me(e, t) {
 	return e.language === "auto" ? (t?.locale?.language ?? t?.language ?? "en").startsWith("nl") ? "nl" : "en" : e.language;
 }
-function Q(e, t) {
-	return Oe(e, t) === "nl" ? De : Ee;
+function Z(e, t) {
+	return Me(e, t) === "nl" ? je : Ae;
 }
-function $(e, t, n) {
+function Q(e, t, n) {
 	let r = n?.locale?.time_format;
-	return new Intl.DateTimeFormat(Oe(t, n), {
+	return new Intl.DateTimeFormat(Me(t, n), {
 		timeZone: n?.config.time_zone ?? "Europe/Amsterdam",
 		hour: "2-digit",
 		minute: "2-digit",
@@ -749,7 +802,7 @@ function $(e, t, n) {
 }
 //#endregion
 //#region src/subscription.ts
-var ke = /* @__PURE__ */ new WeakMap(), Ae = class {
+var Ne = /* @__PURE__ */ new WeakMap(), Pe = class {
 	connection;
 	entity;
 	listeners = /* @__PURE__ */ new Set();
@@ -785,7 +838,7 @@ var ke = /* @__PURE__ */ new WeakMap(), Ae = class {
 		if (this.disposed || !this.connection.connected) return;
 		let t;
 		try {
-			t = xe(e, this.entity, Date.now());
+			t = Ee(e, this.entity, Date.now());
 		} catch {
 			this.publish({ status: "error" });
 			return;
@@ -807,11 +860,11 @@ var ke = /* @__PURE__ */ new WeakMap(), Ae = class {
 		return this.listeners.delete(e), !this.listeners.size && (this.disposed = !0, this.publish({ status: "unavailable" }), this.connection.removeEventListener("disconnected", this.disconnected), this.connection.removeEventListener("ready", this.ready), this.unsubscribe && this.release(this.unsubscribe), !0);
 	}
 };
-function je(e, t, n) {
-	let r = ke.get(e);
-	r || (r = /* @__PURE__ */ new Map(), ke.set(e, r));
+function Fe(e, t, n) {
+	let r = Ne.get(e);
+	r || (r = /* @__PURE__ */ new Map(), Ne.set(e, r));
 	let i = r.get(t);
-	i || (i = new Ae(e, t), r.set(t, i)), i.add(n);
+	i || (i = new Pe(e, t), r.set(t, i)), i.add(n);
 	let a = !0;
 	return () => {
 		a && (a = !1, i.remove(n) && r.delete(t));
@@ -819,7 +872,7 @@ function je(e, t, n) {
 }
 //#endregion
 //#region src/styles.ts
-var Me = o`
+var Ie = o`
   :host {
     display: block;
     container-type: inline-size;
@@ -911,6 +964,11 @@ var Me = o`
     font-size: 1rem;
     font-weight: 500;
     overflow-wrap: anywhere;
+  }
+  .following,
+  .cancellations {
+    margin-top: 4px;
+    font-variant-numeric: tabular-nums;
   }
   .time {
     text-align: end;
@@ -1079,8 +1137,8 @@ var Me = o`
       flex-wrap: wrap;
     }
   }
-`, Ne = class extends G {
-	static styles = Me;
+`, Le = class extends B {
+	static styles = Ie;
 	config = {};
 	ha;
 	error = "";
@@ -1088,7 +1146,7 @@ var Me = o`
 		this.ha = e, this.requestUpdate();
 	}
 	setConfig(e) {
-		this.config = { ...q(e) }, this.requestUpdate();
+		this.config = { ...H(e) }, this.requestUpdate();
 	}
 	change(e, t) {
 		let n = {
@@ -1099,7 +1157,7 @@ var Me = o`
 		for (let e of ["lines", "destinations"]) Array.isArray(n[e]) && (n[e] = n[e].filter((e) => typeof e != "string" || e.trim()));
 		this.config = n;
 		try {
-			Se(n), this.error = "", this.dispatchEvent(new CustomEvent("config-changed", {
+			De(n), this.error = "", this.dispatchEvent(new CustomEvent("config-changed", {
 				detail: { config: n },
 				bubbles: !0,
 				composed: !0
@@ -1124,20 +1182,20 @@ var Me = o`
 		});
 	}
 	render() {
-		let e = this.config.language === "nl" || this.config.language === "en" ? this.config.language : "auto", t = Q({ language: e }, this.ha), n = Array.isArray(this.config.entities) ? this.config.entities.filter((e) => typeof e == "string") : [], r = [.../* @__PURE__ */ new Set([...n, ...Object.entries(this.ha?.states ?? {}).filter(([e, t]) => e.startsWith("sensor.") && K(t.attributes.contract_version) && typeof t.attributes.board_id == "string").map(([e]) => e)])];
-		return P`<div class="editor">
+		let e = this.config.language === "nl" || this.config.language === "en" ? this.config.language : "auto", t = Z({ language: e }, this.ha), n = this.config.type !== "custom:ovapi-commute-card", r = n && this.config.display_mode === "grouped", i = Array.isArray(this.config.entities) ? this.config.entities.filter((e) => typeof e == "string") : [], a = [.../* @__PURE__ */ new Set([...i, ...Object.entries(this.ha?.states ?? {}).filter(([e, t]) => e.startsWith("sensor.") && V(t.attributes.contract_version) && typeof t.attributes.board_id == "string").map(([e]) => e)])];
+		return k`<div class="editor">
       <fieldset>
         <legend>${t.entities}</legend>
-        ${r.length ? r.map((e) => P`<label class="choice">
+        ${a.length ? a.map((e) => k`<label class="choice">
                     <input
                       type="checkbox"
-                      .checked=${n.includes(e)}
-                      @change=${(t) => this.change("entities", this.input(t).checked ? [...n, e] : n.filter((t) => t !== e))}
+                      .checked=${i.includes(e)}
+                      @change=${(t) => this.change("entities", this.input(t).checked ? [...i, e] : i.filter((t) => t !== e))}
                     />
                     ${String(this.ha?.states[e]?.attributes.friendly_name ?? e)}
-                  </label>`) : P`<p>${t.choose}</p>`}
+                  </label>`) : k`<p>${t.choose}</p>`}
       </fieldset>
-      ${this.error ? P`<p class="error" role="alert">${this.error}</p>` : I}
+      ${this.error ? k`<p class="error" role="alert">${this.error}</p>` : j}
       <label for="title">${t.title}</label
       ><input
         id="title"
@@ -1145,9 +1203,9 @@ var Me = o`
         .value=${String(this.config.title ?? "")}
         @change=${(e) => this.change("title", this.input(e).value)}
       />
-      ${["lines", "destinations"].map((e) => P`<fieldset class="filters">
+      ${["lines", "destinations"].map((e) => k`<fieldset class="filters">
             <legend>${t[e]}</legend>
-            ${this.filters(e).map((n, r) => P`
+            ${this.filters(e).map((n, r) => k`
                 <label for="${e}-${r}">${t[e]} ${r + 1}</label>
                 <div class="filter-row">
                   <textarea
@@ -1180,16 +1238,36 @@ var Me = o`
         .value=${String(this.config.walking_minutes ?? "")}
         @change=${(e) => this.change("walking_minutes", this.input(e).value === "" ? void 0 : Number(this.input(e).value))}
       />
-      <label for="maximum">${t.maximum}</label
-      ><input
-        id="maximum"
-        type="number"
-        min="1"
-        max="20"
-        step="1"
-        .value=${String(this.config.max_departures ?? 5)}
-        @change=${(e) => this.change("max_departures", Number(this.input(e).value))}
-      />
+      ${n ? k`<label for="display-mode">${t.displayMode}</label>
+              <select
+                id="display-mode"
+                .value=${this.config.display_mode ?? "departures"}
+                @change=${(e) => this.change("display_mode", this.input(e).value)}
+              >
+                <option value="departures">${t.individual}</option>
+                <option value="grouped">${t.grouped}</option>
+              </select>` : j}
+      ${r ? k`<label for="max-routes">${t.maxRoutes}</label>
+              <input
+                id="max-routes"
+                type="number"
+                min="1"
+                max="20"
+                step="1"
+                aria-describedby="grouped-help"
+                .value=${String(this.config.max_routes ?? 5)}
+                @change=${(e) => this.change("max_routes", Number(this.input(e).value))}
+              />
+              <p id="grouped-help" class="detail">${t.groupedHelp}</p>` : k`<label for="maximum">${t.maximum}</label
+              ><input
+                id="maximum"
+                type="number"
+                min="1"
+                max="20"
+                step="1"
+                .value=${String(this.config.max_departures ?? 5)}
+                @change=${(e) => this.change("max_departures", Number(this.input(e).value))}
+              />`}
       <label for="language">${t.language}</label
       ><select
         id="language"
@@ -1203,11 +1281,11 @@ var Me = o`
     </div>`;
 	}
 };
-customElements.get("ovapi-card-editor") || customElements.define("ovapi-card-editor", Ne);
+customElements.get("ovapi-card-editor") || customElements.define("ovapi-card-editor", Le);
 //#endregion
 //#region src/cards.ts
-var Pe = class extends G {
-	static styles = Me;
+var $ = class extends B {
+	static styles = Ie;
 	config;
 	ha;
 	views = /* @__PURE__ */ new Map();
@@ -1218,10 +1296,10 @@ var Pe = class extends G {
 		return document.createElement("ovapi-card-editor");
 	}
 	static getStubConfig(e) {
-		return { entities: Object.entries(e?.states ?? {}).filter(([e, t]) => e.startsWith("sensor.") && K(t.attributes.contract_version) && typeof t.attributes.board_id == "string").slice(0, 1).map(([e]) => e) };
+		return { entities: Object.entries(e?.states ?? {}).filter(([e, t]) => e.startsWith("sensor.") && V(t.attributes.contract_version) && typeof t.attributes.board_id == "string").slice(0, 1).map(([e]) => e) };
 	}
 	setConfig(e) {
-		this.config = Se(e), this.restart(), this.requestUpdate();
+		this.config = De(e), this.restart(), this.requestUpdate();
 	}
 	set hass(e) {
 		let t = this.ha?.connection !== e.connection;
@@ -1231,7 +1309,8 @@ var Pe = class extends G {
 		return this.ha;
 	}
 	getCardSize() {
-		return (this.config?.entities.length ?? 1) * (this.commute ? 5 : (this.config?.max_departures ?? 5) + 2);
+		let e = this.config?.display_mode === "grouped" ? this.config.max_routes : this.config?.max_departures ?? 5;
+		return (this.config?.entities.length ?? 1) * (this.commute ? 5 : e + 2);
 	}
 	getGridOptions() {
 		return {
@@ -1261,14 +1340,14 @@ var Pe = class extends G {
 		this.stops.forEach((e) => e()), this.stops = [], this.views.clear(), clearInterval(this.tick), this.tick = void 0;
 	}
 	restart() {
-		this.clear(), this.isConnected && !this.paused && this.config && this.ha && (this.stops = this.config.entities.map((e) => je(this.ha.connection, e, (t) => {
+		this.clear(), this.isConnected && !this.paused && this.config && this.ha && (this.stops = this.config.entities.map((e) => Fe(this.ha.connection, e, (t) => {
 			this.views.set(e, t), this.requestUpdate();
 		})), this.tick = setInterval(() => this.requestUpdate(), 1e3)), this.requestUpdate();
 	}
 	render() {
-		if (!this.config) return I;
-		let e = Q(this.config, this.ha);
-		return P` <!-- THESIS: Read departures and leave times, never decorative metrics.
+		if (!this.config) return j;
+		let e = Z(this.config, this.ha);
+		return k` <!-- THESIS: Read departures and leave times, never decorative metrics.
       OWN-WORLD: Home Assistant theme, restrained dividers, tabular times.
       STORY: Choose a favourite, read freshness, decide when to leave.
       FIRST VIEWPORT: Title, named stop, status, aligned line/destination/time.
@@ -1283,7 +1362,7 @@ var Pe = class extends G {
 			let n = this.views.get(t) ?? { status: "loading" }, r = n.board;
 			if (!r || !this.isConnected || this.paused || Date.parse(r.expires_at) <= Date.now()) {
 				let i = r ? "expired" : n.status;
-				return P`<section>
+				return k`<section>
               <h3>${t}</h3>
               <p class="message" role="status">
                 ${e[i === "ready" || i === "stale" ? "loading" : i]}
@@ -1295,66 +1374,97 @@ var Pe = class extends G {
       </ha-card>`;
 	}
 	renderBoard(e) {
-		let t = this.config, n = Q(t, this.ha);
-		return P`<section>
+		let t = this.config, n = Z(t, this.ha);
+		return k`<section>
       <h3>${e.stop.name}</h3>
       <p class="status" role="status">
         ${e.status === "stale" ? n.stale : n.ready}
         <time datetime=${e.fetched_at}
-          >${$(e.fetched_at, t, this.ha)}</time
+          >${Q(e.fetched_at, t, this.ha)}</time
         >
       </p>
-      ${e.status === "stale" ? P`<p class="message warning">${n.staleAdvice}</p>` : I}
+      ${e.status === "stale" ? k`<p class="message warning">${n.staleAdvice}</p>` : j}
       ${this.commute ? this.renderCommute(e) : this.renderDepartures(e)}
     </section>`;
 	}
 	renderDepartures(e) {
-		let t = this.config, n = Q(t, this.ha), r = we(e, t, Date.now()).slice(0, t.max_departures);
-		return r.length ? P`<ol aria-label=${n.departures}>
-      ${r.map((e) => P` <li
-            class="departure ${e.cancelled === !0 ? "cancelled" : ""}"
-          >
-            <span class="line">${e.line}</span>
-            <div>
-              <div class="destination">${e.destination}</div>
-              <div class="detail">
-                ${e.transport === "unknown" ? n.transport : n[e.transport]} ·
-                ${this.serviceStatus(e)}
-              </div>
-            </div>
-            <div class="time">
-              ${e.cancelled === !0 ? I : P`<strong
-                        >${Ce(Z(e), Date.now())}
-                        <small>${n.min}</small></strong
-                      ><br />`}
-              <time datetime=${e.expected_at ?? e.scheduled_at}
-                >${$(Z(e), t, this.ha)}</time
-              >
-            </div>
-          </li>`)}
-    </ol>` : P`<p class="message">
+		let t = this.config, n = Z(t, this.ha), r = Date.now(), i = t.display_mode === "grouped" ? Oe(e, t, r).map((e) => ({
+			departure: e.departure,
+			group: e
+		})) : X(e, t, r).slice(0, t.max_departures).map((e) => ({ departure: e }));
+		return i.length ? k`<ol aria-label=${n.departures}>
+      ${i.map((e) => this.renderDeparture(e.departure, r, e.group))}
+    </ol>` : k`<p class="message">
         ${t.lines.length || t.destinations.length ? n.filtered : n.empty}
       </p>`;
 	}
+	renderDeparture(e, t, n) {
+		let r = this.config, i = Z(r, this.ha), a = n?.cancellations.filter((t) => t !== e) ?? [];
+		return k`<li
+      class="departure ${e.cancelled === !0 ? "cancelled" : ""}"
+    >
+      <span class="line">${e.line}</span>
+      <div>
+        <div class="destination">${e.destination}</div>
+        <div class="detail">
+          ${e.transport === "unknown" ? i.transport : i[e.transport]} ·
+          <span class=${e.cancelled === !0 ? "cancelled-label" : ""}
+            >${this.serviceStatus(e)}</span
+          >
+        </div>
+        ${n?.following.length ? k`<div class="following detail">
+                ${i.alsoIn}
+                ${n.following.map((e, n) => {
+			let r = q(K(e), t), a = this.serviceStatus(e);
+			return k`${n ? ", " : ""}<time
+                      datetime=${e.expected_at ?? e.scheduled_at}
+                      title=${a}
+                      aria-label="${r} ${i.min} · ${a}"
+                      >${r}</time
+                    >`;
+		})}
+                ${i.min}
+              </div>` : j}
+        ${a.length ? k`<div class="cancellations detail">
+                <span class="cancelled-label">${i.cancelled}</span>:
+                ${a.map((e, t) => k`${t ? ", " : ""}<time
+                        datetime=${e.expected_at ?? e.scheduled_at}
+                        >${Q(K(e), r, this.ha)}</time
+                      >`)}
+              </div>` : j}
+        ${n?.additionalCancellations ? k`<div class="detail cancelled-label">
+                ${n.additionalCancellations} ${i.moreCancelled}
+              </div>` : j}
+      </div>
+      <div class="time">
+        ${e.cancelled === !0 ? j : k`<strong
+                  >${q(K(e), t)}
+                  <small>${i.min}</small></strong
+                ><br />`}
+        <time datetime=${e.expected_at ?? e.scheduled_at}
+          >${Q(K(e), r, this.ha)}</time
+        >
+      </div>
+    </li>`;
+	}
 	serviceStatus(e) {
-		let t = Q(this.config, this.ha);
-		if (e.cancelled === !0) return P`<span class="cancelled-label">${t.cancelled}</span>`;
+		let t = Z(this.config, this.ha);
+		if (e.cancelled === !0) return t.cancelled;
 		if (e.delay_seconds !== null && e.delay_seconds !== 0) {
-			if (Math.abs(e.delay_seconds) < 60) return P`${t.expected}
-        ${e.delay_seconds < 0 ? t.subMinuteEarly : t.subMinuteLate}`;
+			if (Math.abs(e.delay_seconds) < 60) return `${t.expected} ${e.delay_seconds < 0 ? t.subMinuteEarly : t.subMinuteLate}`;
 			let n = Math.round(e.delay_seconds / 60);
-			return P`${t.expected} ${n >= 0 ? "+" : ""}${n} ${t.min}`;
+			return `${t.expected} ${n >= 0 ? "+" : ""}${n} ${t.min}`;
 		}
 		return e.cancelled === null ? t.unknown : e.expected_at === null ? t.scheduled : e.delay_seconds === 0 ? t.onTime : t.expected;
 	}
 	renderCommute(e) {
-		let t = this.config, n = Q(t, this.ha);
-		if (e.status === "stale") return I;
-		let r = Te(e, t, Date.now());
-		if (!r) return P`<p class="message">${n.noCommute}</p>`;
-		let { departure: i, leaveAt: a, walking: o } = r, s = Ce(a, Date.now());
-		return P` <div class="leave">
-        ${s ? n.leaveIn : n.leaveNow}${s ? P`<strong>${s} <small>${n.min}</small></strong>` : I}
+		let t = this.config, n = Z(t, this.ha);
+		if (e.status === "stale") return j;
+		let r = ke(e, t, Date.now());
+		if (!r) return k`<p class="message">${n.noCommute}</p>`;
+		let { departure: i, leaveAt: a, walking: o } = r, s = q(a, Date.now());
+		return k` <div class="leave">
+        ${s ? n.leaveIn : n.leaveNow}${s ? k`<strong>${s} <small>${n.min}</small></strong>` : j}
       </div>
       <div class="commute-route">
         <span class="line">${i.line}</span>
@@ -1369,11 +1479,11 @@ var Pe = class extends G {
       <p class="commute-detail">
         ${o} ${n.min} ${n.walk} · ${n.departs}
         <time datetime=${i.expected_at ?? i.scheduled_at}
-          >${$(Z(i), t, this.ha)}</time
+          >${Q(K(i), t, this.ha)}</time
         >
       </p>`;
 	}
-}, Fe = class extends Pe {
+}, Re = class extends $ {
 	get commute() {
 		return !0;
 	}
@@ -1382,12 +1492,12 @@ var Pe = class extends G {
 //#region src/index.ts
 for (let [e, t, n, r] of [[
 	"ovapi-departures-card",
-	Pe,
+	$,
 	"OVAPI departures",
 	"Upcoming departures with honest freshness and cancellation status."
 ], [
 	"ovapi-commute-card",
-	Fe,
+	Re,
 	"OVAPI commute",
 	"When to leave for your favourite stops, including walking time."
 ]]) customElements.get(e) || customElements.define(e, t), window.customCards ??= [], window.customCards.some((t) => t.type === e) || window.customCards.push({
