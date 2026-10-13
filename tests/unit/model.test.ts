@@ -7,8 +7,16 @@ import {
   minutesUntil,
   groupedDepartures,
   departureAt,
+  displayDepartures,
+  leaveAt,
 } from "../../src/model";
-import { board, departure, groupedBoard, NOW } from "../fixtures/boards";
+import {
+  board,
+  combinedBoard,
+  departure,
+  groupedBoard,
+  NOW,
+} from "../fixtures/boards";
 
 describe("config and time model", () => {
   const config = parseConfig({
@@ -20,6 +28,7 @@ describe("config and time model", () => {
     expect(config.language).toBe("auto");
     expect(config.display_mode).toBe("departures");
     expect(config.max_routes).toBe(5);
+    expect(config).toHaveProperty("time_mode", "departure");
     for (const invalid of [
       null,
       {},
@@ -45,6 +54,9 @@ describe("config and time model", () => {
     { destinations: [3] },
     { display_mode: "routes" },
     { display_mode: false },
+    { time_mode: "walking" },
+    { time_mode: "" },
+    { time_mode: false },
     { max_routes: 0 },
     { max_routes: 21 },
     { max_routes: 1.5 },
@@ -58,6 +70,7 @@ describe("config and time model", () => {
   it.each([
     ["max_routes", "max_routes: use 1 to 20"],
     ["display_mode", "display_mode: use departures or grouped"],
+    ["time_mode", "time_mode: use departure or leave"],
   ])("rejects explicit null and empty YAML values for %s", (field, message) => {
     expect(() => parseConfig({ ...config, [field]: null })).toThrow(message);
     for (const value of ["", "null", "~"]) {
@@ -89,6 +102,252 @@ describe("config and time model", () => {
       entities: [board().entity_id],
       display_mode: "grouped",
       max_routes: 20,
+    });
+    describe("walking-aware departures", () => {
+      const config = parseConfig({
+        type: "custom:ovapi-departures-card",
+        entities: [board().entity_id],
+        display_mode: "grouped",
+        time_mode: "leave",
+      });
+
+      it("chooses later reachable vehicles for every route before grouping and limits", () => {
+        const b = combinedBoard();
+        const original = structuredClone(b);
+        const groups = groupedDepartures(b, config, NOW);
+        expect(groups.map((g) => g.departure.id)).toEqual([
+          "synthetic-metro-8",
+          "opposite-9",
+          "bus-10",
+        ]);
+        expect(
+          groups[0]?.following.map((d) =>
+            minutesUntil(departureAt(d) - 7 * 60_000, NOW),
+          ),
+        ).toEqual([7, 13, 19]);
+        expect(groups.every((g) => g.cancellations.length === 0)).toBe(true);
+        expect(
+          groupedDepartures(
+            b,
+            { ...config, max_routes: 1, destinations: ["Gein"] },
+            NOW,
+          )[0]?.departure.id,
+        ).toBe("opposite-9");
+        expect(b).toEqual(original);
+      });
+
+      it.each([
+        [undefined, 8],
+        [0, 2],
+        [7, 8],
+        [9, 14],
+      ])(
+        "uses override %s instead of the feed walk",
+        (walking_minutes, first) => {
+          const c = parseConfig({ ...config, walking_minutes });
+          const group = groupedDepartures(combinedBoard(), c, NOW)[0]!;
+          // At walk9 the opposite route is reachable immediately and sorts first.
+          const metro = groupedDepartures(combinedBoard(), c, NOW).find(
+            (g) =>
+              g.departure.transport === "metro" &&
+              g.departure.destination === "Isolatorweg",
+          )!;
+          expect(metro.departure.id).toBe(`synthetic-metro-${first}`);
+          expect(group.departure.cancelled).not.toBe(true);
+        },
+      );
+
+      it("withholds stale, unavailable, cancelled-only and unreachable advice", () => {
+        for (const b of [
+          { ...combinedBoard(), status: "stale" as const },
+          board({
+            status: "unavailable",
+            fetched_at: null,
+            expires_at: null,
+            departures: [],
+          }),
+          board({ departures: [departure(8, { cancelled: true })] }),
+          board({ walking_minutes: 120 }),
+        ]) {
+          expect(groupedDepartures(b, config, NOW)).toEqual([]);
+        }
+      });
+
+      it("preserves departure defaults and commute selection regardless of time/display mode", () => {
+        for (const type of [
+          "custom:ovapi-departures-card",
+          "custom:ovapi-commute-card",
+        ]) {
+          const defaults = parseConfig({
+            type,
+            entities: config.entities,
+            time_mode: undefined,
+          });
+          expect(defaults).toMatchObject({
+            time_mode: "departure",
+            display_mode: "departures",
+          });
+          expect(displayDepartures(combinedBoard(), defaults, NOW)[0]?.id).toBe(
+            "synthetic-metro-2",
+          );
+          for (const time_mode of ["departure", "leave"]) {
+            const c = parseConfig({
+              ...defaults,
+              time_mode,
+              display_mode: "grouped",
+              max_routes: 1,
+            });
+            expect(nextCommute(combinedBoard(), c, NOW)?.departure.id).toBe(
+              "synthetic-metro-8",
+            );
+          }
+        }
+      });
+
+      it("uses each feed's own walk, or one override for every feed, including zero", () => {
+        const boards = [
+          combinedBoard(),
+          { ...combinedBoard(), walking_minutes: 0 },
+        ];
+        expect(
+          boards.map((b) => displayDepartures(b, config, NOW)[0]?.id),
+        ).toEqual(["synthetic-metro-8", "synthetic-metro-2"]);
+        for (const walking_minutes of [0, 7]) {
+          expect(
+            boards.map(
+              (b) =>
+                displayDepartures(b, { ...config, walking_minutes }, NOW)[0]
+                  ?.id,
+            ),
+          ).toEqual(
+            Array(2).fill(
+              walking_minutes === 0 ? "synthetic-metro-2" : "synthetic-metro-8",
+            ),
+          );
+        }
+      });
+
+      it("uses expected instants, retains unknowns, rejects cancellation, and advances exact leave boundaries", () => {
+        const b = board({
+          walking_minutes: 7,
+          departures: [
+            departure(2, {
+              expected_at: new Date(NOW + 8 * 60_000).toISOString(),
+              delay_seconds: 360,
+              cancelled: null,
+            }),
+            departure(8, { cancelled: true }),
+            departure(14, { cancelled: null, transport: "unknown" }),
+            departure(20, { expected_at: new Date(NOW - 1).toISOString() }),
+          ],
+        });
+        expect(displayDepartures(b, config, NOW).map((d) => d.id)).toEqual([
+          "synthetic-metro-2",
+          "synthetic-metro-14",
+        ]);
+        expect(displayDepartures(b, config, NOW + 60_000)[0]?.id).toBe(
+          "synthetic-metro-2",
+        );
+        expect(displayDepartures(b, config, NOW + 60_001)[0]?.id).toBe(
+          "synthetic-metro-14",
+        );
+        expect(displayDepartures(b, config, NOW + 7 * 60_000 + 1)).toEqual([]);
+        expect(
+          displayDepartures(
+            board({ departures: [departure(0)], walking_minutes: 0 }),
+            config,
+            NOW,
+          ),
+        ).toEqual([]);
+      });
+
+      it("deduplicates exact events only, preserves collisions, and stably orders route rows", () => {
+        const d = departure(8);
+        const b = board({
+          walking_minutes: 7,
+          departures: [
+            d,
+            { ...d },
+            { ...d, scheduled_at: "2030-01-15T13:08:00+01:00" },
+            { ...d, id: "distinct" },
+            { ...d, delay_seconds: 10 },
+            {
+              ...d,
+              scheduled_at: new Date(NOW + 8 * 60_000 + 1000).toISOString(),
+            },
+            { ...d, destination: "Gein" },
+            { ...d, transport: "bus" },
+          ],
+        });
+        const signature = () =>
+          groupedDepartures(b, config, NOW).map((g) => [
+            g.departure.transport,
+            g.departure.destination,
+            [g.departure, ...g.following]
+              .map((e) => [e.id, e.delay_seconds, Date.parse(e.scheduled_at)])
+              .sort((a, b) =>
+                JSON.stringify(a).localeCompare(JSON.stringify(b)),
+              ),
+          ]);
+        const groups = groupedDepartures(b, config, NOW);
+        expect(groups).toHaveLength(3);
+        expect(
+          groups.find(
+            (g) =>
+              g.departure.destination === "Isolatorweg" &&
+              g.departure.transport === "metro",
+          )?.following,
+        ).toHaveLength(3);
+        const before = signature();
+        b.departures.reverse();
+        expect(signature()).toEqual(before);
+      });
+
+      it("applies normalized intersecting filters before both limits, and bounds default and maximum routes", () => {
+        const b = board({
+          walking_minutes: 7,
+          departures: Array.from({ length: 25 }, (_, i) =>
+            departure(8 + i, { line: `${i}`, destination: `Stop ${i}` }),
+          ),
+        });
+        expect(groupedDepartures(b, config, NOW)).toHaveLength(5);
+        expect(
+          groupedDepartures(b, { ...config, max_routes: 20 }, NOW),
+        ).toHaveLength(20);
+        expect(
+          groupedDepartures(
+            b,
+            {
+              ...config,
+              max_routes: 1,
+              lines: [" 24 "],
+              destinations: [" stop 24 "],
+            },
+            NOW,
+          )[0]?.departure.line,
+        ).toBe("24");
+        expect(
+          displayDepartures(
+            b,
+            { ...config, lines: ["24"], destinations: ["stop 1"] },
+            NOW,
+          ),
+        ).toEqual([]);
+        expect(
+          groupedDepartures(board({ departures: [] }), config, NOW),
+        ).toEqual([]);
+      });
+
+      it.each([
+        ["2030-03-31T01:55:00+01:00", "2030-03-31T03:05:00+02:00"],
+        ["2030-10-27T02:55:00+02:00", "2030-10-27T02:05:00+01:00"],
+        ["2030-01-15T23:55:00+01:00", "2030-01-16T00:05:00+01:00"],
+      ])("subtracts walk across DST/midnight %s", (start, end) => {
+        const now = Date.parse(start);
+        const d = departure(0, { scheduled_at: end }, now);
+        expect(minutesUntil(leaveAt(d, 7), now)).toBe(3);
+        expect(minutesUntil(leaveAt(d, 7), now + 1)).toBe(2);
+      });
     });
 
     it("groups transport/line/destination separately with three following times", () => {

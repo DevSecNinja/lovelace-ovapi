@@ -107,6 +107,15 @@ export const styles = css`
     font-size: 1.2rem;
     font-weight: 600;
   }
+  .walking {
+    margin: 0 0 4px;
+  }
+  .leave-time {
+    display: block;
+  }
+  .leave-time strong {
+    display: block;
+  }
   .cancelled .destination {
     text-decoration: line-through;
   }

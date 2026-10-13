@@ -90,6 +90,9 @@ test("configuration editor is keyboard accessible with visible focus", async ({
   await page.keyboard.press("Tab");
   await page.keyboard.press("Space");
   await expect(editor.getByLabel("Amsterdam Centraal")).toBeChecked();
+  await editor
+    .getByLabel("Time display", { exact: true })
+    .selectOption("leave");
   await editor.getByLabel("Walking minutes", { exact: false }).fill("9");
   await editor.getByLabel("Title", { exact: true }).fill("Morning commute");
   await editor

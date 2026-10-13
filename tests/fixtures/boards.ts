@@ -80,6 +80,28 @@ export function groupedBoard(now = NOW): BoardSnapshot {
   });
 }
 
+export function combinedBoard(now = NOW): BoardSnapshot {
+  return board({
+    stop: {
+      id: "SYNTHETIC_COMBINED",
+      name: "Diemen Zuid · synthetic combined",
+    },
+    fetched_at: new Date(now).toISOString(),
+    expires_at: new Date(now + 29 * 60_000).toISOString(),
+    walking_minutes: 7,
+    departures: [
+      ...[2, 8, 14, 20, 26].map((m) => departure(m, {}, now)),
+      ...[3, 9, 15, 21].map((m) =>
+        departure(m, { id: `opposite-${m}`, destination: "Gein" }, now),
+      ),
+      ...[4, 10, 16, 22].map((m) =>
+        departure(m, { id: `bus-${m}`, transport: "bus" }, now),
+      ),
+      departure(7, { cancelled: true }, now),
+    ],
+  });
+}
+
 export function board(overrides: Partial<BoardSnapshot> = {}): BoardSnapshot {
   return {
     contract_version: 1,

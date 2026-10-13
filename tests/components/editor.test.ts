@@ -201,10 +201,98 @@ describe("visual editor", () => {
       state: "ready",
       attributes: { contract_version: 2, board_id: "future" },
     };
+    for (const key of [
+      "walking_duration",
+      "configured_sources",
+      "ready_sources",
+    ]) {
+      ha.states[`sensor.${key}`] = {
+        state: "7",
+        attributes: { friendly_name: key },
+      };
+    }
+    ha.states["sensor.unavailable_feed"] = {
+      state: "unavailable",
+      attributes: { contract_version: 1, board_id: "unavailable" },
+    };
     editor.hass = ha;
     document.body.append(editor);
     await editor.updateComplete;
     expect(editor.shadowRoot!.textContent).not.toContain("sensor.future");
+    expect(
+      editor.shadowRoot!.querySelectorAll('input[type="checkbox"]'),
+    ).toHaveLength(2);
+    expect(editor.shadowRoot!.textContent).toContain("sensor.unavailable_feed");
+    expect(editor.shadowRoot!.textContent).not.toContain("walking_duration");
+  });
+
+  it("shows walking only where applied and preserves omitted/override/clear/zero across editor reopen", async () => {
+    let editor = new OvapiCardEditor();
+    let config: Record<string, unknown> = {
+      type: "custom:ovapi-departures-card",
+      entities: ["sensor.amsterdam_departures"],
+      display_mode: "grouped",
+      max_routes: 3,
+      max_departures: 7,
+    };
+    const wire = () => {
+      editor.setConfig(config);
+      editor.addEventListener("config-changed", (event) => {
+        config = (event as CustomEvent).detail.config;
+        editor.setConfig(structuredClone(config));
+      });
+    };
+    wire();
+    document.body.append(editor);
+    await editor.updateComplete;
+    const value = (id: string) =>
+      editor.shadowRoot!.querySelector<HTMLInputElement | HTMLSelectElement>(
+        `#${id}`,
+      )?.value;
+    const change = async (id: string, next: string) => {
+      const input = editor.shadowRoot!.querySelector<
+        HTMLInputElement | HTMLSelectElement
+      >(`#${id}`)!;
+      input.value = next;
+      input.dispatchEvent(new Event("change"));
+      await editor.updateComplete;
+    };
+    expect(value("time-mode")).toBe("departure");
+    expect(value("walking")).toBeUndefined();
+    await change("time-mode", "leave");
+    expect(value("walking")).toBe("");
+    expect(editor.shadowRoot!.textContent).toContain("not its sources");
+    expect(config).not.toHaveProperty("walking_minutes");
+    for (const [text, expected] of [
+      ["9", 9],
+      ["", undefined],
+      ["0", 0],
+    ] as const) {
+      await change("walking", text);
+      expect(config.walking_minutes).toBe(expected);
+      if (expected === undefined)
+        expect(config).not.toHaveProperty("walking_minutes");
+      const previous = editor;
+      editor = new OvapiCardEditor();
+      wire();
+      previous.replaceWith(editor);
+      await editor.updateComplete;
+      expect(value("walking")).toBe(text);
+      expect(value("time-mode")).toBe("leave");
+      expect(value("max-routes")).toBe("3");
+    }
+    await change("time-mode", "departure");
+    expect(value("walking")).toBeUndefined();
+    expect(config.walking_minutes).toBe(0);
+    await change("time-mode", "leave");
+    expect(value("walking")).toBe("0");
+    await change("display-mode", "departures");
+    expect(value("maximum")).toBe("7");
+    expect(value("time-mode")).toBe("leave");
+    editor.setConfig({ ...config, type: "custom:ovapi-commute-card" });
+    await editor.updateComplete;
+    expect(value("time-mode")).toBeUndefined();
+    expect(value("walking")).toBe("0");
   });
 
   it("handles unconfigured and unavailable entities without dropping selections", async () => {
