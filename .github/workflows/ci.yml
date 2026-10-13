@@ -29,7 +29,7 @@ jobs:
       upload-sarif: false
   versions:
     name: Version and runtime contracts
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     outputs:
       matrix: ${{ steps.matrix.outputs.value }}
@@ -55,7 +55,7 @@ jobs:
       matrix: ${{ fromJSON(needs.versions.outputs.matrix) }}
     env:
       OVAPI_CI_NODE: ${{ matrix.node }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     steps:
       - name: Checkout
