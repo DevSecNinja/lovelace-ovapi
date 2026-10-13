@@ -36,6 +36,13 @@ const en = {
   unknown: "Live status unknown",
   leaveIn: "Leave in",
   leaveNow: "Leave now",
+  leaveTimes: "Leave times",
+  timeMode: "Time display",
+  departureTime: "Departure time",
+  leaveTime: "Leave time",
+  timeModeHelp:
+    "Departure time is when the vehicle leaves. Leave time subtracts your walking time and shows only catchable services.",
+  alsoLeaveIn: "Also leave in",
   min: "min",
   walk: "walk",
   departs: "Departs",
@@ -51,7 +58,9 @@ const en = {
   destinations: "Destinations",
   addFilter: "Add",
   removeFilter: "Remove",
-  walking: "Walking minutes (empty = integration setting)",
+  walking: "Walking minutes (optional override)",
+  walkingHelp:
+    "Empty uses each selected favourite's own walking time. For a combined favourite, this is the group's setting, not its sources. An override applies to all favourites on this card; 0 means no walk.",
   maximum: "Maximum departures per stop",
   displayMode: "Departure display",
   individual: "Individual departures",
@@ -59,6 +68,8 @@ const en = {
   maxRoutes: "Maximum route rows per favourite",
   groupedHelp:
     "One row per transport + line + destination, soonest first. Opposite directions count separately. Up to three following times; cancelled-only routes appear last.",
+  groupedLeaveHelp:
+    "One row per transport + line + destination, soonest catchable first. Opposite directions count separately. Up to three following leave times; cancelled services are excluded.",
   alsoIn: "Also in",
   oneMoreCancelled: "more cancelled",
   moreCancelled: "more cancelled",
@@ -105,6 +116,13 @@ const nl: typeof en = {
   unknown: "Actuele status onbekend",
   leaveIn: "Vertrek over",
   leaveNow: "Vertrek nu",
+  leaveTimes: "Tijden om te vertrekken",
+  timeMode: "Tijdweergave",
+  departureTime: "Vertrektijd voertuig",
+  leaveTime: "Tijd om te vertrekken",
+  timeModeHelp:
+    "De vertrektijd is wanneer het voertuig vertrekt. De tijd om te vertrekken trekt je looptijd af en toont alleen haalbare ritten.",
+  alsoLeaveIn: "Vertrek ook over",
   min: "min",
   walk: "lopen",
   departs: "Vertrek",
@@ -120,7 +138,9 @@ const nl: typeof en = {
   destinations: "Bestemmingen",
   addFilter: "Toevoegen",
   removeFilter: "Verwijderen",
-  walking: "Looptijd in minuten (leeg = integratie-instelling)",
+  walking: "Looptijd in minuten (optionele afwijking)",
+  walkingHelp:
+    "Leeg gebruikt de eigen looptijd van elke geselecteerde favoriet. Bij een gecombineerde favoriet is dit de groepsinstelling, niet die van de bronnen. Een afwijking geldt voor alle favorieten op deze kaart; 0 betekent niet lopen.",
   maximum: "Maximum vertrekken per halte",
   displayMode: "Vertrekweergave",
   individual: "Afzonderlijke vertrekken",
@@ -128,6 +148,8 @@ const nl: typeof en = {
   maxRoutes: "Maximum routerijen per favoriet",
   groupedHelp:
     "Een rij per vervoertype + lijn + bestemming, eerstvolgende bovenaan. Tegengestelde richtingen tellen apart. Tot drie volgende tijden; routes met alleen vervallen ritten staan onderaan.",
+  groupedLeaveHelp:
+    "Een rij per vervoertype + lijn + bestemming, eerstvolgende haalbare rit bovenaan. Tegengestelde richtingen tellen apart. Tot drie volgende tijden om te vertrekken; vervallen ritten zijn uitgesloten.",
   alsoIn: "Ook over",
   oneMoreCancelled: "andere vervallen rit",
   moreCancelled: "andere vervallen ritten",

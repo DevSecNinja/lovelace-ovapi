@@ -284,13 +284,13 @@ var v = class extends HTMLElement {
 v.elementStyles = [], v.shadowRootOptions = { mode: "open" }, v[g("elementProperties")] = /* @__PURE__ */ new Map(), v[g("finalized")] = /* @__PURE__ */ new Map(), ne?.({ ReactiveElement: v }), (h.reactiveElementVersions ??= []).push("2.1.2");
 //#endregion
 //#region node_modules/lit-html/lit-html.js
-var ae = globalThis, oe = (e) => e, y = ae.trustedTypes, se = y ? y.createPolicy("lit-html", { createHTML: (e) => e }) : void 0, ce = "$lit$", b = `lit$${Math.random().toFixed(9).slice(2)}$`, x = "?" + b, le = `<${x}>`, S = document, C = () => S.createComment(""), w = (e) => e === null || typeof e != "object" && typeof e != "function", T = Array.isArray, ue = (e) => T(e) || typeof e?.[Symbol.iterator] == "function", E = "[ 	\n\f\r]", D = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, de = /-->/g, fe = />/g, O = RegExp(`>|${E}(?:([^\\s"'>=/]+)(${E}*=${E}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`, "g"), pe = /'/g, me = /"/g, he = /^(?:script|style|textarea|title)$/i, k = ((e) => (t, ...n) => ({
+var ae = globalThis, oe = (e) => e, y = ae.trustedTypes, se = y ? y.createPolicy("lit-html", { createHTML: (e) => e }) : void 0, b = "$lit$", x = `lit$${Math.random().toFixed(9).slice(2)}$`, S = "?" + x, ce = `<${S}>`, C = document, w = () => C.createComment(""), T = (e) => e === null || typeof e != "object" && typeof e != "function", E = Array.isArray, le = (e) => E(e) || typeof e?.[Symbol.iterator] == "function", ue = "[ 	\n\f\r]", D = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g, de = /-->/g, fe = />/g, O = RegExp(`>|${ue}(?:([^\\s"'>=/]+)(${ue}*=${ue}*(?:[^ \t\n\f\r"'\`<>=]|("|')|))|$)`, "g"), pe = /'/g, me = /"/g, he = /^(?:script|style|textarea|title)$/i, k = ((e) => (t, ...n) => ({
 	_$litType$: e,
 	strings: t,
 	values: n
-}))(1), A = Symbol.for("lit-noChange"), j = Symbol.for("lit-nothing"), ge = /* @__PURE__ */ new WeakMap(), M = S.createTreeWalker(S, 129);
+}))(1), A = Symbol.for("lit-noChange"), j = Symbol.for("lit-nothing"), ge = /* @__PURE__ */ new WeakMap(), M = C.createTreeWalker(C, 129);
 function _e(e, t) {
-	if (!T(e) || !e.hasOwnProperty("raw")) throw Error("invalid template strings array");
+	if (!E(e) || !e.hasOwnProperty("raw")) throw Error("invalid template strings array");
 	return se === void 0 ? t : se.createHTML(t);
 }
 var ve = (e, t) => {
@@ -299,7 +299,7 @@ var ve = (e, t) => {
 		let n = e[t], s, c, l = -1, u = 0;
 		for (; u < n.length && (o.lastIndex = u, c = o.exec(n), c !== null);) u = o.lastIndex, o === D ? c[1] === "!--" ? o = de : c[1] === void 0 ? c[2] === void 0 ? c[3] !== void 0 && (o = O) : (he.test(c[2]) && (i = RegExp("</" + c[2], "g")), o = O) : o = fe : o === O ? c[0] === ">" ? (o = i ?? D, l = -1) : c[1] === void 0 ? l = -2 : (l = o.lastIndex - c[2].length, s = c[1], o = c[3] === void 0 ? O : c[3] === "\"" ? me : pe) : o === me || o === pe ? o = O : o === de || o === fe ? o = D : (o = O, i = void 0);
 		let d = o === O && e[t + 1].startsWith("/>") ? " " : "";
-		a += o === D ? n + le : l >= 0 ? (r.push(s), n.slice(0, l) + ce + n.slice(l) + b + d) : n + b + (l === -2 ? t : d);
+		a += o === D ? n + ce : l >= 0 ? (r.push(s), n.slice(0, l) + b + n.slice(l) + x + d) : n + x + (l === -2 ? t : d);
 	}
 	return [_e(e, a + (e[n] || "<?>") + (t === 2 ? "</svg>" : t === 3 ? "</math>" : "")), r];
 }, N = class e {
@@ -313,8 +313,8 @@ var ve = (e, t) => {
 		}
 		for (; (i = M.nextNode()) !== null && c.length < s;) {
 			if (i.nodeType === 1) {
-				if (i.hasAttributes()) for (let e of i.getAttributeNames()) if (e.endsWith(ce)) {
-					let t = u[o++], n = i.getAttribute(e).split(b), r = /([.?@])?(.*)/.exec(t);
+				if (i.hasAttributes()) for (let e of i.getAttributeNames()) if (e.endsWith(b)) {
+					let t = u[o++], n = i.getAttribute(e).split(x), r = /([.?@])?(.*)/.exec(t);
 					c.push({
 						type: 1,
 						index: a,
@@ -322,45 +322,45 @@ var ve = (e, t) => {
 						strings: n,
 						ctor: r[1] === "." ? be : r[1] === "?" ? xe : r[1] === "@" ? Se : I
 					}), i.removeAttribute(e);
-				} else e.startsWith(b) && (c.push({
+				} else e.startsWith(x) && (c.push({
 					type: 6,
 					index: a
 				}), i.removeAttribute(e));
 				if (he.test(i.tagName)) {
-					let e = i.textContent.split(b), t = e.length - 1;
+					let e = i.textContent.split(x), t = e.length - 1;
 					if (t > 0) {
 						i.textContent = y ? y.emptyScript : "";
-						for (let n = 0; n < t; n++) i.append(e[n], C()), M.nextNode(), c.push({
+						for (let n = 0; n < t; n++) i.append(e[n], w()), M.nextNode(), c.push({
 							type: 2,
 							index: ++a
 						});
-						i.append(e[t], C());
+						i.append(e[t], w());
 					}
 				}
 			} else if (i.nodeType === 8) {
-				if (i.data === x) c.push({
+				if (i.data === S) c.push({
 					type: 2,
 					index: a
 				});
 				else {
 					let e = -1;
-					for (; (e = i.data.indexOf(b, e + 1)) !== -1;) c.push({
+					for (; (e = i.data.indexOf(x, e + 1)) !== -1;) c.push({
 						type: 7,
 						index: a
-					}), e += b.length - 1;
+					}), e += x.length - 1;
 				}
 			}
 			a++;
 		}
 	}
 	static createElement(e, t) {
-		let n = S.createElement("template");
+		let n = C.createElement("template");
 		return n.innerHTML = e, n;
 	}
 };
 function P(e, t, n = e, r) {
 	if (t === A) return t;
-	let i = r === void 0 ? n._$Cl : n._$Co?.[r], a = w(t) ? void 0 : t._$litDirective$;
+	let i = r === void 0 ? n._$Cl : n._$Co?.[r], a = T(t) ? void 0 : t._$litDirective$;
 	return i?.constructor !== a && (i?._$AO?.(!1), a === void 0 ? i = void 0 : (i = new a(e), i._$AT(e, n, r)), r === void 0 ? n._$Cl = i : (n._$Co ??= [])[r] = i), i !== void 0 && (t = P(e, i._$AS(e, t.values), i, r)), t;
 }
 var ye = class {
@@ -374,7 +374,7 @@ var ye = class {
 		return this._$AM._$AU;
 	}
 	u(e) {
-		let { el: { content: t }, parts: n } = this._$AD, r = (e?.creationScope ?? S).importNode(t, !0);
+		let { el: { content: t }, parts: n } = this._$AD, r = (e?.creationScope ?? C).importNode(t, !0);
 		M.currentNode = r;
 		let i = M.nextNode(), a = 0, o = 0, s = n[0];
 		for (; s !== void 0;) {
@@ -384,7 +384,7 @@ var ye = class {
 			}
 			a !== s?.index && (i = M.nextNode(), a++);
 		}
-		return M.currentNode = S, r;
+		return M.currentNode = C, r;
 	}
 	p(e) {
 		let t = 0;
@@ -408,7 +408,7 @@ var ye = class {
 		return this._$AB;
 	}
 	_$AI(e, t = this) {
-		e = P(this, e, t), w(e) ? e === j || e == null || e === "" ? (this._$AH !== j && this._$AR(), this._$AH = j) : e !== this._$AH && e !== A && this._(e) : e._$litType$ === void 0 ? e.nodeType === void 0 ? ue(e) ? this.k(e) : this._(e) : this.T(e) : this.$(e);
+		e = P(this, e, t), T(e) ? e === j || e == null || e === "" ? (this._$AH !== j && this._$AR(), this._$AH = j) : e !== this._$AH && e !== A && this._(e) : e._$litType$ === void 0 ? e.nodeType === void 0 ? le(e) ? this.k(e) : this._(e) : this.T(e) : this.$(e);
 	}
 	O(e) {
 		return this._$AA.parentNode.insertBefore(e, this._$AB);
@@ -417,7 +417,7 @@ var ye = class {
 		this._$AH !== e && (this._$AR(), this._$AH = this.O(e));
 	}
 	_(e) {
-		this._$AH !== j && w(this._$AH) ? this._$AA.nextSibling.data = e : this.T(S.createTextNode(e)), this._$AH = e;
+		this._$AH !== j && T(this._$AH) ? this._$AA.nextSibling.data = e : this.T(C.createTextNode(e)), this._$AH = e;
 	}
 	$(e) {
 		let { values: t, _$litType$: n } = e, r = typeof n == "number" ? this._$AC(e) : (n.el === void 0 && (n.el = N.createElement(_e(n.h, n.h[0]), this.options)), n);
@@ -432,9 +432,9 @@ var ye = class {
 		return t === void 0 && ge.set(e.strings, t = new N(e)), t;
 	}
 	k(t) {
-		T(this._$AH) || (this._$AH = [], this._$AR());
+		E(this._$AH) || (this._$AH = [], this._$AR());
 		let n = this._$AH, r, i = 0;
-		for (let a of t) i === n.length ? n.push(r = new e(this.O(C()), this.O(C()), this, this.options)) : r = n[i], r._$AI(a), i++;
+		for (let a of t) i === n.length ? n.push(r = new e(this.O(w()), this.O(w()), this, this.options)) : r = n[i], r._$AI(a), i++;
 		i < n.length && (this._$AR(r && r._$AB.nextSibling, i), n.length = i);
 	}
 	_$AR(e = this._$AA.nextSibling, t) {
@@ -458,10 +458,10 @@ var ye = class {
 	}
 	_$AI(e, t = this, n, r) {
 		let i = this.strings, a = !1;
-		if (i === void 0) e = P(this, e, t, 0), a = !w(e) || e !== this._$AH && e !== A, a && (this._$AH = e);
+		if (i === void 0) e = P(this, e, t, 0), a = !T(e) || e !== this._$AH && e !== A, a && (this._$AH = e);
 		else {
 			let r = e, o, s;
-			for (e = i[0], o = 0; o < i.length - 1; o++) s = P(this, r[n + o], t, o), s === A && (s = this._$AH[o]), a ||= !w(s) || s !== this._$AH[o], s === j ? e = j : e !== j && (e += (s ?? "") + i[o + 1]), this._$AH[o] = s;
+			for (e = i[0], o = 0; o < i.length - 1; o++) s = P(this, r[n + o], t, o), s === A && (s = this._$AH[o]), a ||= !T(s) || s !== this._$AH[o], s === j ? e = j : e !== j && (e += (s ?? "") + i[o + 1]), this._$AH[o] = s;
 		}
 		a && !r && this.j(e);
 	}
@@ -505,13 +505,13 @@ var ye = class {
 		P(this, e);
 	}
 }, we = {
-	M: ce,
-	P: b,
-	A: x,
+	M: b,
+	P: x,
+	A: S,
 	C: 1,
 	L: ve,
 	R: ye,
-	D: ue,
+	D: le,
 	V: P,
 	I: F,
 	H: I,
@@ -525,7 +525,7 @@ var Ee = (e, t, n) => {
 	let r = n?.renderBefore ?? t, i = r._$litPart$;
 	if (i === void 0) {
 		let e = n?.renderBefore ?? null;
-		r._$litPart$ = i = new F(t.insertBefore(C(), e), e, void 0, n ?? {});
+		r._$litPart$ = i = new F(t.insertBefore(w(), e), e, void 0, n ?? {});
 	}
 	return i._$AI(e), i;
 }, L = globalThis, R = class extends v {
@@ -641,12 +641,12 @@ function je(e, t, n) {
 }
 //#endregion
 //#region src/model.ts
-function W(e, t) {
+function Me(e, t) {
 	if (!Array.isArray(e) || e.some((e) => typeof e != "string" || !e.trim() || e.length > 512)) throw Error(`${t}: use a list of non-empty strings`);
 	return [...new Set(e.map((e) => e.trim()))];
 }
-function Me(e) {
-	let t = B(e), n = W(t.entities, "entities");
+function Ne(e) {
+	let t = B(e), n = Me(t.entities, "entities");
 	if (n.length < 1 || n.length > 12 || n.some((e) => !/^sensor\.[a-z0-9_]+$/.test(e))) throw Error("entities: select 1 to 12 OVAPI sensors");
 	if (!["custom:ovapi-departures-card", "custom:ovapi-commute-card"].includes(String(t.type))) throw Error("type: select an OVAPI departure or commute card");
 	let r = t.max_departures ?? 5;
@@ -655,35 +655,46 @@ function Me(e) {
 	if (!Number.isInteger(i) || Number(i) < 1 || Number(i) > 20) throw Error("max_routes: use 1 to 20");
 	let a = t.display_mode === void 0 ? "departures" : t.display_mode;
 	if (a !== "departures" && a !== "grouped") throw Error("display_mode: use departures or grouped");
+	let o = t.time_mode === void 0 ? "departure" : t.time_mode;
+	if (o !== "departure" && o !== "leave") throw Error("time_mode: use departure or leave");
 	if (t.walking_minutes !== void 0 && (!Number.isInteger(t.walking_minutes) || Number(t.walking_minutes) < 0 || Number(t.walking_minutes) > 120)) throw Error("walking_minutes: use 0 to 120");
 	if (t.title !== void 0 && (typeof t.title != "string" || t.title.length > 120)) throw Error("title: maximum 120 characters");
-	let o = t.language ?? "auto";
+	let s = t.language ?? "auto";
 	if (![
 		"auto",
 		"en",
 		"nl"
-	].includes(String(o))) throw Error("language: use auto, en or nl");
+	].includes(String(s))) throw Error("language: use auto, en or nl");
 	return {
 		type: t.type,
 		entities: n,
 		...t.title === void 0 ? {} : { title: t.title },
-		lines: W(t.lines ?? [], "lines"),
-		destinations: W(t.destinations ?? [], "destinations"),
+		lines: Me(t.lines ?? [], "lines"),
+		destinations: Me(t.destinations ?? [], "destinations"),
 		max_departures: r,
 		display_mode: a,
+		time_mode: o,
 		max_routes: i,
 		...t.walking_minutes === void 0 ? {} : { walking_minutes: t.walking_minutes },
-		language: o
+		language: s
 	};
 }
-var G = (e) => Date.parse(e.expected_at ?? e.scheduled_at), K = (e, t) => Math.max(0, Math.floor((e - t) / 6e4)), q = (e) => e.trim().toLowerCase(), Ne = (e, t) => G(e) - G(t) || e.id.localeCompare(t.id);
-function J(e, t, n) {
+var W = (e) => Date.parse(e.expected_at ?? e.scheduled_at), G = (e, t) => W(e) - t * 6e4, K = (e, t) => Math.max(0, Math.floor((e - t) / 6e4)), q = (e) => e.trim().toLowerCase(), Pe = (e, t) => W(e) - W(t) || e.id.localeCompare(t.id);
+function Fe(e, t, n) {
 	let r = (e, t) => !e.length || e.some((e) => q(e) === q(t));
-	return e.departures.filter((e) => G(e) > n && r(t.lines, e.line) && r(t.destinations, e.destination)).sort(Ne);
+	return e.departures.filter((e) => W(e) > n && r(t.lines, e.line) && r(t.destinations, e.destination)).sort(Pe);
 }
-function Pe(e, t, n) {
+function Ie(e, t, n) {
+	if (e.status !== "ready") return [];
+	let r = t.walking_minutes ?? e.walking_minutes;
+	return Fe(e, t, n).filter((e) => e.cancelled !== !0 && G(e, r) >= n);
+}
+function Le(e, t, n) {
+	return t.time_mode === "leave" ? Ie(e, t, n) : Fe(e, t, n);
+}
+function Re(e, t, n) {
 	let r = /* @__PURE__ */ new Map(), i = /* @__PURE__ */ new Set();
-	for (let a of J(e, t, n)) {
+	for (let a of Le(e, t, n)) {
 		let e = JSON.stringify([
 			a.id,
 			a.transport,
@@ -712,20 +723,19 @@ function Pe(e, t, n) {
 		following: t.upcoming.slice(1, 4),
 		cancellations: t.cancelled.slice(0, 3),
 		additionalCancellations: Math.max(0, t.cancelled.length - 3)
-	})).sort((e, t) => Number(e.departure.cancelled === !0) - Number(t.departure.cancelled === !0) || Ne(e.departure, t.departure) || e.key.localeCompare(t.key)).slice(0, t.max_routes);
+	})).sort((e, t) => Number(e.departure.cancelled === !0) - Number(t.departure.cancelled === !0) || Pe(e.departure, t.departure) || e.key.localeCompare(t.key)).slice(0, t.max_routes);
 }
-function Fe(e, t, n) {
-	if (e.status !== "ready") return;
-	let r = t.walking_minutes ?? e.walking_minutes, i = J(e, t, n).find((e) => e.cancelled !== !0 && G(e) - r * 6e4 >= n);
+function ze(e, t, n) {
+	let r = t.walking_minutes ?? e.walking_minutes, i = Ie(e, t, n)[0];
 	return i ? {
 		departure: i,
-		leaveAt: G(i) - r * 6e4,
+		leaveAt: G(i, r),
 		walking: r
 	} : void 0;
 }
 //#endregion
 //#region src/localize.ts
-var Ie = {
+var Be = {
 	departures: "Departures",
 	commute: "Time to leave",
 	loading: "Connecting to your departure board…",
@@ -753,6 +763,12 @@ var Ie = {
 	unknown: "Live status unknown",
 	leaveIn: "Leave in",
 	leaveNow: "Leave now",
+	leaveTimes: "Leave times",
+	timeMode: "Time display",
+	departureTime: "Departure time",
+	leaveTime: "Leave time",
+	timeModeHelp: "Departure time is when the vehicle leaves. Leave time subtracts your walking time and shows only catchable services.",
+	alsoLeaveIn: "Also leave in",
 	min: "min",
 	walk: "walk",
 	departs: "Departs",
@@ -767,13 +783,15 @@ var Ie = {
 	destinations: "Destinations",
 	addFilter: "Add",
 	removeFilter: "Remove",
-	walking: "Walking minutes (empty = integration setting)",
+	walking: "Walking minutes (optional override)",
+	walkingHelp: "Empty uses each selected favourite's own walking time. For a combined favourite, this is the group's setting, not its sources. An override applies to all favourites on this card; 0 means no walk.",
 	maximum: "Maximum departures per stop",
 	displayMode: "Departure display",
 	individual: "Individual departures",
 	grouped: "Grouped routes",
 	maxRoutes: "Maximum route rows per favourite",
 	groupedHelp: "One row per transport + line + destination, soonest first. Opposite directions count separately. Up to three following times; cancelled-only routes appear last.",
+	groupedLeaveHelp: "One row per transport + line + destination, soonest catchable first. Opposite directions count separately. Up to three following leave times; cancelled services are excluded.",
 	alsoIn: "Also in",
 	oneMoreCancelled: "more cancelled",
 	moreCancelled: "more cancelled",
@@ -781,7 +799,7 @@ var Ie = {
 	auto: "Automatic",
 	choose: "Choose one or more OVAPI sensors.",
 	editorHelp: "One exact value per field; commas are part of the name. Filters narrow the existing board and never request more data."
-}, Le = {
+}, Ve = {
 	departures: "Vertrektijden",
 	commute: "Tijd om te vertrekken",
 	loading: "Verbinding met je vertrekbord…",
@@ -809,6 +827,12 @@ var Ie = {
 	unknown: "Actuele status onbekend",
 	leaveIn: "Vertrek over",
 	leaveNow: "Vertrek nu",
+	leaveTimes: "Tijden om te vertrekken",
+	timeMode: "Tijdweergave",
+	departureTime: "Vertrektijd voertuig",
+	leaveTime: "Tijd om te vertrekken",
+	timeModeHelp: "De vertrektijd is wanneer het voertuig vertrekt. De tijd om te vertrekken trekt je looptijd af en toont alleen haalbare ritten.",
+	alsoLeaveIn: "Vertrek ook over",
 	min: "min",
 	walk: "lopen",
 	departs: "Vertrek",
@@ -823,13 +847,15 @@ var Ie = {
 	destinations: "Bestemmingen",
 	addFilter: "Toevoegen",
 	removeFilter: "Verwijderen",
-	walking: "Looptijd in minuten (leeg = integratie-instelling)",
+	walking: "Looptijd in minuten (optionele afwijking)",
+	walkingHelp: "Leeg gebruikt de eigen looptijd van elke geselecteerde favoriet. Bij een gecombineerde favoriet is dit de groepsinstelling, niet die van de bronnen. Een afwijking geldt voor alle favorieten op deze kaart; 0 betekent niet lopen.",
 	maximum: "Maximum vertrekken per halte",
 	displayMode: "Vertrekweergave",
 	individual: "Afzonderlijke vertrekken",
 	grouped: "Gegroepeerde routes",
 	maxRoutes: "Maximum routerijen per favoriet",
 	groupedHelp: "Een rij per vervoertype + lijn + bestemming, eerstvolgende bovenaan. Tegengestelde richtingen tellen apart. Tot drie volgende tijden; routes met alleen vervallen ritten staan onderaan.",
+	groupedLeaveHelp: "Een rij per vervoertype + lijn + bestemming, eerstvolgende haalbare rit bovenaan. Tegengestelde richtingen tellen apart. Tot drie volgende tijden om te vertrekken; vervallen ritten zijn uitgesloten.",
 	alsoIn: "Ook over",
 	oneMoreCancelled: "andere vervallen rit",
 	moreCancelled: "andere vervallen ritten",
@@ -838,15 +864,15 @@ var Ie = {
 	choose: "Kies een of meer OVAPI-sensoren.",
 	editorHelp: "Een exacte waarde per veld; komma's horen bij de naam. Filters beperken het bestaande bord en vragen nooit extra gegevens op."
 };
-function Re(e, t) {
+function He(e, t) {
 	return e.language === "auto" ? (t?.locale?.language ?? t?.language ?? "en").startsWith("nl") ? "nl" : "en" : e.language;
 }
-function Y(e, t) {
-	return Re(e, t) === "nl" ? Le : Ie;
+function J(e, t) {
+	return He(e, t) === "nl" ? Ve : Be;
 }
-function X(e, t, n) {
+function Y(e, t, n) {
 	let r = n?.locale?.time_format;
-	return new Intl.DateTimeFormat(Re(t, n), {
+	return new Intl.DateTimeFormat(He(t, n), {
 		timeZone: n?.config.time_zone ?? "Europe/Amsterdam",
 		hour: "2-digit",
 		minute: "2-digit",
@@ -855,7 +881,7 @@ function X(e, t, n) {
 }
 //#endregion
 //#region src/subscription.ts
-function ze(e, t) {
+function Ue(e, t) {
 	return e.coverage?.metadata_expires_at && Date.parse(e.coverage.metadata_expires_at) <= t ? {
 		status: "unavailable",
 		coverageExpired: !0
@@ -864,10 +890,10 @@ function ze(e, t) {
 		...e.coverage ? { coverage: e.coverage } : {}
 	} : e;
 }
-function Be(e) {
+function We(e) {
 	return Math.min(e.board ? Date.parse(e.board.expires_at) : Infinity, e.coverage?.metadata_expires_at ? Date.parse(e.coverage.metadata_expires_at) : Infinity);
 }
-var Ve = /* @__PURE__ */ new WeakMap(), He = class {
+var Ge = /* @__PURE__ */ new WeakMap(), Ke = class {
 	connection;
 	entity;
 	listeners = /* @__PURE__ */ new Set();
@@ -890,10 +916,10 @@ var Ve = /* @__PURE__ */ new WeakMap(), He = class {
 			console.warn("OVAPI subscription cleanup failed; reload the dashboard.");
 		});
 	}
-	publish(e) {
-		clearTimeout(this.timer), this.timer = void 0, this.view = ze(e, Date.now()), this.listeners.forEach((e) => e(this.view));
-		let t = Be(this.view) - Date.now();
-		Number.isFinite(t) && (this.timer = setTimeout(() => this.publish(this.view), Math.min(t, 2147483647)));
+	publish(e, t = Date.now()) {
+		clearTimeout(this.timer), this.timer = void 0, this.view = Ue(e, t), this.listeners.forEach((e) => e(this.view));
+		let n = We(this.view) - t;
+		Number.isFinite(n) && (this.timer = setTimeout(() => this.publish(this.view), Math.min(n, 2147483647)));
 	}
 	disconnected = () => {
 		this.publish({ status: "disconnected" });
@@ -916,8 +942,8 @@ var Ve = /* @__PURE__ */ new WeakMap(), He = class {
 			...t.coverage ? { coverage: t.coverage } : {}
 		});
 	};
-	current() {
-		return Be(this.view) <= Date.now() && this.publish(this.view), this.view;
+	current(e = Date.now()) {
+		return We(this.view) <= e && this.publish(this.view, e), this.view;
 	}
 	add(e) {
 		let t = this.current();
@@ -927,14 +953,14 @@ var Ve = /* @__PURE__ */ new WeakMap(), He = class {
 		return this.listeners.delete(e), !this.listeners.size && (this.disposed = !0, this.publish({ status: "unavailable" }), this.connection.removeEventListener("disconnected", this.disconnected), this.connection.removeEventListener("ready", this.ready), this.unsubscribe && this.release(this.unsubscribe), !0);
 	}
 };
-function Ue(e, t) {
-	return Ve.get(e)?.get(t)?.current();
+function qe(e, t, n = Date.now()) {
+	return Ge.get(e)?.get(t)?.current(n);
 }
-function We(e, t, n) {
-	let r = Ve.get(e);
-	r || (r = /* @__PURE__ */ new Map(), Ve.set(e, r));
+function Je(e, t, n) {
+	let r = Ge.get(e);
+	r || (r = /* @__PURE__ */ new Map(), Ge.set(e, r));
 	let i = r.get(t);
-	i || (i = new He(e, t), r.set(t, i)), i.add(n);
+	i || (i = new Ke(e, t), r.set(t, i)), i.add(n);
 	let a = !0;
 	return () => {
 		a && (a = !1, i.remove(n) && r.delete(t));
@@ -942,7 +968,7 @@ function We(e, t, n) {
 }
 //#endregion
 //#region src/styles.ts
-var Ge = o`
+var Ye = o`
   :host {
     display: block;
     container-type: inline-size;
@@ -1048,6 +1074,15 @@ var Ge = o`
   .time strong {
     font-size: 1.2rem;
     font-weight: 600;
+  }
+  .walking {
+    margin: 0 0 4px;
+  }
+  .leave-time {
+    display: block;
+  }
+  .leave-time strong {
+    display: block;
   }
   .cancelled .destination {
     text-decoration: line-through;
@@ -1207,17 +1242,17 @@ var Ge = o`
       flex-wrap: wrap;
     }
   }
-`, Z = {
+`, X = {
 	ATTRIBUTE: 1,
 	CHILD: 2,
 	PROPERTY: 3,
 	BOOLEAN_ATTRIBUTE: 4,
 	EVENT: 5,
 	ELEMENT: 6
-}, Ke = (e) => (...t) => ({
+}, Xe = (e) => (...t) => ({
 	_$litDirective$: e,
 	values: t
-}), qe = class {
+}), Ze = class {
 	constructor(e) {}
 	get _$AU() {
 		return this._$AM._$AU;
@@ -1231,9 +1266,9 @@ var Ge = o`
 	update(e, t) {
 		return this.render(...t);
 	}
-}, { I: Je } = we, Ye = (e) => e, Xe = (e) => e.strings === void 0, Ze = () => document.createComment(""), Q = (e, t, n) => {
+}, { I: Qe } = we, $e = (e) => e, et = (e) => e.strings === void 0, tt = () => document.createComment(""), Z = (e, t, n) => {
 	let r = e._$AA.parentNode, i = t === void 0 ? e._$AB : t._$AA;
-	if (n === void 0) n = new Je(r.insertBefore(Ze(), i), r.insertBefore(Ze(), i), e, e.options);
+	if (n === void 0) n = new Qe(r.insertBefore(tt(), i), r.insertBefore(tt(), i), e, e.options);
 	else {
 		let t = n._$AB.nextSibling, a = n._$AM, o = a !== e;
 		if (o) {
@@ -1243,18 +1278,18 @@ var Ge = o`
 		if (t !== i || o) {
 			let e = n._$AA;
 			for (; e !== t;) {
-				let t = Ye(e).nextSibling;
-				Ye(r).insertBefore(e, i), e = t;
+				let t = $e(e).nextSibling;
+				$e(r).insertBefore(e, i), e = t;
 			}
 		}
 	}
 	return n;
-}, $ = (e, t, n = e) => (e._$AI(t, n), e), Qe = {}, $e = (e, t = Qe) => e._$AH = t, et = (e) => e._$AH, tt = (e) => {
+}, Q = (e, t, n = e) => (e._$AI(t, n), e), nt = {}, rt = (e, t = nt) => e._$AH = t, it = (e) => e._$AH, $ = (e) => {
 	e._$AR(), e._$AA.remove();
-}, nt = Ke(class extends qe {
+}, at = Xe(class extends Ze {
 	constructor(e) {
-		if (super(e), e.type !== Z.PROPERTY && e.type !== Z.ATTRIBUTE && e.type !== Z.BOOLEAN_ATTRIBUTE) throw Error("The `live` directive is not allowed on child or event bindings");
-		if (!Xe(e)) throw Error("`live` bindings can only contain a single expression");
+		if (super(e), e.type !== X.PROPERTY && e.type !== X.ATTRIBUTE && e.type !== X.BOOLEAN_ATTRIBUTE) throw Error("The `live` directive is not allowed on child or event bindings");
+		if (!et(e)) throw Error("`live` bindings can only contain a single expression");
 	}
 	render(e) {
 		return e;
@@ -1262,20 +1297,20 @@ var Ge = o`
 	update(e, [t]) {
 		if (t === A || t === j) return t;
 		let n = e.element, r = e.name;
-		if (e.type === Z.PROPERTY) {
+		if (e.type === X.PROPERTY) {
 			if (t === n[r]) return A;
-		} else if (e.type === Z.BOOLEAN_ATTRIBUTE) {
+		} else if (e.type === X.BOOLEAN_ATTRIBUTE) {
 			if (!!t === n.hasAttribute(r)) return A;
-		} else if (e.type === Z.ATTRIBUTE && n.getAttribute(r) === t + "") return A;
-		return $e(e), t;
+		} else if (e.type === X.ATTRIBUTE && n.getAttribute(r) === t + "") return A;
+		return rt(e), t;
 	}
-}), rt = (e, t, n) => {
+}), ot = (e, t, n) => {
 	let r = /* @__PURE__ */ new Map();
 	for (let i = t; i <= n; i++) r.set(e[i], i);
 	return r;
-}, it = Ke(class extends qe {
+}, st = Xe(class extends Ze {
 	constructor(e) {
-		if (super(e), e.type !== Z.CHILD) throw Error("repeat() can only be used in text expressions");
+		if (super(e), e.type !== X.CHILD) throw Error("repeat() can only be used in text expressions");
 	}
 	dt(e, t, n) {
 		let r;
@@ -1291,47 +1326,47 @@ var Ge = o`
 		return this.dt(e, t, n).values;
 	}
 	update(e, [t, n, r]) {
-		let i = et(e), { values: a, keys: o } = this.dt(t, n, r);
+		let i = it(e), { values: a, keys: o } = this.dt(t, n, r);
 		if (!Array.isArray(i)) return this.ut = o, a;
 		let s = this.ut ??= [], c = [], l, u, d = 0, f = i.length - 1, p = 0, m = a.length - 1;
 		for (; d <= f && p <= m;) if (i[d] === null) d++;
 		else if (i[f] === null) f--;
-		else if (s[d] === o[p]) c[p] = $(i[d], a[p]), d++, p++;
-		else if (s[f] === o[m]) c[m] = $(i[f], a[m]), f--, m--;
-		else if (s[d] === o[m]) c[m] = $(i[d], a[m]), Q(e, c[m + 1], i[d]), d++, m--;
-		else if (s[f] === o[p]) c[p] = $(i[f], a[p]), Q(e, i[d], i[f]), f--, p++;
-		else if (l === void 0 && (l = rt(o, p, m), u = rt(s, d, f)), l.has(s[d])) {
+		else if (s[d] === o[p]) c[p] = Q(i[d], a[p]), d++, p++;
+		else if (s[f] === o[m]) c[m] = Q(i[f], a[m]), f--, m--;
+		else if (s[d] === o[m]) c[m] = Q(i[d], a[m]), Z(e, c[m + 1], i[d]), d++, m--;
+		else if (s[f] === o[p]) c[p] = Q(i[f], a[p]), Z(e, i[d], i[f]), f--, p++;
+		else if (l === void 0 && (l = ot(o, p, m), u = ot(s, d, f)), l.has(s[d])) {
 			if (l.has(s[f])) {
 				let t = u.get(o[p]), n = t === void 0 ? null : i[t];
 				if (n === null) {
-					let t = Q(e, i[d]);
-					$(t, a[p]), c[p] = t;
-				} else c[p] = $(n, a[p]), Q(e, i[d], n), i[t] = null;
+					let t = Z(e, i[d]);
+					Q(t, a[p]), c[p] = t;
+				} else c[p] = Q(n, a[p]), Z(e, i[d], n), i[t] = null;
 				p++;
-			} else tt(i[f]), f--;
-		} else tt(i[d]), d++;
+			} else $(i[f]), f--;
+		} else $(i[d]), d++;
 		for (; p <= m;) {
-			let t = Q(e, c[m + 1]);
-			$(t, a[p]), c[p++] = t;
+			let t = Z(e, c[m + 1]);
+			Q(t, a[p]), c[p++] = t;
 		}
 		for (; d <= f;) {
 			let e = i[d++];
-			e !== null && tt(e);
+			e !== null && $(e);
 		}
-		return this.ut = o, $e(e, c), A;
+		return this.ut = o, rt(e, c), A;
 	}
 });
 //#endregion
 //#region src/editor.ts
-function at(e) {
+function ct(e) {
 	return JSON.stringify(e, (e, t) => {
 		if (typeof t != "object" || !t || Array.isArray(t)) return t;
 		let n = B(t);
 		return Object.fromEntries(Object.keys(n).sort().map((e) => [e, n[e]]));
 	});
 }
-var ot = class extends R {
-	static styles = Ge;
+var lt = class extends R {
+	static styles = Ye;
 	config = {};
 	acceptedConfig;
 	ha;
@@ -1340,7 +1375,7 @@ var ot = class extends R {
 		this.ha = e, this.requestUpdate();
 	}
 	setConfig(e) {
-		let t = { ...B(e) }, n = at(t);
+		let t = { ...B(e) }, n = ct(t);
 		n !== this.acceptedConfig && (this.config = t, this.acceptedConfig = n, this.error = "", this.requestUpdate());
 	}
 	selectedEntities() {
@@ -1359,7 +1394,7 @@ var ot = class extends R {
 		for (let e of ["lines", "destinations"]) Array.isArray(n[e]) && (n[e] = n[e].filter((e) => typeof e != "string" || e.trim()));
 		this.config = n;
 		try {
-			Me(n), this.error = "", this.acceptedConfig = at(n), this.dispatchEvent(new CustomEvent("config-changed", {
+			Ne(n), this.error = "", this.acceptedConfig = ct(n), this.dispatchEvent(new CustomEvent("config-changed", {
 				detail: { config: n },
 				bubbles: !0,
 				composed: !0
@@ -1384,15 +1419,15 @@ var ot = class extends R {
 		});
 	}
 	render() {
-		let e = this.config.language === "nl" || this.config.language === "en" ? this.config.language : "auto", t = Y({ language: e }, this.ha), n = this.config.type !== "custom:ovapi-commute-card", r = n && this.config.display_mode === "grouped", i = this.selectedEntities(), a = [.../* @__PURE__ */ new Set([...i, ...Object.entries(this.ha?.states ?? {}).filter(([e, t]) => e.startsWith("sensor.") && z(t.attributes.contract_version) && typeof t.attributes.board_id == "string").map(([e]) => e)])].sort();
+		let e = this.config.language === "nl" || this.config.language === "en" ? this.config.language : "auto", t = J({ language: e }, this.ha), n = this.config.type !== "custom:ovapi-commute-card", r = n && this.config.display_mode === "grouped", i = !n || this.config.time_mode === "leave", a = this.selectedEntities(), o = [.../* @__PURE__ */ new Set([...a, ...Object.entries(this.ha?.states ?? {}).filter(([e, t]) => e.startsWith("sensor.") && z(t.attributes.contract_version) && typeof t.attributes.board_id == "string").map(([e]) => e)])].sort();
 		return k`<div class="editor">
       <fieldset>
         <legend>${t.entities}</legend>
-        ${a.length ? it(a, (e) => e, (e) => k`<label class="choice">
+        ${o.length ? st(o, (e) => e, (e) => k`<label class="choice">
                     <input
                       type="checkbox"
                       .value=${e}
-                      .checked=${nt(i.includes(e))}
+                      .checked=${at(a.includes(e))}
                       @change=${(t) => this.toggleEntity(e, this.input(t).checked)}
                     />
                     ${String(this.ha?.states[e]?.attributes.friendly_name ?? e)}
@@ -1431,16 +1466,29 @@ var ot = class extends R {
             </button>
           </fieldset>`)}
       <p class="detail">${t.editorHelp}</p>
-      <label for="walking">${t.walking}</label
-      ><input
-        id="walking"
-        type="number"
-        min="0"
-        max="120"
-        step="1"
-        .value=${String(this.config.walking_minutes ?? "")}
-        @change=${(e) => this.change("walking_minutes", this.input(e).value === "" ? void 0 : Number(this.input(e).value))}
-      />
+      ${n ? k`<label for="time-mode">${t.timeMode}</label>
+              <select
+                id="time-mode"
+                aria-describedby="time-mode-help"
+                .value=${this.config.time_mode ?? "departure"}
+                @change=${(e) => this.change("time_mode", this.input(e).value)}
+              >
+                <option value="departure">${t.departureTime}</option>
+                <option value="leave">${t.leaveTime}</option>
+              </select>
+              <p id="time-mode-help" class="detail">${t.timeModeHelp}</p>` : j}
+      ${i ? k`<label for="walking">${t.walking}</label
+              ><input
+                id="walking"
+                type="number"
+                min="0"
+                max="120"
+                step="1"
+                aria-describedby="walking-help"
+                .value=${String(this.config.walking_minutes ?? "")}
+                @change=${(e) => this.change("walking_minutes", this.input(e).value === "" ? void 0 : Number(this.input(e).value))}
+              />
+              <p id="walking-help" class="detail">${t.walkingHelp}</p>` : j}
       ${n ? k`<label for="display-mode">${t.displayMode}</label>
               <select
                 id="display-mode"
@@ -1461,7 +1509,9 @@ var ot = class extends R {
                 .value=${String(this.config.max_routes ?? 5)}
                 @change=${(e) => this.change("max_routes", Number(this.input(e).value))}
               />
-              <p id="grouped-help" class="detail">${t.groupedHelp}</p>` : k`<label for="maximum">${t.maximum}</label
+              <p id="grouped-help" class="detail">
+                ${i ? t.groupedLeaveHelp : t.groupedHelp}
+              </p>` : k`<label for="maximum">${t.maximum}</label
               ><input
                 id="maximum"
                 type="number"
@@ -1484,11 +1534,11 @@ var ot = class extends R {
     </div>`;
 	}
 };
-customElements.get("ovapi-card-editor") || customElements.define("ovapi-card-editor", ot);
+customElements.get("ovapi-card-editor") || customElements.define("ovapi-card-editor", lt);
 //#endregion
 //#region src/cards.ts
-var st = class extends R {
-	static styles = Ge;
+var ut = class extends R {
+	static styles = Ye;
 	config;
 	ha;
 	stops = [];
@@ -1501,7 +1551,7 @@ var st = class extends R {
 		return { entities: Object.entries(e?.states ?? {}).filter(([e, t]) => e.startsWith("sensor.") && z(t.attributes.contract_version) && typeof t.attributes.board_id == "string").slice(0, 1).map(([e]) => e) };
 	}
 	setConfig(e) {
-		this.config = Me(e), this.restart(), this.requestUpdate();
+		this.config = Ne(e), this.restart(), this.requestUpdate();
 	}
 	set hass(e) {
 		let t = this.ha?.connection !== e.connection;
@@ -1542,13 +1592,13 @@ var st = class extends R {
 		this.stops.forEach((e) => e()), this.stops = [], clearInterval(this.tick), this.tick = void 0;
 	}
 	restart() {
-		this.clear(), this.isConnected && !this.paused && this.config && this.ha && (this.stops = this.config.entities.map((e) => We(this.ha.connection, e, () => {
+		this.clear(), this.isConnected && !this.paused && this.config && this.ha && (this.stops = this.config.entities.map((e) => Je(this.ha.connection, e, () => {
 			this.requestUpdate();
 		})), this.tick = setInterval(() => this.requestUpdate(), 1e3)), this.requestUpdate();
 	}
 	render() {
 		if (!this.config) return j;
-		let e = Y(this.config, this.ha);
+		let e = J(this.config, this.ha), t = Date.now();
 		return k` <!-- THESIS: Read departures and leave times, never decorative metrics.
       OWN-WORLD: Home Assistant theme, restrained dividers, tabular times.
       STORY: Choose a favourite, read freshness, decide when to leave.
@@ -1560,107 +1610,123 @@ var st = class extends R {
             ${this.config.title || (this.commute ? e.commute : e.departures)}
           </h2>
         </header>
-        ${this.config.entities.map((t) => {
-			let n = (this.isConnected && !this.paused && this.ha ? Ue(this.ha.connection, t) : void 0) ?? { status: "loading" }, r = n.board;
-			if (!r) {
-				let r = n.status, i = this.renderCoverage(n);
+        ${this.config.entities.map((n) => {
+			let r = (this.isConnected && !this.paused && this.ha ? qe(this.ha.connection, n, t) : void 0) ?? { status: "loading" }, i = r.board;
+			if (!i) {
+				let t = r.status, i = this.renderCoverage(r);
 				return k`<section>
-              <h3>${t}</h3>
+              <h3>${n}</h3>
               ${i}
-              ${i === j || n.coverage?.status === "stale" ? k`<p class="message" role="status">
-                      ${e[r === "ready" || r === "stale" ? "loading" : r]}
+              ${i === j || r.coverage?.status === "stale" ? k`<p class="message" role="status">
+                      ${e[t === "ready" || t === "stale" ? "loading" : t]}
                     </p>` : j}
             </section>`;
 			}
-			return this.renderBoard(r);
+			return this.renderBoard(i, t);
 		})}
       </ha-card>`;
 	}
-	renderBoard(e) {
-		let t = this.config, n = Y(t, this.ha);
+	renderBoard(e, t) {
+		let n = this.config, r = J(n, this.ha);
 		return k`<section>
       <h3>${e.stop.name}</h3>
       <p class="status" role="status">
-        ${e.status === "stale" ? n.stale : n.ready}
+        ${e.status === "stale" ? r.stale : r.ready}
         <time datetime=${e.fetched_at}
-          >${X(e.fetched_at, t, this.ha)}</time
+          >${Y(e.fetched_at, n, this.ha)}</time
         >
       </p>
-      ${e.status === "stale" ? k`<p class="message warning">${n.staleAdvice}</p>` : j}
+      ${e.status === "stale" ? k`<p class="message warning">${r.staleAdvice}</p>` : j}
       ${this.renderCoverage({
 			status: e.status,
 			coverage: e.coverage
 		})}
-      ${this.commute ? this.renderCommute(e) : this.renderDepartures(e)}
+      ${this.commute ? this.renderCommute(e, t) : this.renderDepartures(e, t)}
     </section>`;
 	}
 	renderCoverage(e) {
-		let t = Y(this.config, this.ha), n = e.coverage, r = e.coverageExpired ? t.coverageExpired : n?.status === "unavailable" ? t.coverageUnavailable : n?.status === "partial" ? t.coveragePartial(n.verified_members, n.selected_members) : n?.selected_members === 0 ? t.coverageEmpty : n?.status === "stale" ? t.coverageStale : null;
+		let t = J(this.config, this.ha), n = e.coverage, r = e.coverageExpired ? t.coverageExpired : n?.status === "unavailable" ? t.coverageUnavailable : n?.status === "partial" ? t.coveragePartial(n.verified_members, n.selected_members) : n?.selected_members === 0 ? t.coverageEmpty : n?.status === "stale" ? t.coverageStale : null;
 		return r ? k`<p class="message warning coverage" role="status">${r}</p>` : j;
 	}
-	renderDepartures(e) {
-		let t = this.config, n = Y(t, this.ha), r = Date.now(), i = t.display_mode === "grouped" ? Pe(e, t, r).map((e) => ({
+	renderDepartures(e, t) {
+		let n = this.config, r = J(n, this.ha), i = n.time_mode === "leave" ? n.walking_minutes ?? e.walking_minutes : void 0;
+		if (i !== void 0 && e.status !== "ready") return j;
+		let a = n.display_mode === "grouped" ? Re(e, n, t).map((e) => ({
 			departure: e.departure,
 			group: e
-		})) : J(e, t, r).slice(0, t.max_departures).map((e) => ({ departure: e }));
-		return i.length ? k`<ol aria-label=${n.departures}>
-      ${i.map((e) => this.renderDeparture(e.departure, r, e.group))}
-    </ol>` : k`<p class="message">
-        ${t.lines.length || t.destinations.length ? n.filtered : n.empty}
+		})) : Le(e, n, t).slice(0, n.max_departures).map((e) => ({ departure: e }));
+		return a.length ? k` ${i === void 0 ? j : k`<p class="walking detail">${i} ${r.min} ${r.walk}</p>`}
+      <ol aria-label=${i === void 0 ? r.departures : r.leaveTimes}>
+        ${a.map((e) => this.renderDeparture(e.departure, t, e.group, i))}
+      </ol>` : k`<p class="message">
+        ${(n.lines.length || n.destinations.length) && !Fe(e, n, t).length ? r.filtered : i === void 0 ? r.empty : r.noCommute}
       </p>`;
 	}
-	renderDeparture(e, t, n) {
-		let r = this.config, i = Y(r, this.ha), a = n?.cancellations.filter((t) => t !== e) ?? [];
+	renderDeparture(e, t, n, r) {
+		let i = this.config, a = J(i, this.ha), o = n?.cancellations.filter((t) => t !== e) ?? [];
 		return k`<li
-      class="departure ${e.cancelled === !0 ? "cancelled" : ""}"
+      class="departure ${e.cancelled === !0 ? "cancelled" : ""} ${r === void 0 ? "" : "leave-mode"}"
     >
       <span class="line">${e.line}</span>
       <div>
         <div class="destination">${e.destination}</div>
         <div class="detail">
-          ${e.transport === "unknown" ? i.transport : i[e.transport]} ·
+          ${e.transport === "unknown" ? a.transport : a[e.transport]} ·
           <span class=${e.cancelled === !0 ? "cancelled-label" : ""}
             >${this.serviceStatus(e)}</span
           >
         </div>
         ${n?.following.length ? k`<div class="following detail">
-                ${i.alsoIn}
+                ${r === void 0 ? a.alsoIn : a.alsoLeaveIn}
                 ${n.following.map((e, n) => {
-			let r = K(G(e), t), a = this.serviceStatus(e);
+			let i = r === void 0 ? W(e) : G(e, r), o = K(i, t), s = this.serviceStatus(e);
 			return k`${n ? ", " : ""}<time
-                      datetime=${e.expected_at ?? e.scheduled_at}
-                      title=${a}
-                      aria-label="${r} ${i.min} · ${a}"
-                      >${r}</time
+                      datetime=${new Date(i).toISOString()}
+                      title=${s}
+                      aria-label="${r === void 0 ? "" : `${a.alsoLeaveIn} `}${o} ${a.min} · ${s}"
+                      >${o}</time
                     >`;
 		})}
-                ${i.min}
+                ${a.min}
               </div>` : j}
-        ${a.length ? k`<div class="cancellations detail">
-                <span class="cancelled-label">${i.cancelled}</span>:
-                ${a.map((e, t) => k`${t ? ", " : ""}<time
+        ${o.length ? k`<div class="cancellations detail">
+                <span class="cancelled-label">${a.cancelled}</span>:
+                ${o.map((e, t) => k`${t ? ", " : ""}<time
                         datetime=${e.expected_at ?? e.scheduled_at}
-                        >${X(G(e), r, this.ha)}</time
+                        >${Y(W(e), i, this.ha)}</time
                       >`)}
               </div>` : j}
         ${n?.additionalCancellations ? k`<div class="detail cancelled-label">
                 ${n.additionalCancellations}
-                ${n.additionalCancellations === 1 ? i.oneMoreCancelled : i.moreCancelled}
+                ${n.additionalCancellations === 1 ? a.oneMoreCancelled : a.moreCancelled}
               </div>` : j}
       </div>
       <div class="time">
-        ${e.cancelled === !0 ? j : k`<strong
-                  >${K(G(e), t)}
-                  <small>${i.min}</small></strong
-                ><br />`}
-        <time datetime=${e.expected_at ?? e.scheduled_at}
-          >${X(G(e), r, this.ha)}</time
+        ${e.cancelled === !0 ? j : r === void 0 ? k`<strong
+                    >${K(W(e), t)}
+                    <small>${a.min}</small></strong
+                  ><br />` : this.renderLeaveTime(e, r, t)}
+        <span class=${r === void 0 ? "" : "detail departure-clock"}
+          >${r === void 0 ? j : `${a.departs} `}<time
+            datetime=${e.expected_at ?? e.scheduled_at}
+            >${Y(W(e), i, this.ha)}</time
+          ></span
         >
       </div>
     </li>`;
 	}
+	renderLeaveTime(e, t, n) {
+		let r = J(this.config, this.ha), i = G(e, t), a = K(i, n);
+		return k`<time
+      class="leave-time"
+      datetime=${new Date(i).toISOString()}
+      aria-label="${a ? `${r.leaveIn} ${a} ${r.min}` : r.leaveNow} · ${this.serviceStatus(e)}"
+      >${a ? k`<span class="detail">${r.leaveIn}</span
+              ><strong>${a} <small>${r.min}</small></strong>` : k`<strong>${r.leaveNow}</strong>`}</time
+    >`;
+	}
 	serviceStatus(e) {
-		let t = Y(this.config, this.ha);
+		let t = J(this.config, this.ha);
 		if (e.cancelled === !0) return t.cancelled;
 		if (e.delay_seconds !== null && e.delay_seconds !== 0) {
 			if (Math.abs(e.delay_seconds) < 60) return `${t.expected} ${e.delay_seconds < 0 ? t.subMinuteEarly : t.subMinuteLate}`;
@@ -1669,33 +1735,33 @@ var st = class extends R {
 		}
 		return e.cancelled === null ? t.unknown : e.expected_at === null ? t.scheduled : e.delay_seconds === 0 ? t.onTime : t.expected;
 	}
-	renderCommute(e) {
-		let t = this.config, n = Y(t, this.ha);
+	renderCommute(e, t) {
+		let n = this.config, r = J(n, this.ha);
 		if (e.status === "stale") return j;
-		let r = Fe(e, t, Date.now());
-		if (!r) return k`<p class="message">${n.noCommute}</p>`;
-		let { departure: i, leaveAt: a, walking: o } = r, s = K(a, Date.now());
+		let i = ze(e, n, t);
+		if (!i) return k`<p class="message">${r.noCommute}</p>`;
+		let { departure: a, leaveAt: o, walking: s } = i, c = K(o, t);
 		return k` <div class="leave">
-        ${s ? n.leaveIn : n.leaveNow}${s ? k`<strong>${s} <small>${n.min}</small></strong>` : j}
+        ${c ? r.leaveIn : r.leaveNow}${c ? k`<strong>${c} <small>${r.min}</small></strong>` : j}
       </div>
       <div class="commute-route">
-        <span class="line">${i.line}</span>
+        <span class="line">${a.line}</span>
         <div>
-          <div class="destination">${i.destination}</div>
+          <div class="destination">${a.destination}</div>
           <div class="detail">
-            ${i.transport === "unknown" ? n.transport : n[i.transport]} ·
-            ${this.serviceStatus(i)}
+            ${a.transport === "unknown" ? r.transport : r[a.transport]} ·
+            ${this.serviceStatus(a)}
           </div>
         </div>
       </div>
       <p class="commute-detail">
-        ${o} ${n.min} ${n.walk} · ${n.departs}
-        <time datetime=${i.expected_at ?? i.scheduled_at}
-          >${X(G(i), t, this.ha)}</time
+        ${s} ${r.min} ${r.walk} · ${r.departs}
+        <time datetime=${a.expected_at ?? a.scheduled_at}
+          >${Y(W(a), n, this.ha)}</time
         >
       </p>`;
 	}
-}, ct = class extends st {
+}, dt = class extends ut {
 	get commute() {
 		return !0;
 	}
@@ -1704,12 +1770,12 @@ var st = class extends R {
 //#region src/index.ts
 for (let [e, t, n, r] of [[
 	"ovapi-departures-card",
-	st,
+	ut,
 	"OVAPI departures",
 	"Upcoming departures with honest freshness and cancellation status."
 ], [
 	"ovapi-commute-card",
-	ct,
+	dt,
 	"OVAPI commute",
 	"When to leave for your favourite stops, including walking time."
 ]]) customElements.get(e) || customElements.define(e, t), window.customCards ??= [], window.customCards.some((t) => t.type === e) || window.customCards.push({

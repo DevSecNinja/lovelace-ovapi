@@ -3,9 +3,11 @@ import type { HomeAssistant, BoardSnapshot, Departure } from "./contract";
 import { isSupportedContract } from "./contract";
 import {
   departureAt,
+  leaveAt,
   minutesUntil,
   nextCommute,
   parseConfig,
+  displayDepartures,
   visibleDepartures,
   groupedDepartures,
 } from "./model";
@@ -120,6 +122,7 @@ export class OvapiDeparturesCard extends LitElement {
   protected render() {
     if (!this.config) return nothing;
     const t = labels(this.config, this.ha);
+    const now = Date.now();
     return html` <!-- THESIS: Read departures and leave times, never decorative metrics.
       OWN-WORLD: Home Assistant theme, restrained dividers, tabular times.
       STORY: Choose a favourite, read freshness, decide when to leave.
@@ -133,7 +136,7 @@ export class OvapiDeparturesCard extends LitElement {
         </header>
         ${this.config.entities.map((entity) => {
           const view = (this.isConnected && !this.paused && this.ha
-            ? readBoard(this.ha.connection, entity)
+            ? readBoard(this.ha.connection, entity, now)
             : undefined) ?? { status: "loading" };
           const board = view.board;
           if (!board) {
@@ -151,12 +154,12 @@ export class OvapiDeparturesCard extends LitElement {
               }
             </section>`;
           }
-          return this.renderBoard(board);
+          return this.renderBoard(board, now);
         })}
       </ha-card>`;
   }
 
-  private renderBoard(board: BoardSnapshot) {
+  private renderBoard(board: BoardSnapshot, now: number) {
     const config = this.config!;
     const t = labels(config, this.ha);
     return html`<section>
@@ -169,7 +172,7 @@ export class OvapiDeparturesCard extends LitElement {
       </p>
       ${board.status === "stale" ? html`<p class="message warning">${t.staleAdvice}</p>` : nothing}
       ${this.renderCoverage({ status: board.status, coverage: board.coverage })}
-      ${this.commute ? this.renderCommute(board) : this.renderDepartures(board)}
+      ${this.commute ? this.renderCommute(board, now) : this.renderDepartures(board, now)}
     </section>`;
   }
 
@@ -195,35 +198,49 @@ export class OvapiDeparturesCard extends LitElement {
       : nothing;
   }
 
-  private renderDepartures(board: BoardSnapshot) {
+  private renderDepartures(board: BoardSnapshot, now: number) {
     const config = this.config!;
     const t = labels(config, this.ha);
-    const now = Date.now();
+    const walking =
+      config.time_mode === "leave"
+        ? (config.walking_minutes ?? board.walking_minutes)
+        : undefined;
+    if (walking !== undefined && board.status !== "ready") return nothing;
     const rows: { departure: Departure; group?: DepartureGroup }[] =
       config.display_mode === "grouped"
         ? groupedDepartures(board, config, now).map((group) => ({
             departure: group.departure,
             group,
           }))
-        : visibleDepartures(board, config, now)
+        : displayDepartures(board, config, now)
             .slice(0, config.max_departures)
             .map((departure) => ({ departure }));
-    if (!rows.length)
+    if (!rows.length) {
+      const filtered =
+        (config.lines.length || config.destinations.length) &&
+        !visibleDepartures(board, config, now).length;
       return html`<p class="message">
-        ${config.lines.length || config.destinations.length ? t.filtered : t.empty}
+        ${filtered ? t.filtered : walking !== undefined ? t.noCommute : t.empty}
       </p>`;
-    return html`<ol aria-label=${t.departures}>
-      ${rows.map((row) => this.renderDeparture(row.departure, now, row.group))}
-    </ol>`;
+    }
+    return html` ${walking !== undefined ? html`<p class="walking detail">${walking} ${t.min} ${t.walk}</p>` : nothing}
+      <ol aria-label=${walking !== undefined ? t.leaveTimes : t.departures}>
+        ${rows.map((row) => this.renderDeparture(row.departure, now, row.group, walking))}
+      </ol>`;
   }
 
-  private renderDeparture(d: Departure, now: number, group?: DepartureGroup) {
+  private renderDeparture(
+    d: Departure,
+    now: number,
+    group?: DepartureGroup,
+    walking?: number,
+  ) {
     const config = this.config!;
     const t = labels(config, this.ha);
     const cancellations =
       group?.cancellations.filter((cancelled) => cancelled !== d) ?? [];
     return html`<li
-      class="departure ${d.cancelled === true ? "cancelled" : ""}"
+      class="departure ${d.cancelled === true ? "cancelled" : ""} ${walking !== undefined ? "leave-mode" : ""}"
     >
       <span class="line">${d.line}</span>
       <div>
@@ -237,14 +254,18 @@ export class OvapiDeparturesCard extends LitElement {
         ${
           group?.following.length
             ? html`<div class="following detail">
-                ${t.alsoIn}
+                ${walking !== undefined ? t.alsoLeaveIn : t.alsoIn}
                 ${group.following.map((following, i) => {
-                  const minutes = minutesUntil(departureAt(following), now);
+                  const at =
+                    walking !== undefined
+                      ? leaveAt(following, walking)
+                      : departureAt(following);
+                  const minutes = minutesUntil(at, now);
                   const status = this.serviceStatus(following);
                   return html`${i ? ", " : ""}<time
-                      datetime=${following.expected_at ?? following.scheduled_at}
+                      datetime=${new Date(at).toISOString()}
                       title=${status}
-                      aria-label="${minutes} ${t.min} · ${status}"
+                      aria-label="${walking !== undefined ? `${t.alsoLeaveIn} ` : ""}${minutes} ${t.min} · ${status}"
                       >${minutes}</time
                     >`;
                 })}
@@ -279,16 +300,38 @@ export class OvapiDeparturesCard extends LitElement {
         ${
           d.cancelled === true
             ? nothing
-            : html`<strong
-                  >${minutesUntil(departureAt(d), now)}
-                  <small>${t.min}</small></strong
-                ><br />`
+            : walking !== undefined
+              ? this.renderLeaveTime(d, walking, now)
+              : html`<strong
+                    >${minutesUntil(departureAt(d), now)}
+                    <small>${t.min}</small></strong
+                  ><br />`
         }
-        <time datetime=${d.expected_at ?? d.scheduled_at}
-          >${clock(departureAt(d), config, this.ha)}</time
+        <span class=${walking !== undefined ? "detail departure-clock" : ""}
+          >${walking !== undefined ? `${t.departs} ` : nothing}<time
+            datetime=${d.expected_at ?? d.scheduled_at}
+            >${clock(departureAt(d), config, this.ha)}</time
+          ></span
         >
       </div>
     </li>`;
+  }
+
+  private renderLeaveTime(d: Departure, walking: number, now: number) {
+    const t = labels(this.config!, this.ha);
+    const at = leaveAt(d, walking);
+    const minutes = minutesUntil(at, now);
+    return html`<time
+      class="leave-time"
+      datetime=${new Date(at).toISOString()}
+      aria-label="${minutes ? `${t.leaveIn} ${minutes} ${t.min}` : t.leaveNow} · ${this.serviceStatus(d)}"
+      >${
+        minutes
+          ? html`<span class="detail">${t.leaveIn}</span
+              ><strong>${minutes} <small>${t.min}</small></strong>`
+          : html`<strong>${t.leaveNow}</strong>`
+      }</time
+    >`;
   }
 
   private serviceStatus(d: Departure): string {
@@ -309,14 +352,14 @@ export class OvapiDeparturesCard extends LitElement {
         : t.expected;
   }
 
-  private renderCommute(board: BoardSnapshot) {
+  private renderCommute(board: BoardSnapshot, now: number) {
     const config = this.config!;
     const t = labels(config, this.ha);
     if (board.status === "stale") return nothing;
-    const journey = nextCommute(board, config, Date.now());
+    const journey = nextCommute(board, config, now);
     if (!journey) return html`<p class="message">${t.noCommute}</p>`;
     const { departure: d, leaveAt, walking } = journey;
-    const minutes = minutesUntil(leaveAt, Date.now());
+    const minutes = minutesUntil(leaveAt, now);
     return html` <div class="leave">
         ${minutes ? t.leaveIn : t.leaveNow}${minutes ? html`<strong>${minutes} <small>${t.min}</small></strong>` : nothing}
       </div>

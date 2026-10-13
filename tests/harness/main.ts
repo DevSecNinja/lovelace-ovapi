@@ -1,4 +1,9 @@
-import { board, coverage, groupedBoard } from "../fixtures/boards";
+import {
+  board,
+  combinedBoard,
+  coverage,
+  groupedBoard,
+} from "../fixtures/boards";
 import { FakeConnection, hass } from "../fixtures/connection";
 import type { BoardSnapshot, StationCoverage } from "../../src/contract";
 import type { OvapiDeparturesCard } from "../../src/cards";
@@ -6,6 +11,7 @@ import type { OvapiCardEditor } from "../../src/editor";
 
 const params = new URLSearchParams(location.search);
 const grouped = params.has("grouped");
+const leave = params.has("leave");
 document.documentElement.classList.toggle(
   "dark",
   params.get("theme") === "dark",
@@ -31,6 +37,7 @@ const cards = ["ovapi-departures-card", "ovapi-commute-card"].map((tag) => {
     entities,
     max_departures: 4,
     ...(grouped ? { display_mode: "grouped", max_routes: 3 } : {}),
+    ...(leave && tag === "ovapi-departures-card" ? { time_mode: "leave" } : {}),
   });
   card.hass = ha;
   document.querySelector("#cards")!.append(card);
@@ -66,11 +73,16 @@ function snapshot(entity: string, second = false): BoardSnapshot {
     cancelled: i === 1,
     delay_seconds: i === 2 ? null : 120,
   }));
-  if (grouped) {
-    b.departures = groupedBoard(now).departures;
+  if (grouped || leave) {
+    b.departures = (leave ? combinedBoard(now) : groupedBoard(now)).departures;
+    if (leave) b.walking_minutes = second ? 0 : 7;
     if (second) {
-      b.departures.find((d) => d.id === "synthetic-opposite")!.destination =
-        "A very long synthetic destination to demonstrate readable wrapping";
+      for (const departure of b.departures.filter(
+        (d) => d.destination === "Gein",
+      )) {
+        departure.destination =
+          "A very long synthetic destination to demonstrate readable wrapping";
+      }
     }
   }
   return b;
@@ -131,6 +143,7 @@ if (params.has("editor")) {
     ...(grouped
       ? { display_mode: "grouped", max_routes: 3, max_departures: 4 }
       : {}),
+    ...(leave ? { time_mode: "leave" } : {}),
   });
   editor.addEventListener("config-changed", (event) => {
     const config = (event as CustomEvent<{ config: Record<string, unknown> }>)

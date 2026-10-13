@@ -83,6 +83,15 @@ to three with a remaining count. Cancelled-only routes sit last with no countdow
 Secondary times use tabular numerals and wrap rather than truncating. The visual
 editor shows only the active presentation's limit and explains what a route counts.
 
+Optional Leave time reuses the same departure rows, not the commute hero.
+The right-aligned time gains an explicit Leave in / Leave now label; the smaller
+vehicle clock is labelled Departs. A single walking-duration line per favourite
+explains the adjustment. Following text says Also leave in, with walking-adjusted
+absolute time semantics and honest live-status descriptions. Unreachable and
+cancelled vehicles are excluded before grouping; stale boards have no leave rows.
+Departure time remains the default. The editor keeps row grouping independent
+of time presentation and shows the walking override only where applied.
+
 ## Do's and Don'ts
 
 Do make source freshness obvious. Do preserve unknown metadata and label it.

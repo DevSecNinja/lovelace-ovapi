@@ -106,6 +106,44 @@ Existing cards (and new cards unless opted in) keep **Individual departures**.
 routes. Switching modes in the editor preserves both limits. Grouping does not
 change the commute card's catchable-departure selection.
 
+### Departure time or Leave time
+
+The departures card normally shows **vehicle departure times**. To include your
+walk, choose **Time display → Leave time** in its visual editor. This works with
+both Individual departures and Grouped routes; neither card's default changes.
+
+```yaml
+type: custom:ovapi-departures-card
+entities:
+  - sensor.synthetic_combined_departures
+display_mode: grouped
+time_mode: leave
+max_routes: 5
+```
+
+With a seven-minute walk, vehicles departing in 2, 8, 14, 20 and 26 minutes show
+**Leave in 1 min** and **Also leave in 7, 13, 19 min** (Dutch: **Vertrek ook over**).
+The first vehicle is not reachable and is skipped **before** grouping and limits,
+so it cannot hide a reachable later vehicle. Each transport + line + destination
+has its own row; this is not restricted to two routes or two combined sources.
+The small **Departs** clock still shows the vehicle's actual departure time.
+Cancelled vehicles and stale boards never produce leave instructions. Following
+times keep live status in their tooltip and screen-reader description.
+
+**Walking precedence:** an optional card `walking_minutes` override wins.
+Otherwise each selected feed uses its own integration walking duration. For a
+combined favourite, that is the **group's own setting**; leaf sensors' walking
+durations are neither inherited nor added. With multiple individual favourites
+on one card, each uses its own value unless one card override applies to them all.
+Clearing the walking field removes the override; explicit **0** means no walk.
+
+The walking field is shown only for **Leave time** or the commute card, where it
+has an effect. Switching back to Departure time hides it but preserves the value
+for later. Departure time never shifts vehicle times, even when a stored walking
+override exists. No backend configuration or feed data is changed.
+
+### Single-result commute card
+
 ```yaml
 type: custom:ovapi-commute-card
 title: Leave for the tram
@@ -123,17 +161,18 @@ These sensor IDs and services are **synthetic examples**. Replace them with
 your actual entities and supported lines/destinations. The examples do not claim
 coverage at Amsterdam Amstel or Centraal.
 
-| Option            | Default              | Meaning                                                              |
-| ----------------- | -------------------- | -------------------------------------------------------------------- |
-| `entities`        | Required             | 1–12 unique OVAPI sensor entity IDs                                  |
-| `title`           | Localized card title | Optional heading, at most 120 characters                             |
-| `lines`           | All                  | Exact, case-insensitive line names                                   |
-| `destinations`    | All                  | Exact, case-insensitive destination names                            |
-| `display_mode`    | `departures`         | `departures` or `grouped` (departure card only)                      |
-| `max_departures`  | `5`                  | 1–20 individual departures per favourite in `departures` mode        |
-| `max_routes`      | `5`                  | 1–20 transport/line/destination rows per favourite in `grouped` mode |
-| `walking_minutes` | Integration setting  | Optional 0–120 minute card-only override                             |
-| `language`        | `auto`               | `en`, `nl`, or HA language                                           |
+| Option            | Default               | Meaning                                                                          |
+| ----------------- | --------------------- | -------------------------------------------------------------------------------- |
+| `entities`        | Required              | 1–12 unique OVAPI sensor entity IDs                                              |
+| `title`           | Localized card title  | Optional heading, at most 120 characters                                         |
+| `lines`           | All                   | Exact, case-insensitive line names                                               |
+| `destinations`    | All                   | Exact, case-insensitive destination names                                        |
+| `display_mode`    | `departures`          | `departures` or `grouped` (departure card only)                                  |
+| `time_mode`       | `departure`           | `departure` or walking-adjusted `leave` (departure card only; either row mode)   |
+| `max_departures`  | `5`                   | 1–20 individual departures per favourite in `departures` mode                    |
+| `max_routes`      | `5`                   | 1–20 transport/line/destination rows per favourite in `grouped` mode             |
+| `walking_minutes` | Selected feed setting | Optional 0–120 minute card-only override; applies to Leave time and commute only |
+| `language`        | `auto`                | `en`, `nl`, or HA language                                                       |
 
 Line and destination filters intersect; matching and grouping ignore case and
 surrounding whitespace, not internal whitespace or punctuation. Filters apply
@@ -233,6 +272,8 @@ Screenshots are local ignored artifacts under `test-results/`, never uploaded.
 `mise exec -- npm run harness` serves the labelled synthetic demo on loopback.
 Use `/tests/harness/?grouped&editor` for grouped rows and the visual editor;
 add `theme=dark&language=nl` for the Dutch dark-theme preview.
+Add `leave` for walking-aware grouped departures with a synthetic combined feed;
+the first feed walks seven minutes and the second zero.
 Add `coverage` to preview the synthetic incomplete-station warning.
 It is a component harness, **not** a full Home Assistant E2E.
 
@@ -332,6 +373,8 @@ templates and `.github/skills/` are retained. Constitution → specification →
 → tasks → implementation → convergence evidence lives in
 [`specs/001-dashboard-cards/`](specs/001-dashboard-cards/), with the opt-in grouped
 presentation in [`specs/002-grouped-departure-rows/`](specs/002-grouped-departure-rows/).
+Optional walking-aware departures are specified in
+[`specs/003-walking-aware-departures/`](specs/003-walking-aware-departures/).
 
 Shared lint CI is SHA-pinned to `DevSecNinja/.github` in `.github/workflows/ci.yml`
 with failures enforced.

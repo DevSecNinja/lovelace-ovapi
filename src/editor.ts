@@ -117,6 +117,7 @@ export class OvapiCardEditor extends LitElement {
     const t = labels({ language }, this.ha);
     const departures = this.config.type !== "custom:ovapi-commute-card";
     const grouped = departures && this.config.display_mode === "grouped";
+    const leave = !departures || this.config.time_mode === "leave";
     const selected = this.selectedEntities();
     const entities = [
       ...new Set([
@@ -201,16 +202,37 @@ export class OvapiCardEditor extends LitElement {
           </fieldset>`,
       )}
       <p class="detail">${t.editorHelp}</p>
-      <label for="walking">${t.walking}</label
-      ><input
-        id="walking"
-        type="number"
-        min="0"
-        max="120"
-        step="1"
-        .value=${String(this.config.walking_minutes ?? "")}
-        @change=${(e: Event) => this.change("walking_minutes", this.input(e).value === "" ? undefined : Number(this.input(e).value))}
-      />
+      ${
+        departures
+          ? html`<label for="time-mode">${t.timeMode}</label>
+              <select
+                id="time-mode"
+                aria-describedby="time-mode-help"
+                .value=${this.config.time_mode ?? "departure"}
+                @change=${(e: Event) => this.change("time_mode", this.input(e).value)}
+              >
+                <option value="departure">${t.departureTime}</option>
+                <option value="leave">${t.leaveTime}</option>
+              </select>
+              <p id="time-mode-help" class="detail">${t.timeModeHelp}</p>`
+          : nothing
+      }
+      ${
+        leave
+          ? html`<label for="walking">${t.walking}</label
+              ><input
+                id="walking"
+                type="number"
+                min="0"
+                max="120"
+                step="1"
+                aria-describedby="walking-help"
+                .value=${String(this.config.walking_minutes ?? "")}
+                @change=${(e: Event) => this.change("walking_minutes", this.input(e).value === "" ? undefined : Number(this.input(e).value))}
+              />
+              <p id="walking-help" class="detail">${t.walkingHelp}</p>`
+          : nothing
+      }
       ${
         departures
           ? html`<label for="display-mode">${t.displayMode}</label>
@@ -237,7 +259,9 @@ export class OvapiCardEditor extends LitElement {
                 .value=${String(this.config.max_routes ?? 5)}
                 @change=${(e: Event) => this.change("max_routes", Number(this.input(e).value))}
               />
-              <p id="grouped-help" class="detail">${t.groupedHelp}</p>`
+              <p id="grouped-help" class="detail">
+                ${leave ? t.groupedLeaveHelp : t.groupedHelp}
+              </p>`
           : html`<label for="maximum">${t.maximum}</label
               ><input
                 id="maximum"

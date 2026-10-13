@@ -84,12 +84,12 @@ class BoardSubscription {
     });
   }
 
-  private publish(view: BoardView): void {
+  private publish(view: BoardView, now = Date.now()): void {
     clearTimeout(this.timer);
     this.timer = undefined;
-    this.view = currentBoardView(view, Date.now());
+    this.view = currentBoardView(view, now);
     this.listeners.forEach((listener) => listener(this.view));
-    const remaining = deadline(this.view) - Date.now();
+    const remaining = deadline(this.view) - now;
     if (Number.isFinite(remaining))
       this.timer = setTimeout(
         () => this.publish(this.view),
@@ -119,8 +119,8 @@ class BoardSubscription {
     });
   };
 
-  current(): BoardView {
-    if (deadline(this.view) <= Date.now()) this.publish(this.view);
+  current(now = Date.now()): BoardView {
+    if (deadline(this.view) <= now) this.publish(this.view, now);
     return this.view;
   }
 
@@ -145,8 +145,9 @@ class BoardSubscription {
 export function readBoard(
   connection: HAConnection,
   entity: string,
+  now = Date.now(),
 ): BoardView | undefined {
-  return connections.get(connection)?.get(entity)?.current();
+  return connections.get(connection)?.get(entity)?.current(now);
 }
 
 export function watchBoard(

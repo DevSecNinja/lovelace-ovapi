@@ -8,6 +8,7 @@ export interface CardConfig {
   lines: string[];
   destinations: string[];
   display_mode: "departures" | "grouped";
+  time_mode: "departure" | "leave";
   max_departures: number;
   max_routes: number;
   walking_minutes?: number;
@@ -55,6 +56,9 @@ export function parseConfig(value: unknown): CardConfig {
     c.display_mode === undefined ? "departures" : c.display_mode;
   if (displayMode !== "departures" && displayMode !== "grouped")
     throw new Error("display_mode: use departures or grouped");
+  const timeMode = c.time_mode === undefined ? "departure" : c.time_mode;
+  if (timeMode !== "departure" && timeMode !== "leave")
+    throw new Error("time_mode: use departure or leave");
   if (
     c.walking_minutes !== undefined &&
     (!Number.isInteger(c.walking_minutes) ||
@@ -79,6 +83,7 @@ export function parseConfig(value: unknown): CardConfig {
     destinations: strings(c.destinations ?? [], "destinations"),
     max_departures: max as number,
     display_mode: displayMode,
+    time_mode: timeMode,
     max_routes: maxRoutes as number,
     ...(c.walking_minutes !== undefined
       ? { walking_minutes: c.walking_minutes as number }
@@ -89,6 +94,8 @@ export function parseConfig(value: unknown): CardConfig {
 
 export const departureAt = (d: Departure): number =>
   Date.parse(d.expected_at ?? d.scheduled_at);
+export const leaveAt = (d: Departure, walking: number): number =>
+  departureAt(d) - walking * 60_000;
 export const minutesUntil = (at: number, now: number): number =>
   Math.max(0, Math.floor((at - now) / 60_000));
 
@@ -120,6 +127,28 @@ export interface DepartureGroup {
   additionalCancellations: number;
 }
 
+function reachableDepartures(
+  board: BoardSnapshot,
+  config: CardConfig,
+  now: number,
+): Departure[] {
+  if (board.status !== "ready") return [];
+  const walking = config.walking_minutes ?? board.walking_minutes;
+  return visibleDepartures(board, config, now).filter(
+    (d) => d.cancelled !== true && leaveAt(d, walking) >= now,
+  );
+}
+
+export function displayDepartures(
+  board: BoardSnapshot,
+  config: CardConfig,
+  now: number,
+): Departure[] {
+  return config.time_mode === "leave"
+    ? reachableDepartures(board, config, now)
+    : visibleDepartures(board, config, now);
+}
+
 export function groupedDepartures(
   board: BoardSnapshot,
   config: CardConfig,
@@ -130,7 +159,7 @@ export function groupedDepartures(
     { upcoming: Departure[]; cancelled: Departure[] }
   >();
   const seen = new Set<string>();
-  for (const d of visibleDepartures(board, config, now)) {
+  for (const d of displayDepartures(board, config, now)) {
     // v1 has no source-point key: only collapse identical events, never minute values.
     const identity = JSON.stringify([
       d.id,
@@ -179,12 +208,9 @@ export function nextCommute(
   config: CardConfig,
   now: number,
 ): { departure: Departure; leaveAt: number; walking: number } | undefined {
-  if (board.status !== "ready") return undefined;
   const walking = config.walking_minutes ?? board.walking_minutes;
-  const departure = visibleDepartures(board, config, now).find(
-    (d) => d.cancelled !== true && departureAt(d) - walking * 60_000 >= now,
-  );
+  const departure = reachableDepartures(board, config, now)[0];
   return departure
-    ? { departure, leaveAt: departureAt(departure) - walking * 60_000, walking }
+    ? { departure, leaveAt: leaveAt(departure, walking), walking }
     : undefined;
 }

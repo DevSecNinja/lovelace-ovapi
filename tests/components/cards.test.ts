@@ -5,6 +5,7 @@ import { watchBoard } from "../../src/subscription";
 import { FakeConnection, hass } from "../fixtures/connection";
 import {
   board,
+  combinedBoard,
   coverage,
   departure,
   groupedBoard,
@@ -44,6 +45,284 @@ describe("cards", () => {
     await mounted.card.updateComplete;
     return mounted;
   }
+  it("renders three walking-aware combined routes and explicit following leave times", async () => {
+    const { card, connection, text } = await mountGrouped({
+      time_mode: "leave",
+    });
+    connection.emit(board().entity_id, combinedBoard());
+    await card.updateComplete;
+    const rows = card.shadowRoot!.querySelectorAll(".departure");
+    expect(rows).toHaveLength(3);
+    expect(rows[0]!.querySelector(".time")?.textContent).toContain("Leave in");
+    expect(rows[0]!.querySelector(".time strong")?.textContent).toContain("1");
+    expect(
+      rows[0]!
+        .querySelector(".following")
+        ?.textContent?.replace(/\s+/g, " ")
+        .trim(),
+    ).toBe("Also leave in 7, 13, 19 min");
+    expect(
+      rows[0]!.querySelector(".following time")?.getAttribute("datetime"),
+    ).toBe(new Date(NOW + 7 * 60_000).toISOString());
+    expect(text()).toContain("7 min walk");
+    expect(text()).toContain("Departs");
+    expect(card.shadowRoot!.querySelector(".cancellations")).toBeNull();
+    expect(connection.calls).toBe(2);
+    expect(
+      rows[0]!.querySelector(".leave-time")?.getAttribute("aria-label"),
+    ).toBe("Leave in 1 min · Scheduled");
+  });
+  it.each(["en", "nl"])(
+    "labels walking-adjusted primary/following instants and unknown/delayed facts in %s",
+    async (language) => {
+      const { card, connection, text } = await mountGrouped({
+        time_mode: "leave",
+        language,
+        max_routes: 1,
+      });
+      connection.emit(board().entity_id, {
+        ...combinedBoard(),
+        departures: [
+          departure(8, { cancelled: null, transport: "unknown" }),
+          departure(14, { cancelled: null, transport: "unknown" }),
+          departure(18, {
+            expected_at: new Date(NOW + 20 * 60_000).toISOString(),
+            delay_seconds: 120,
+            transport: "unknown",
+          }),
+        ],
+      });
+      await card.updateComplete;
+      expect(text()).toContain(
+        language === "en" ? "Live status unknown" : "Actuele status onbekend",
+      );
+      expect(text()).not.toContain(language === "en" ? "On time" : "Op tijd");
+      expect(
+        card.shadowRoot!.querySelector(".leave-time")?.getAttribute("datetime"),
+      ).toBe(new Date(NOW + 60_000).toISOString());
+      const times = card.shadowRoot!.querySelectorAll(".following time");
+      expect(times[0]?.getAttribute("aria-label")).toContain(
+        language === "en" ? "Also leave in 7 min" : "Vertrek ook over 7 min",
+      );
+      expect(times[0]?.getAttribute("title")).toContain(
+        language === "en" ? "unknown" : "onbekend",
+      );
+      expect(times[1]?.getAttribute("aria-label")).toContain("+2 min");
+      expect(times[1]?.getAttribute("datetime")).toBe(
+        new Date(NOW + 13 * 60_000).toISOString(),
+      );
+      await vi.advanceTimersByTimeAsync(60_000);
+      await card.updateComplete;
+      expect(
+        card.shadowRoot!.querySelector(".leave-time")?.textContent,
+      ).toContain(language === "en" ? "Leave now" : "Vertrek nu");
+      await vi.advanceTimersByTimeAsync(1000);
+      await card.updateComplete;
+      expect(
+        card.shadowRoot!.querySelector(".leave-time")?.getAttribute("datetime"),
+      ).toBe(new Date(NOW + 7 * 60_000).toISOString());
+    },
+  );
+  it.each(["departures", "grouped"])(
+    "suppresses unsafe leave advice and restores only fresh data in %s mode",
+    async (display_mode) => {
+      const { card, connection, text } = await mountGrouped({
+        time_mode: "leave",
+        display_mode,
+        max_departures: 2,
+      });
+      connection.emit(board().entity_id, combinedBoard());
+      await card.updateComplete;
+      expect(card.shadowRoot!.querySelectorAll(".departure")).toHaveLength(
+        display_mode === "grouped" ? 3 : 2,
+      );
+      expect(card.shadowRoot!.querySelectorAll(".following")).toHaveLength(
+        display_mode === "grouped" ? 3 : 0,
+      );
+      for (const [value, expected] of [
+        [{ ...combinedBoard(), status: "stale" }, "Check departures"],
+        [
+          {
+            ...combinedBoard(),
+            departures: [departure(8, { cancelled: true })],
+          },
+          "No catchable",
+        ],
+        [{ ...combinedBoard(), departures: [departure(2)] }, "No catchable"],
+        [{ ...combinedBoard(), departures: [] }, "No catchable"],
+        [unavailableStation(), "3 of 4"],
+        [
+          board({
+            status: "unavailable",
+            fetched_at: null,
+            expires_at: null,
+            departures: [],
+          }),
+          "unavailable",
+        ],
+        [{}, "Cannot read"],
+      ]) {
+        connection.emit(board().entity_id, value);
+        await card.updateComplete;
+        expect(text()).toContain(expected);
+        expect(card.shadowRoot!.querySelector(".leave-time")).toBeNull();
+        expect(card.shadowRoot!.querySelector(".following")).toBeNull();
+      }
+      connection.emit(board().entity_id, {
+        ...combinedBoard(),
+        expires_at: new Date(NOW + 1000).toISOString(),
+      });
+      await card.updateComplete;
+      expect(card.shadowRoot!.querySelector(".leave-time")).not.toBeNull();
+      await vi.advanceTimersByTimeAsync(1000);
+      await card.updateComplete;
+      expect(text()).toContain("expired");
+      expect(text()).not.toContain("Isolatorweg");
+      vi.setSystemTime(NOW);
+      card.requestUpdate();
+      await card.updateComplete;
+      expect(card.shadowRoot!.querySelector(".leave-time")).toBeNull();
+      for (const pause of ["pagehide", "disconnected", "hidden", "remove"]) {
+        connection.emit(board().entity_id, combinedBoard());
+        await card.updateComplete;
+        expect(card.shadowRoot!.querySelector(".leave-time")).not.toBeNull();
+        if (pause === "pagehide") window.dispatchEvent(new Event("pagehide"));
+        if (pause === "disconnected") connection.fire("disconnected");
+        const hidden =
+          pause === "hidden"
+            ? vi.spyOn(document, "hidden", "get").mockReturnValue(true)
+            : undefined;
+        if (hidden) document.dispatchEvent(new Event("visibilitychange"));
+        if (pause === "remove") card.remove();
+        await card.updateComplete;
+        expect(text()).not.toContain("Isolatorweg");
+        expect(card.shadowRoot!.querySelector(".leave-time")).toBeNull();
+        if (pause === "pagehide") window.dispatchEvent(new Event("pageshow"));
+        if (pause === "disconnected") connection.fire("ready");
+        if (hidden) {
+          hidden.mockRestore();
+          document.dispatchEvent(new Event("visibilitychange"));
+        }
+      }
+      expect(vi.getTimerCount()).toBe(0);
+    },
+  );
+  it("uses one render clock for all feed reads and leave countdowns without route subscriptions", async () => {
+    const second = "sensor.second";
+    const { card, connection } = await mountGrouped({
+      time_mode: "leave",
+      entities: [board().entity_id, second],
+    });
+    connection.emit(board().entity_id, combinedBoard());
+    connection.emit(second, {
+      ...combinedBoard(),
+      entity_id: second,
+      board_id: "second",
+      walking_minutes: 0,
+    });
+    await card.updateComplete;
+    const calls = connection.calls;
+    const clock = vi
+      .spyOn(Date, "now")
+      .mockReturnValueOnce(NOW + 59_999)
+      .mockReturnValue(NOW + 60_000);
+    card.requestUpdate();
+    await card.updateComplete;
+    expect(clock).toHaveBeenCalledTimes(1);
+    const sections = card.shadowRoot!.querySelectorAll("section");
+    expect(sections[0]!.querySelector(".leave-time")?.textContent).toContain(
+      "Leave now",
+    );
+    expect(
+      sections[1]!.querySelector(".leave-time strong")?.textContent,
+    ).toContain("1");
+    expect(sections[0]!.querySelector(".walking")?.textContent).toContain(
+      "7 min",
+    );
+    expect(sections[1]!.querySelector(".walking")?.textContent).toContain(
+      "0 min",
+    );
+    expect(connection.calls).toBe(calls);
+    clock.mockRestore();
+  });
+  it("uses the captured read instant for irreversible metadata expiry in leave mode", async () => {
+    const { card, connection, text } = await mountGrouped({
+      time_mode: "leave",
+    });
+    connection.emit(board().entity_id, {
+      ...combinedBoard(),
+      coverage: coverage({
+        metadata_expires_at: new Date(NOW + 60_000).toISOString(),
+      }),
+    });
+    await card.updateComplete;
+    vi.setSystemTime(NOW + 60_000);
+    card.requestUpdate();
+    await card.updateComplete;
+    expect(text()).toContain("Station coverage information expired");
+    vi.setSystemTime(NOW);
+    card.requestUpdate();
+    await card.updateComplete;
+    expect(text()).not.toContain("Isolatorweg");
+    expect(card.shadowRoot!.querySelector(".leave-time")).toBeNull();
+  });
+  it("keeps the same raw vehicle time when leave mode/override changes and distinguishes filtered-empty", async () => {
+    const { card, connection } = await mountGrouped({
+      time_mode: "leave",
+      walking_minutes: 0,
+      lines: ["50"],
+      destinations: ["Isolatorweg"],
+    });
+    connection.emit(board().entity_id, combinedBoard());
+    await card.updateComplete;
+    expect(
+      card.shadowRoot!.querySelector(".departure-clock time")?.textContent,
+    ).toBe("13:02");
+    expect(
+      card.shadowRoot!.querySelector(".leave-time strong")?.textContent,
+    ).toContain("2");
+    card.setConfig({
+      type: "custom:ovapi-departures-card",
+      entities: [board().entity_id],
+      display_mode: "grouped",
+      time_mode: "departure",
+      walking_minutes: 120,
+    });
+    connection.emit(board().entity_id, combinedBoard());
+    await card.updateComplete;
+    expect(
+      card.shadowRoot!.querySelector(".time strong")?.textContent,
+    ).toContain("2");
+    expect(card.shadowRoot!.querySelector(".walking")).toBeNull();
+    expect(
+      card
+        .shadowRoot!.querySelector(".following")
+        ?.textContent?.replace(/\s+/g, " ")
+        .trim(),
+    ).toBe("Also in 8, 14, 20 min");
+    card.setConfig({
+      type: "custom:ovapi-departures-card",
+      entities: [board().entity_id],
+      time_mode: "leave",
+      lines: ["missing"],
+    });
+    connection.emit(board().entity_id, combinedBoard());
+    await card.updateComplete;
+    expect(card.shadowRoot!.textContent).toContain(
+      "No departures match your filters",
+    );
+    card.setConfig({
+      type: "custom:ovapi-departures-card",
+      entities: [board().entity_id],
+      time_mode: "leave",
+      lines: ["50"],
+      walking_minutes: 120,
+    });
+    connection.emit(board().entity_id, combinedBoard());
+    await card.updateComplete;
+    expect(card.shadowRoot!.textContent).toContain("No catchable departure");
+    expect(card.shadowRoot!.textContent).not.toContain("No departures match");
+  });
   it.each([
     ["ovapi-departures-card", "departures", "live"],
     ["ovapi-departures-card", "grouped", "metadata"],
