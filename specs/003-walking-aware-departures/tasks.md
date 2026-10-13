@@ -39,9 +39,9 @@ candidates never give unsafe instructions, including clock and lifecycle edges.
 ## Final Phase: Verification and delivery
 
 - [x] T011 Document defaults, precedence, zero/clear and time semantics in `README.md`, `DESIGN.md` and feature artifacts.
-- [ ] T012 Run required pre-commit/test/browser gates and regenerate `dist/lovelace-ovapi.js`; send artifact hash/head to backend peer.
-- [ ] T013 Record actual isolated HA combined-feed authenticated WS and native editor save/reopen proof in `specs/003-walking-aware-departures/verification.md`; screenshots remain ignored.
-- [ ] T014 Run convergence, create/push focused Conventional Commit and PR using `.github/PULL_REQUEST_TEMPLATE.md`; report head for parent-managed native Copilot review.
+- [x] T012 Run required pre-commit/test/browser gates and regenerate `dist/lovelace-ovapi.js`; send artifact hash/head to backend peer.
+- [x] T013 Record actual isolated HA combined-feed authenticated WS and native editor save/reopen proof in `specs/003-walking-aware-departures/verification.md`; screenshots remain ignored.
+- [x] T014 Run convergence, create/push focused Conventional Commit and PR using `.github/PULL_REQUEST_TEMPLATE.md`; report head for parent-managed native Copilot review.
 
 ## Dependencies & Execution Order
 
@@ -63,3 +63,12 @@ its isolated runtime independently; no additional frontend agents are needed.
 Small verified increments: red fixture/model/render tests, selection/rendering,
 editor and precedence, lifecycle/browser, then final joint HA evidence and PR.
 US1 is the minimum functional increment; all stories are required before delivery.
+
+## Phase 6: Convergence
+
+- [x] T015 Complete and record the joint actual-HA combined-feed authenticated
+      WebSocket/native editor proof in `specs/003-walking-aware-departures/verification.md`
+      per FR-007, SC-005 and T013 (partial). Offline production-browser evidence is
+      complete but is not a substitute for native HA; no remaining product-code gap.
+
+T015 closes the existing T013 evidence obligation, not additional product scope.
