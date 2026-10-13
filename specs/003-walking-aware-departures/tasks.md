@@ -72,3 +72,9 @@ US1 is the minimum functional increment; all stories are required before deliver
       complete but is not a substitute for native HA; no remaining product-code gap.
 
 T015 closes the existing T013 evidence obligation, not additional product scope.
+
+## Review follow-up
+
+- [x] T016 Refresh `specs/003-walking-aware-departures/verification.md` with the
+      corrected backend exact-origin harness guard and repeated dual-HA proof;
+      keep the reviewed frontend source and bundle unchanged.

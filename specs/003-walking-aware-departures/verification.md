@@ -81,32 +81,32 @@ fallback and HA's theme variable remains authoritative. No suppression was added
 ## Actual isolated Home Assistant
 
 PASS, using the backend peer's actual isolated integration at
-`dde2c117db5a1175b6482e7a638d8f2399291f94`, based on merged combined-feed main
+`41ca3039846f38aab7d7b73b8e5b63a03e8ed19e`, based on merged combined-feed main
 `a1edd74d26f52e64c6b185440a4c0360c6146298`. The exact frozen frontend artifact
 above was copied read-only into its runtime and its SHA256 checked.
-See the [immutable backend verification record](https://github.com/DevSecNinja/home-assistant-ovapi/blob/dde2c117db5a1175b6482e7a638d8f2399291f94/specs/005-local-favourite-insights/verification.md).
+See the [corrected immutable backend verification record](https://github.com/DevSecNinja/home-assistant-ovapi/blob/41ca3039846f38aab7d7b73b8e5b63a03e8ed19e/specs/005-local-favourite-insights/verification.md).
 
 Commands executed by the peer in that backend checkout:
 
 ```sh
 OVAPI_CARD_BUNDLE="$PWD/.ha-e2e/bundles/leave-card.js" \
-OVAPI_UI_ARTIFACTS=.ha-e2e/insights \
+OVAPI_UI_ARTIFACTS=.ha-e2e/review-locked \
   mise exec -- uv run --locked --group e2e \
-  pytest tests/ui/test_native_insights.py -m frontend --no-cov --timeout=120 -q --tb=short
+  pytest tests/ui -m frontend --no-cov --timeout=120 -q --tb=short
 ```
 
-PASS: four native EN/NL device-page and actual dashboard/editor cases on
-HA 2026.10.1.
+PASS: eight native EN/NL cases on HA 2026.10.1: stop picker, combination setup,
+device pages and actual dashboard/editor.
 
 ```sh
 UV_PROJECT_ENVIRONMENT=.venv-minimum \
 OVAPI_CARD_BUNDLE="$PWD/.ha-e2e/bundles/leave-card.js" \
-OVAPI_UI_ARTIFACTS=.ha-e2e/minimum-insights \
+OVAPI_UI_ARTIFACTS=.ha-e2e/review-minimum \
   mise exec -- uv run --locked --no-default-groups --group minimum --group e2e \
-  pytest tests/ui/test_native_insights.py -m frontend --no-cov --timeout=120 -q --tb=short
+  pytest tests/ui -m frontend --no-cov --timeout=120 -q --tb=short
 ```
 
-PASS: the same four cases on HA 2026.10.0 with its compatible fixture.
+PASS: the same eight cases on HA 2026.10.0 with its compatible fixture.
 
 The real authenticated combined feed has three source favourites, three routes
 (opposite metro destinations plus tram), and four vehicles per route. With group
@@ -124,8 +124,8 @@ subscriptions return `not_found`.
 All four language/runtime machine-readable card reports were read and asserted
 again in the frontend session: matching bundle hash, three sources/routes, exact
 native precedence results, diagnostic invariants and one synthetic batched HTTP
-request throughout. Requests outside isolated loopback are blocked. No real
-OVAPI or live HA is contacted; runtimes and browsers close after the scenarios.
+request throughout. No off-origin browser request was observed. No real OVAPI or
+live HA is contacted; runtimes and browsers close after the scenarios.
 
 Final native desktop English routes, phone Dutch routes and native walking
 override/editor preview were visually inspected. Screenshots wait for launch
@@ -142,6 +142,18 @@ check, now closed by the evidence above.
 [Review](https://github.com/DevSecNinja/lovelace-ovapi/pull/6#pullrequestreview-5501465758).
 Final evidence changes do not alter the reviewed source or bundle.
 
+Backend review subsequently found that its browser harness allowlist used a URL
+prefix comparison that could accept a credential-style off-origin URL. This was
+a harness-guard issue, not a card finding or an observed external request.
+The backend peer replaced all three native-fixture guards with parsed exact
+scheme/host/port comparison, also rejecting userinfo, invalid and non-HTTP(S)
+URLs. All 31 pure-string adversarial/normal URL cases pass without navigating to
+or fetching them; five had failed against the old prefix guard. Both complete
+native suites then passed again (eight cases per HA runtime) with the unchanged
+frontend artifact. The proof reference, commands and local reports above now
+identify that corrected run at `41ca3039`; T016 is complete. The original prefix
+guard is not claimed to have provided complete origin enforcement.
+
 ## Convergence
 
 Spec Kit specification, plan, tasks and implementation were executed using the
@@ -149,8 +161,9 @@ repository's pinned official tooling/templates. No extension hooks were installe
 Convergence checked eight functional requirements, five success criteria, twelve
 acceptance scenarios, the five implementation decisions and all five constitution
 principles. The only partial item was native HA evidence, already tracked by
-T013 and appended as T015. Both are now complete; final assessment finds no
-remaining product-code or verification gap. All task obligations are satisfied.
+T013 and appended as T015. Both are complete, along with the corrected-boundary
+evidence refresh in T016. Final assessment finds no remaining product-code or
+verification gap. All task obligations are satisfied.
 
 No live HA changes, upstream requests, source persistence, additional dependencies,
 contract changes, releases, workflow changes or merges.
