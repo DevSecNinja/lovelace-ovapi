@@ -10,7 +10,7 @@ rf-protocols==4.3.0
 mutagen==1.48.1
 pymicro-vad==1.0.2
 pyspeex-noise==1.0.2
-aiohasupervisor==0.6.0
+aiohasupervisor==0.7.0
 SQLAlchemy==2.0.54
 fnv-hash-fast==2.0.3
 psutil-home-assistant==0.0.1
