@@ -1,7 +1,7 @@
 homeassistant==2026.10.1
 home-assistant-frontend==20260930.3
 ha-ffmpeg==3.2.2
-gazetteer-matcher==1.1.0
+gazetteer-matcher==1.2.0
 hassil==3.12.1
 home-assistant-intents==2026.10.6
 PyTurboJPEG==1.8.3
