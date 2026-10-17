@@ -9,9 +9,29 @@ const {
   station_entities: stationEntities = {},
 } = JSON.parse(readFileSync(".ha-e2e/connection.json", "utf8"));
 assert.equal(new URL(url).hostname, "127.0.0.1");
+assert.equal(new URL(url).protocol, "http:");
+assert.equal(new URL(url).origin, url);
 const browser = await chromium.launch();
 const context = await browser.newContext({
   viewport: { width: 1024, height: 900 },
+  serviceWorkers: "block",
+});
+const unexpectedOrigins = [];
+await context.route("**/*", async (route) => {
+  if (new URL(route.request().url()).origin === url) {
+    await route.continue();
+    return;
+  }
+  unexpectedOrigins.push(new URL(route.request().url()).origin);
+  await route.abort("blockedbyclient");
+});
+await context.routeWebSocket("**/*", (socket) => {
+  if (new URL(socket.url()).origin === url.replace("http:", "ws:")) {
+    socket.connectToServer();
+    return;
+  }
+  unexpectedOrigins.push(new URL(socket.url()).origin);
+  socket.close();
 });
 const page = await context.newPage();
 const upstream = [];
@@ -473,6 +493,11 @@ try {
     );
   }
   assert.deepEqual(upstream, []);
+  assert.deepEqual(
+    unexpectedOrigins,
+    [],
+    "HA browser left the exact loopback origin",
+  );
   console.log(
     "PASS actual HA: config flow -> sensor -> authenticated WS v1 -> registered Lovelace resource -> both rendered cards",
   );

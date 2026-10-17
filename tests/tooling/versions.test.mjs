@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import semver from "semver";
+import { parse as yaml } from "yaml";
 import {
   checkVersions,
   readVersionSources,
@@ -17,6 +20,63 @@ test("actual release/lock/config pins are coherent without equating independent 
   assert.deepEqual(checkVersions(baseline, runtime).node, [
     ...new Set([minimum, baseline.mise.tools.node]),
   ]);
+});
+
+test("CI runs the same jobs for pull requests and pushes to main", () => {
+  assert.ok(Object.hasOwn(baseline.ci.on, "pull_request"));
+  assert.deepEqual(baseline.ci.on.push.branches, ["main"]);
+  for (const name of ["lint", "versions", "frontend"])
+    assert.equal(baseline.ci.jobs[name].if, undefined);
+});
+
+for (const [label, valid] of [
+  ["ubuntu-26.04", true],
+  ["ubuntu-24.04", true],
+  ["ubuntu-26.04-typo", false],
+  ["ubuntu-99.04", false],
+]) {
+  test(`actionlint ${valid ? "accepts" : "rejects"} runner ${label}`, () => {
+    const config = ".github/actionlint.yaml";
+    assert.deepEqual(yaml(readFileSync(config, "utf8")), {
+      "self-hosted-runner": { labels: ["ubuntu-26.04"] },
+    });
+    const result = spawnSync("actionlint", ["-config-file", config, "-"], {
+      input: `on: push\njobs:\n  check:\n    runs-on: ${label}\n    steps:\n      - run: echo ok\n`,
+      encoding: "utf8",
+      timeout: 10_000,
+    });
+    assert.ifError(result.error);
+    const output = result.stdout + result.stderr;
+    assert.equal(result.status, valid ? 0 : 1, output);
+    if (!valid) {
+      assert.ok(output.includes(`label "${label}" is unknown`), output);
+      assert.ok(output.includes("[runner-label]"), output);
+    }
+  });
+}
+
+test("inherited Renovate regexes extract the mise minimum and all three CI pins", () => {
+  // DevSecNinja/.github .renovate/customManagers.json5 at 9170d8c24e95a27dca91e1b7904f1f70a94dd1b0.
+  const workflow =
+    /# renovate: datasource=(?<datasource>\S+) depName=(?<depName>\S+)\n\s+[\w-]*version: "?(?<currentValue>[^\s"]+)"?/g;
+  const minimum =
+    /# renovate: datasource=github-releases depName=(?<depName>\S+)\nmin_version = "(?<currentValue>[^"]+)"/g;
+  assert.deepEqual(
+    [...baseline.ciText.matchAll(workflow)].map(({ groups }) => ({
+      ...groups,
+    })),
+    Array.from({ length: 3 }, () => ({
+      datasource: "github-releases",
+      depName: "jdx/mise",
+      currentValue: baseline.ci.jobs.lint.with["mise-version"],
+    })),
+  );
+  assert.deepEqual(
+    [...baseline.miseText.matchAll(minimum)].map(({ groups }) => ({
+      ...groups,
+    })),
+    [{ depName: "jdx/mise", currentValue: baseline.mise.min_version }],
+  );
 });
 
 for (const [name, mutate, message] of [
@@ -112,11 +172,14 @@ for (const [name, mutate, message] of [
     /exact SemVer/,
   ],
   [
-    "CI below mise minimum",
+    "unannotated mise minimum",
     (s) => {
-      s.ci.jobs.lint.with["mise-version"] = "2020.1.1";
+      s.miseText = s.miseText.replace(
+        "# renovate: datasource=github-releases depName=jdx/mise\n",
+        "",
+      );
     },
-    /CI mise is below/,
+    /mise minimum needs.*Renovate annotation/,
   ],
   [
     "unpinned action",
@@ -171,15 +234,91 @@ for (const [name, mutate, message] of [
   });
 }
 
+for (const [index, name] of ["lint", "versions", "frontend"].entries()) {
+  for (const [label, version, message] of [
+    ["below minimum", "2020.1.1", /CI mise is below/],
+    ["missing pin", undefined, /CI mise: use an exact SemVer pin/],
+    ["inconsistent pin", "2099.1.1", /CI mise bootstrap pins drift/],
+  ]) {
+    test(`rejects ${name} mise ${label}`, () => {
+      const s = structuredClone(baseline);
+      const job = s.ci.jobs[name];
+      const inputs =
+        job.with ??
+        job.steps.find((step) => step.uses?.startsWith("jdx/mise-action@"))
+          .with;
+      inputs[name === "lint" ? "mise-version" : "version"] = version;
+      assert.throws(() => checkVersions(s, runtime), message);
+    });
+  }
+  for (const [label, mutate] of [
+    ["missing", () => ""],
+    ["wrong dependency", (comment) => comment.replace("jdx/mise", "jdx/other")],
+    ["not adjacent", (comment) => `${comment}\n`],
+  ]) {
+    test(`rejects ${name} mise annotation ${label}`, () => {
+      const s = structuredClone(baseline);
+      let current = 0;
+      s.ciText = s.ciText.replace(
+        /^[ \t]*# renovate: datasource=github-releases depName=jdx\/mise\n/gm,
+        (comment) => (current++ === index ? mutate(comment) : comment),
+      );
+      s.ci = yaml(s.ciText);
+      assert.throws(
+        () => checkVersions(s, runtime),
+        /CI mise needs.*Renovate annotation/,
+      );
+    });
+  }
+}
+
+function setCiMise(sources, version) {
+  sources.ciText = sources.ciText.replace(
+    /(^[ \t]+(?:mise-)?version: ")[^"]+"/gm,
+    (_match, prefix) => `${prefix}${version}"`,
+  );
+  sources.ci = yaml(sources.ciText);
+}
+
+test("accepts coordinated mise minimum and bootstrap updates", () => {
+  const s = structuredClone(baseline);
+  const newer = semver.inc(s.ci.jobs.lint.with["mise-version"], "minor");
+  s.miseText = s.miseText.replace(s.mise.min_version, newer);
+  s.mise.min_version = newer;
+  setCiMise(s, newer);
+  assert.doesNotThrow(() =>
+    checkVersions(s, { ...runtime, miseVersion: newer }),
+  );
+});
+
+test("rejects raising the mise minimum above unchanged CI bootstrap pins", () => {
+  const s = structuredClone(baseline);
+  const newer = semver.inc(s.ci.jobs.lint.with["mise-version"], "minor");
+  s.miseText = s.miseText.replace(s.mise.min_version, newer);
+  s.mise.min_version = newer;
+  assert.throws(
+    () => checkVersions(s, { ...runtime, miseVersion: newer }),
+    /CI mise is below/,
+  );
+});
+
 test("rejects wrong installed runtimes, including an unsupported newer Node", () => {
-  for (const nodeVersion of ["20.0.0", "23.0.0", "garbage"]) {
+  for (const nodeVersion of [
+    "20.0.0",
+    semver.inc(baseline.mise.tools.node, "major"),
+    "garbage",
+  ]) {
     assert.throws(
       () => checkVersions(baseline, { ...runtime, nodeVersion }),
       /Installed Node/,
     );
   }
   assert.throws(
-    () => checkVersions(baseline, { ...runtime, nodeVersion: "22.23.4" }),
+    () =>
+      checkVersions(baseline, {
+        ...runtime,
+        nodeVersion: semver.inc(baseline.mise.tools.node, "patch"),
+      }),
     /pinned Node/,
   );
   assert.throws(
@@ -229,6 +368,6 @@ test("coherent toolchain/Spec Kit upgrades allow CI mise newer than the minimum"
     `v${nextSpecKit}`,
   );
   s.specVersions.fill(nextSpecKit);
-  s.ci.jobs.lint.with["mise-version"] = semver.inc(s.mise.min_version, "minor");
+  setCiMise(s, semver.inc(s.mise.min_version, "minor"));
   assert.doesNotThrow(() => checkVersions(s, runtime));
 });

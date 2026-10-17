@@ -45,13 +45,20 @@ def check_runtime(root: Path = Path(".")) -> None:
         if supported and python not in SpecifierSet(supported):
             raise ValueError(f"{name} does not support the pinned Python")
     ha = metadata.distribution("homeassistant")
-    manifest = json.loads(Path(ha.locate_file("homeassistant/components/frontend/manifest.json")).read_text())
-    frontend = [
-        Requirement(value) for value in manifest["requirements"]
-        if canonicalize_name(Requirement(value).name) == "home-assistant-frontend"
-    ]
-    if len(frontend) != 1 or Version(metadata.version("home-assistant-frontend")) not in frontend[0].specifier:
-        raise ValueError("Frontend pin is incompatible with the actual Home Assistant manifest")
+    components = Path(ha.locate_file("homeassistant/components"))
+    matched = set()
+    for path in components.glob("*/manifest.json"):
+        for value in json.loads(path.read_text()).get("requirements", []):
+            requirement = Requirement(value)
+            name = canonicalize_name(requirement.name)
+            if name not in pins or (requirement.marker and not requirement.marker.evaluate()):
+                continue
+            if Version(metadata.version(name)) not in requirement.specifier:
+                raise ValueError(f"{name} pin is incompatible with the actual HA {path.parent.name} manifest")
+            matched.add(name)
+    missing = pins.keys() - {"homeassistant"} - matched
+    if missing:
+        raise ValueError(f"Runtime pins missing from actual HA component manifests: {', '.join(sorted(missing))}")
 
 
 if __name__ == "__main__":

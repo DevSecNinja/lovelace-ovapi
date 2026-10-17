@@ -19,7 +19,9 @@ class RuntimeVersionsTest(unittest.TestCase):
         (self.root / ".mise.toml").write_text('[tools]\npython = "3.14.8"\n')
         self.requirements = self.root / "tests/ha-requirements.txt"
         self.requirements.write_text("homeassistant==2026.10.1\nhome-assistant-frontend==20260930.3\n")
-        self.frontend = self.root / "frontend.json"
+        self.components = self.root / "components"
+        (self.components / "frontend").mkdir(parents=True)
+        self.frontend = self.components / "frontend/manifest.json"
         self.frontend.write_text('{"requirements":["home-assistant-frontend==20260930.3"]}')
         self.versions = {"homeassistant": "2026.10.1", "home-assistant-frontend": "20260930.3"}
         self.requires_python = ">=3.14.2"
@@ -27,7 +29,7 @@ class RuntimeVersionsTest(unittest.TestCase):
             patch("check_ha_runtime.platform.python_version", return_value="3.14.8"),
             patch("check_ha_runtime.metadata.version", side_effect=lambda name: self.versions[name]),
             patch("check_ha_runtime.metadata.metadata", side_effect=lambda _: {"Requires-Python": self.requires_python}),
-            patch("check_ha_runtime.metadata.distribution", return_value=Mock(locate_file=lambda _: self.frontend)),
+            patch("check_ha_runtime.metadata.distribution", return_value=Mock(locate_file=lambda _: self.components)),
         ]:
             patcher.start()
             self.addCleanup(patcher.stop)
@@ -41,8 +43,31 @@ class RuntimeVersionsTest(unittest.TestCase):
 
     def test_frontend_incompatible_with_actual_ha_manifest(self):
         self.frontend.write_text('{"requirements":["home-assistant-frontend==20260930.4"]}')
-        with self.assertRaisesRegex(ValueError, "Frontend pin is incompatible"):
+        with self.assertRaisesRegex(ValueError, "home-assistant-frontend pin is incompatible"):
             check_runtime(self.root)
+
+    def test_component_owned_pin_drift_and_coordinated_upgrade(self):
+        self.requirements.write_text(self.requirements.read_text() + "gazetteer-matcher==1.2.0\n")
+        self.versions["gazetteer-matcher"] = "1.2.0"
+        directory = self.components / "conversation"
+        directory.mkdir()
+        manifest = directory / "manifest.json"
+        manifest.write_text('{"requirements":["gazetteer-matcher==1.1.0"]}')
+        with self.assertRaisesRegex(ValueError, "gazetteer-matcher pin is incompatible.*conversation"):
+            check_runtime(self.root)
+        manifest.write_text('{"requirements":["gazetteer-matcher==1.2.0"]}')
+        check_runtime(self.root)
+
+    def test_missing_manifest_pin(self):
+        self.frontend.write_text('{"requirements":[]}')
+        with self.assertRaisesRegex(ValueError, "missing from actual HA.*home-assistant-frontend"):
+            check_runtime(self.root)
+
+    def test_unrelated_manifest_dependencies_do_not_need_installation(self):
+        self.frontend.write_text(
+            '{"requirements":["home-assistant-frontend==20260930.3","unused-library==1.0.0"]}'
+        )
+        check_runtime(self.root)
 
     def test_wrong_installed_ha_and_frontend(self):
         for name in self.versions:

@@ -250,7 +250,10 @@ Do not attach live source payloads when reporting a problem; use synthetic examp
 
 Tools and the minimum mise version are declared in `.mise.toml`; packages are
 locked in `package-lock.json`. The supported build Node range is `package.json`
-`engines.node`. No global tool defaults are changed.
+`engines.node` (Node 24); CI tests its minimum and the exact development pin.
+This build-tool requirement does not change browser or Home Assistant support.
+No global tool defaults are changed.
+The same CI gates run for pull requests and pushes to `main`.
 
 ```sh
 mise trust
@@ -313,6 +316,11 @@ platforms. The fixture replaces the CHB directory/gzip and v0 HTTP responses,
 not the coordinator or its station selection. This setup-to-display check does
 not claim to exercise the backend's station discovery configuration UI.
 
+This historical station scenario requires the matching unmerged station-aware
+backend; current backend `main` accepts numeric timing points, not `chb:` entries.
+Use the standard flow above for current-production acceptance. Offline station
+contract tests are not evidence that the current backend implements that feature.
+
 After the ready message, run in another terminal:
 
 ```sh
@@ -330,7 +338,8 @@ may log optional Supervisor/media-library warnings unrelated to these cards.
 `npm run versions` is mandatory in install/check/test/build (therefore browser/CI).
 It uses standard SemVer, TOML and YAML parsers to check release/lock/installed
 dependency agreement, exact tool pins, supported Node engines, CI mise at least
-the declared minimum, and installed Spec Kit provenance. `npm ci` and strict
+the declared minimum with consistent bootstrap pins and Renovate annotations,
+and installed Spec Kit provenance. `npm ci` and strict
 engines remain the package manager's authority for lock installation.
 
 - **Release bump:** `package.json` owns the cards release. Use
@@ -348,15 +357,33 @@ engines remain the package manager's authority for lock installation.
   complete declared range fits dependencies. `.mise.toml` owns tool pins and the
   minimum mise; CI may run a newer mise. Renovate's existing presets manage pins
   and full action SHAs; version comments are retained, not used instead of SHAs.
+  Keep `# renovate: datasource=github-releases depName=jdx/mise` immediately above
+  `min_version` and every CI mise install input (`mise-version` or `version`).
+  The inherited custom managers then track the minimum and bootstrap pins together.
+  Keep all CI mise pins consistent and at least the minimum; do not downgrade CI
+  merely to match an older minimum or an existing Renovate proposal.
+  Renovate preserves the Node engine range instead of narrowing it to one patch.
+  TypeScript remains below 6.1 while `typescript-eslint` declares that peer upper
+  bound; revisit the scoped Renovate constraint when upgrading the parser.
 - **HA target:** `tests/ha-requirements.txt` owns the tested optional E2E environment,
   not a minimum-HA claim. `mise run ha-versions` verifies every installed pin,
-  Python against `.mise.toml` and package `Requires-Python`, and frontend against
-  the actual HA manifest. This check and its mutation tests run in CI; the full
+  Python against `.mise.toml` and package `Requires-Python`, and each auxiliary pin
+  against the actual HA component manifests. This check and its mutation tests run in CI; the full
   setup-to-display E2E remains local/optional. `mise run ha-server` performs the
   same preflight before starting. Adding a HACS HA minimum requires an exact
   minimum-runtime test and revising the explicit no-unverified-claim guard.
   Run the full isolated E2E before recording a new HA target as tested; metadata
   compatibility alone does not prove frontend behavior or HA storage-schema compatibility.
+  `gazetteer-matcher`, `SQLAlchemy`, `pymicro-vad`, `pyspeex-noise`, `PyTurboJPEG`,
+  `aiohasupervisor` and `infrared-protocols`
+  are exact component-manifest requirements of the pinned HA release, not
+  independently upgradeable libraries. The scoped Renovate rule suppresses their
+  standalone proposals in `tests/ha-requirements.txt`; update them from the new HA
+  target's manifests as a coherent set and rerun the runtime and isolated E2E gates.
+  Python 3.15 is the development/CI interpreter, not an HA support floor. The
+  cards' optional environment resolves dependencies independently of the backend's
+  locked test profiles; validate its actual installation and native HA behavior
+  rather than assuming another environment's compatibility result applies.
 - **Contract:** `CARD_CONTRACT_VERSION` owns the consumer's supported wire version.
   Parser, picker and editor share its guard; independent v1 synthetic fixtures and
   rejection tests prevent accidental “support” for future/malformed versions.
@@ -382,6 +409,12 @@ That reusable workflow declares `security-events: write` internally, so GitHub
 requires the calling lint job to grant it even with SARIF uploads disabled. The
 permission is scoped to that job; frontend verification remains read-only.
 Frontend, HACS and browser tests are local because they are product-specific.
+Repository-owned jobs use GitHub-hosted `ubuntu-26.04`; the reusable workflow's
+runner remains upstream-owned. Actionlint 1.7.12 does not yet recognize that label,
+so `.github/actionlint.yaml` adds only `ubuntu-26.04` via its documented
+`self-hosted-runner.labels` extension setting. It does not select a self-hosted
+runner or suppress lint errors. Tests run the real linter and reject unknown
+labels; remove the extension when the pinned actionlint recognizes 26.04.
 Canonical formatting, Renovate presets and PR conventions follow the org's
 `.github` and `repo-starter` repositories. Unused Go/IaC and generated-shell
 linters are disabled explicitly. Actions use least permissions and no releases.

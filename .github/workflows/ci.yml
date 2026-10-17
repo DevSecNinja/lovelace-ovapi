@@ -3,6 +3,9 @@ name: CI
 
 on:
   pull_request:
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -18,6 +21,7 @@ jobs:
       security-events: write
     uses: DevSecNinja/.github/.github/workflows/lint.yml@24acc67adf1be33089e73b2fdbdb4be8c12d145b # v3.2.0
     with:
+      # renovate: datasource=github-releases depName=jdx/mise
       mise-version: "2026.10.4"
       lint-fail-on-error: true
       lint-go: false
@@ -29,7 +33,7 @@ jobs:
       upload-sarif: false
   versions:
     name: Version and runtime contracts
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     outputs:
       matrix: ${{ steps.matrix.outputs.value }}
@@ -39,8 +43,9 @@ jobs:
         with:
           persist-credentials: false
       - name: Install pinned tools
-        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
         with:
+          # renovate: datasource=github-releases depName=jdx/mise
           version: "2026.10.4"
       - run: mise run install
       - id: matrix
@@ -55,7 +60,7 @@ jobs:
       matrix: ${{ fromJSON(needs.versions.outputs.matrix) }}
     env:
       OVAPI_CI_NODE: ${{ matrix.node }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     steps:
       - name: Checkout
@@ -63,8 +68,9 @@ jobs:
         with:
           persist-credentials: false
       - name: Install pinned tools
-        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        uses: jdx/mise-action@9149ea85001c7435d5a66bb127d6a1b6227cb0a5 # v5.0.0
         with:
+          # renovate: datasource=github-releases depName=jdx/mise
           version: "2026.10.4"
       - name: Select declared minimum or development Node
         env:
