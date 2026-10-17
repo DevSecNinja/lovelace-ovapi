@@ -4,7 +4,7 @@ min_version = "2026.9.17"
 [tools]
 node = "24.21.0"
 python = "3.15.0"
-uv = "0.12.21"
+uv = "0.12.22"
 dprint = "0.58.0"
 yamlfmt = "0.21.0"
 actionlint = "1.7.12"
