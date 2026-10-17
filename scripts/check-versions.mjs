@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
 import semver from "semver";
 import { parse as toml } from "smol-toml";
-import { parse as yaml } from "yaml";
+import { parse as yaml, parseDocument } from "yaml";
 
 export function readVersionSources(root = ".") {
   const read = (path) => readFileSync(resolve(root, path), "utf8");
@@ -15,6 +15,7 @@ export function readVersionSources(root = ".") {
     pkg,
     lock: json("package-lock.json"),
     mise: toml(read(".mise.toml")),
+    miseText: read(".mise.toml"),
     ci: yaml(read(".github/workflows/ci.yml")),
     ciText: read(".github/workflows/ci.yml"),
     hacs: json("hacs.json"),
@@ -45,8 +46,17 @@ export function checkVersions(
   sources,
   { nodeVersion, miseVersion, ciNodeVersion },
 ) {
-  const { pkg, lock, mise, ci, ciText, hacs, specVersions, installed } =
-    sources;
+  const {
+    pkg,
+    lock,
+    mise,
+    miseText,
+    ci,
+    ciText,
+    hacs,
+    specVersions,
+    installed,
+  } = sources;
   exact(pkg.version, "package.json version");
   assert.equal(
     lock.lockfileVersion,
@@ -125,23 +135,49 @@ export function checkVersions(
   for (const [tool, version] of Object.entries(mise.tools))
     exact(version, `mise ${tool}`);
   exact(mise.min_version, "mise minimum");
+  assert.equal(
+    miseText.match(
+      /# renovate: datasource=github-releases depName=jdx\/mise\nmin_version = "([^"]+)"/,
+    )?.[1],
+    mise.min_version,
+    "mise minimum needs an immediately preceding Renovate annotation",
+  );
   assert.ok(
     semver.gte(exact(miseVersion, "Installed mise"), mise.min_version),
     "Installed mise is below minimum",
   );
   const ciMise = [];
-  for (const job of Object.values(ci.jobs)) {
-    if (job.with?.["mise-version"]) ciMise.push(job.with["mise-version"]);
-    for (const step of job.steps ?? []) {
+  for (const [name, job] of Object.entries(ci.jobs)) {
+    if (
+      (job.with && Object.hasOwn(job.with, "mise-version")) ||
+      job.uses?.startsWith("DevSecNinja/.github/.github/workflows/lint.yml@")
+    )
+      ciMise.push({
+        version: job.with?.["mise-version"],
+        path: ["jobs", name, "with", "mise-version"],
+      });
+    for (const [index, step] of (job.steps ?? []).entries()) {
       if (step.uses?.startsWith("jdx/mise-action@"))
-        ciMise.push(step.with?.version);
+        ciMise.push({
+          version: step.with?.version,
+          path: ["jobs", name, "steps", index, "with", "version"],
+        });
     }
   }
   assert.ok(ciMise.length, "CI must install pinned mise");
-  for (const version of ciMise) {
+  const ciDocument = parseDocument(ciText);
+  for (const { version, path } of ciMise) {
     assert.ok(
       semver.gte(exact(version, "CI mise"), mise.min_version),
       "CI mise is below minimum",
+    );
+    assert.equal(version, ciMise[0].version, "CI mise bootstrap pins drift");
+    const offset = ciDocument.getIn(path, true)?.range?.[0];
+    assert.ok(offset !== undefined, `Missing CI mise pin: ${path.join(".")}`);
+    assert.match(
+      ciText.slice(0, offset),
+      /# renovate: datasource=github-releases depName=jdx\/mise\n[ \t]+(?:mise-)?version: $/,
+      `${path.join(".")}: CI mise needs an immediately preceding Renovate annotation`,
     );
   }
   const refs = ciText

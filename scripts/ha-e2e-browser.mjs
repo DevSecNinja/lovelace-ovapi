@@ -1,6 +1,7 @@
 import { readFileSync, mkdirSync } from "node:fs";
 import assert from "node:assert/strict";
 import { chromium, expect } from "@playwright/test";
+import { createHaBrowserContext } from "./ha-browser-context.mjs";
 
 const {
   url,
@@ -8,11 +9,14 @@ const {
   refresh_token: refreshToken,
   station_entities: stationEntities = {},
 } = JSON.parse(readFileSync(".ha-e2e/connection.json", "utf8"));
-assert.equal(new URL(url).hostname, "127.0.0.1");
 const browser = await chromium.launch();
-const context = await browser.newContext({
-  viewport: { width: 1024, height: 900 },
-});
+const { context, assertNoUnexpectedRequests } = await createHaBrowserContext(
+  browser,
+  url,
+  {
+    viewport: { width: 1024, height: 900 },
+  },
+);
 const page = await context.newPage();
 const upstream = [];
 page.on("request", (request) => {
@@ -52,13 +56,18 @@ try {
   ]) {
     const start = await context.request.post(
       `${url}/api/config/config_entries/flow`,
-      { headers, data: { handler: "ovapi", show_advanced_options: false } },
+      {
+        headers,
+        data: { handler: "ovapi", show_advanced_options: false },
+        maxRedirects: 0,
+      },
     );
     assert.equal(start.status(), 200);
     let form = await start.json();
     const flowUrl = `${url}/api/config/config_entries/flow/${form.flow_id}`;
     if (form.type === "menu") {
       const manual = await context.request.post(flowUrl, {
+        maxRedirects: 0,
         headers,
         data: { next_step_id: "manual" },
       });
@@ -67,6 +76,7 @@ try {
     }
     assert.equal(form.type, "form");
     const setup = await context.request.post(flowUrl, {
+      maxRedirects: 0,
       headers,
       data: {
         name,
@@ -80,6 +90,7 @@ try {
     for (let i = 0; i < 100 && result.type === "progress"; i++) {
       await new Promise((resolve) => setTimeout(resolve, 100));
       const progress = await context.request.post(flowUrl, {
+        maxRedirects: 0,
         headers,
         data: {},
       });
@@ -473,6 +484,7 @@ try {
     );
   }
   assert.deepEqual(upstream, []);
+  assertNoUnexpectedRequests();
   console.log(
     "PASS actual HA: config flow -> sensor -> authenticated WS v1 -> registered Lovelace resource -> both rendered cards",
   );
@@ -484,4 +496,5 @@ try {
   );
 } finally {
   await browser.close();
+  assertNoUnexpectedRequests();
 }

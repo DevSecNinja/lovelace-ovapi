@@ -14,4 +14,28 @@
     "github>DevSecNinja/.github//.renovate/packageRules.json5",
     "github>DevSecNinja/.github//.renovate/semanticCommits.json5",
   ],
+  packageRules: [
+    {
+      description: "Node engines declare a supported range; .mise.toml owns the exact development pin.",
+      matchManagers: ["npm"],
+      matchDepTypes: ["engines"],
+      matchPackageNames: ["node"],
+      rangeStrategy: "replace",
+    },
+    {
+      description: "TypeScript must remain within typescript-eslint's supported peer range; revisit with parser upgrades.",
+      matchManagers: ["npm"],
+      matchPackageNames: ["typescript"],
+      allowedVersions: "<6.1.0",
+    },
+    {
+      description: "These optional HA runtime dependencies are exact HA component-manifest pins, upgraded together with the HA target.",
+      matchManagers: ["pip_requirements"],
+      matchFileNames: ["tests/ha-requirements.txt"],
+      matchPackageNames: [
+        "/^(gazetteer-matcher|sqlalchemy|pymicro-vad|pyspeex-noise|pyturbojpeg|aiohasupervisor|infrared-protocols)$/i",
+      ],
+      enabled: false,
+    },
+  ],
 }
