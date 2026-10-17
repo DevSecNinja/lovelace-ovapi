@@ -332,6 +332,13 @@ cleans its temporary config and synthetic credentials on exit. Stop it with Ctrl
 after the check. Screenshots stay in `.ha-e2e/evidence/` (ignored). No backend
 checkout or shared Python environment is changed. Minimal standalone HA on macOS
 may log optional Supervisor/media-library warnings unrelated to these cards.
+The native browser permits only the exact loopback HTTP/WebSocket origin and
+blocks service workers. HTTP redirects are rejected before following them, including
+the config-flow API requests. Fulfilled documents lose Chromium's loopback address
+classification, so the temporary context grants local-network access only to the
+exact HA origin; HTTP/WebSocket allowlists still block every other origin. No
+browser-wide security flags are disabled. The production browser suite includes real two-origin
+loopback regressions asserting that denied redirect destinations receive zero requests.
 
 ### Version maintenance
 
