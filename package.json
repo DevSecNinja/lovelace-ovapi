@@ -29,7 +29,7 @@
     "@types/node": "26.6.5",
     "@vitest/coverage-v8": "5.0.5",
     "eslint": "10.12.0",
-    "happy-dom": "21.0.1",
+    "happy-dom": "21.0.3",
     "prettier": "3.9.10",
     "semver": "7.8.5",
     "smol-toml": "1.9.1",
