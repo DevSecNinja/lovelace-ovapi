@@ -1,5 +1,5 @@
 homeassistant==2026.10.1
-home-assistant-frontend==20260930.3
+home-assistant-frontend==20260930.4
 ha-ffmpeg==3.2.2
 gazetteer-matcher==1.1.0
 hassil==3.12.1
