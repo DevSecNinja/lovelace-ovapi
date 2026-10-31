@@ -1,4 +1,4 @@
-homeassistant==2026.10.1
+homeassistant==2026.10.2
 home-assistant-frontend==20260930.3
 ha-ffmpeg==3.2.2
 gazetteer-matcher==1.1.0
