@@ -6,7 +6,7 @@
   "skip-github-release": false,
   "bump-minor-pre-major": true,
   "bump-patch-for-minor-pre-major": false,
-  "draft": false,
+  "draft": true,
   "draft-pull-request": false,
   "prerelease": false,
   "changelog-sections": [
