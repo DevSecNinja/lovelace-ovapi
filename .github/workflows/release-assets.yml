@@ -42,6 +42,7 @@ jobs:
         with:
           # renovate: datasource=github-releases depName=jdx/mise
           version: "2026.10.19"
+          cache: false
       - run: mise run install
       - run: mise run build
       - name: Upload asset
