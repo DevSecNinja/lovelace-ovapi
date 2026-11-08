@@ -1,0 +1,32 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "node",
+  "include-component-in-tag": false,
+  "include-v-in-tag": true,
+  "skip-github-release": false,
+  "bump-minor-pre-major": true,
+  "bump-patch-for-minor-pre-major": false,
+  "draft": false,
+  "draft-pull-request": false,
+  "prerelease": false,
+  "changelog-sections": [
+    { "type": "feat", "section": "🚀 Features" },
+    { "type": "fix", "section": "🐛 Bug Fixes" },
+    { "type": "perf", "section": "⚡ Performance" },
+    { "type": "revert", "section": "⏪ Reverts" },
+    { "type": "build", "section": "📦 Dependencies" },
+    { "type": "ci", "section": "🔧 CI", "hidden": true },
+    { "type": "docs", "section": "📖 Documentation", "hidden": true },
+    { "type": "chore", "hidden": true },
+    { "type": "refactor", "hidden": true },
+    { "type": "test", "hidden": true },
+    { "type": "style", "hidden": true }
+  ],
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "package-name": "lovelace-ovapi",
+      "changelog-path": "CHANGELOG.md"
+    }
+  }
+}

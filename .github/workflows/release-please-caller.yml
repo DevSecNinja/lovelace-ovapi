@@ -1,0 +1,36 @@
+---
+name: Release Please
+
+# Opens or updates a `chore(main): release vX.Y.Z` PR on every push to main.
+# Pattern A: release-please creates the tag and GitHub Release itself. The
+# committed dist/lovelace-ovapi.js is what HACS serves from the tagged
+# commit, so no tag-triggered asset publisher is needed.
+#
+# Requires the RELEASE_PLEASE_APP_ID variable, the
+# RELEASE_PLEASE_APP_PRIVATE_KEY secret and the repository setting
+# "Allow GitHub Actions to create and approve pull requests".
+#
+# Onboarding guide:
+#   https://github.com/DevSecNinja/.github/blob/main/docs/release-please-onboarding.md
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    uses: DevSecNinja/.github/.github/workflows/release-please.yml@c61e8107b080f72e25bfc41d3eef947dbfa66446 # v3.0.0
+    permissions:
+      contents: write
+      pull-requests: write
+    with:
+      app-id: ${{ vars.RELEASE_PLEASE_APP_ID }}
+    secrets:
+      app-private-key: ${{ secrets.RELEASE_PLEASE_APP_PRIVATE_KEY }}
