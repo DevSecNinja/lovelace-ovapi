@@ -1,10 +1,10 @@
 # renovate: datasource=github-releases depName=jdx/mise
-min_version = "2026.10.19"
+min_version = "2026.10.24"
 
 [tools]
-node = "24.21.0"
-python = "3.15.1"
-uv = "0.13.5"
+node = "24.22.2"
+python = "3.15.2"
+uv = "0.13.6"
 dprint = "0.64.3"
 yamlfmt = "0.21.0"
 actionlint = "1.7.12"
