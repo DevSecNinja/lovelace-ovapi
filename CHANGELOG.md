@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/DevSecNinja/lovelace-ovapi/compare/v0.2.0...v0.2.1) (2026-11-18)
+
+
+### 📦 Dependencies
+
+* **renovate:** keep HA manifest pins in step with the HA target ([#92](https://github.com/DevSecNinja/lovelace-ovapi/issues/92)) ([1e60e32](https://github.com/DevSecNinja/lovelace-ovapi/commit/1e60e327bf350c14a7cfb5535ba80e881ea33190))
+
 ## [0.2.0](https://github.com/DevSecNinja/lovelace-ovapi/compare/v0.1.0...v0.2.0) (2026-11-08)
 
 
