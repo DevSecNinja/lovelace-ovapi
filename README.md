@@ -381,12 +381,14 @@ engines remain the package manager's authority for lock installation.
   minimum-runtime test and revising the explicit no-unverified-claim guard.
   Run the full isolated E2E before recording a new HA target as tested; metadata
   compatibility alone does not prove frontend behavior or HA storage-schema compatibility.
-  `gazetteer-matcher`, `SQLAlchemy`, `pymicro-vad`, `pyspeex-noise`, `PyTurboJPEG`,
-  `aiohasupervisor` and `infrared-protocols`
-  are exact component-manifest requirements of the pinned HA release, not
-  independently upgradeable libraries. The scoped Renovate rule suppresses their
-  standalone proposals in `tests/ha-requirements.txt`; update them from the new HA
-  target's manifests as a coherent set and rerun the runtime and isolated E2E gates.
+  Every pin other than `homeassistant` (including `home-assistant-frontend`,
+  `home-assistant-intents`, `hassil`, `SQLAlchemy` and `PyTurboJPEG`) is an exact
+  component-manifest requirement of the pinned HA release, not an independently
+  upgradeable library. A scoped Renovate rule suppresses their standalone
+  proposals in `tests/ha-requirements.txt`, and `homeassistant` arrives in its own
+  "Home Assistant target" PR outside the weekly group. On that PR, update the other
+  pins from the new HA target's manifests as a coherent set and rerun the runtime
+  and isolated E2E gates.
   Python 3.15 is the development/CI interpreter, not an HA support floor. The
   cards' optional environment resolves dependencies independently of the backend's
   locked test profiles; validate its actual installation and native HA behavior
