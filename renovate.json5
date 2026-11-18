@@ -29,13 +29,19 @@
       allowedVersions: "<6.1.0",
     },
     {
-      description: "These optional HA runtime dependencies are exact HA component-manifest pins, upgraded together with the HA target.",
+      description: "Every pin in tests/ha-requirements.txt except homeassistant is an exact HA component-manifest requirement (scripts/check_ha_runtime.py enforces this), including home-assistant-frontend and home-assistant-intents. Renovate can't read HA's manifests, so it never proposes them on their own; update them from the new HA target's manifests on the HA target PR.",
       matchManagers: ["pip_requirements"],
       matchFileNames: ["tests/ha-requirements.txt"],
-      matchPackageNames: [
-        "/^(gazetteer-matcher|sqlalchemy|pymicro-vad|pyspeex-noise|pyturbojpeg|aiohasupervisor|infrared-protocols)$/i",
-      ],
+      matchPackageNames: ["!homeassistant"],
       enabled: false,
+    },
+    {
+      description: "The HA target gets its own PR, outside the weekly all-non-major group: its manifest pins usually need a manual update on the branch, which must not block the other updates.",
+      matchManagers: ["pip_requirements"],
+      matchFileNames: ["tests/ha-requirements.txt"],
+      matchPackageNames: ["homeassistant"],
+      groupName: "Home Assistant target",
+      groupSlug: "home-assistant-target",
     },
   ],
 }
