@@ -206,7 +206,14 @@ export function checkVersions(
     "An HA minimum claim requires an exact minimum-runtime test; the current HA E2E pin is only a tested target",
   );
   assert.equal(hacs.filename, `${pkg.name}.js`, "HACS resource filename drift");
-  return { node: [...new Set([minimum, mise.tools.node])] };
+  // Each CI job is named after its runtime role, not its Node version, so the
+  // ruleset's required check names survive Node updates.
+  return {
+    include: [
+      { runtime: "minimum", node: minimum },
+      { runtime: "development", node: mise.tools.node },
+    ],
+  };
 }
 
 if (

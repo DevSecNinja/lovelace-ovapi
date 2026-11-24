@@ -54,7 +54,7 @@ jobs:
       - run: mise run ha-versions
       - run: mise run ha-version-tests
   frontend:
-    name: Frontend / offline verification
+    name: Frontend / offline verification (${{ matrix.runtime }})
     needs: versions
     strategy:
       matrix: ${{ fromJSON(needs.versions.outputs.matrix) }}
