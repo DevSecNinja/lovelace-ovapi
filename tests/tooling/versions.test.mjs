@@ -371,6 +371,18 @@ test("a development Node update keeps the old minimum in the derived CI matrix",
   );
 });
 
+test("equal minimum and development Node still report both role checks", () => {
+  const s = structuredClone(baseline);
+  s.mise.tools.node = minimum;
+  assert.deepEqual(
+    checkVersions(s, { ...runtime, nodeVersion: minimum }).include,
+    [
+      { runtime: "minimum", node: minimum },
+      { runtime: "development", node: minimum },
+    ],
+  );
+});
+
 test("coherent toolchain/Spec Kit upgrades allow CI mise newer than the minimum", () => {
   const s = structuredClone(baseline);
   const nextSpecKit = semver.inc(s.specVersions[0], "minor");
