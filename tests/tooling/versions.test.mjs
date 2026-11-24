@@ -17,9 +17,17 @@ const runtime = {
 };
 
 test("actual release/lock/config pins are coherent without equating independent versions", () => {
-  assert.deepEqual(checkVersions(baseline, runtime).node, [
-    ...new Set([minimum, baseline.mise.tools.node]),
+  assert.deepEqual(checkVersions(baseline, runtime).include, [
+    { runtime: "minimum", node: minimum },
+    { runtime: "development", node: baseline.mise.tools.node },
   ]);
+});
+
+test("frontend CI jobs are named by runtime role so required checks survive Node updates", () => {
+  assert.equal(
+    baseline.ci.jobs.frontend.name,
+    "Frontend / offline verification (${{ matrix.runtime }})",
+  );
 });
 
 test("CI runs the same jobs for pull requests and pushes to main", () => {
@@ -343,8 +351,11 @@ test("a development Node update keeps the old minimum in the derived CI matrix",
   const newer = semver.inc(minimum, "minor");
   s.mise.tools.node = newer;
   assert.deepEqual(
-    checkVersions(s, { ...runtime, nodeVersion: minimum }).node,
-    [minimum, newer],
+    checkVersions(s, { ...runtime, nodeVersion: minimum }).include,
+    [
+      { runtime: "minimum", node: minimum },
+      { runtime: "development", node: newer },
+    ],
   );
   assert.doesNotThrow(() =>
     checkVersions(s, { ...runtime, nodeVersion: newer }),
