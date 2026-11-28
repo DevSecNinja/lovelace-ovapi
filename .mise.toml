@@ -1,17 +1,17 @@
 # renovate: datasource=github-releases depName=jdx/mise
-min_version = "2026.10.19"
+min_version = "2026.11.8"
 
 [tools]
-node = "24.21.0"
-python = "3.15.1"
-uv = "0.13.5"
+node = "24.22.3"
+python = "3.15.2"
+uv = "0.13.8"
 dprint = "0.64.3"
 yamlfmt = "0.21.0"
 actionlint = "1.7.12"
 shellcheck = "0.11.0"
 gitleaks = "8.30.1"
 lefthook = "2.2.2"
-zizmor = "1.31.1"
+zizmor = "1.32.0"
 
 [tasks.install]
 run = ["npm ci", "npm run versions"]
